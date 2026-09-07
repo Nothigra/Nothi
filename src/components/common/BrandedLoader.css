@@ -1,0 +1,79 @@
+.branded-loader-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  width: 100%;
+  animation: fadeContainerIn 0.3s ease-out forwards;
+}
+
+.branded-loader-container.exiting {
+  animation: fadeContainerOut 0.3s ease-out forwards;
+}
+
+.branded-loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  text-align: center;
+}
+
+.branded-loader-text {
+  font-family: var(--font-heading, inherit);
+  font-size: var(--text-2xl, 1.5rem);
+  font-weight: 700;
+  color: var(--color-text-primary, #111827);
+  margin: 0;
+}
+
+.branded-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--color-border, #e5e7eb);
+  border-top-color: var(--color-accent, #6366f1);
+  border-radius: 50%;
+  animation: brandedSpin 0.8s linear infinite;
+  opacity: 0;
+  animation: fadeSpinnerIn 0.3s ease-out forwards, brandedSpin 0.8s linear infinite;
+}
+
+@keyframes fadeContainerIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeContainerOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes brandedSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeSpinnerIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Reduced Motion Fallbacks */
+@media (prefers-reduced-motion: reduce) {
+  .branded-loader-container {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  
+  .branded-loader-container.exiting {
+    animation: none !important;
+    opacity: 0 !important;
+    transition: opacity 0.01ms !important;
+  }
+  
+  .branded-spinner {
+    animation: none !important;
+    border-top-color: var(--color-border, #e5e7eb);
+    border: 3px solid var(--color-accent, #6366f1);
+    opacity: 0.6 !important;
+  }
+}

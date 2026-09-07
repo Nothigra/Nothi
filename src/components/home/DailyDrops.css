@@ -1,0 +1,127 @@
+.daily-drops {
+  padding: var(--space-xl) 0;
+}
+
+.drops-wrapper {
+  padding: var(--space-2xl);
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+  border: 1px solid var(--border-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+.drops-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+}
+
+.drops-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2xl);
+  flex-wrap: wrap;
+  gap: var(--space-xl);
+}
+
+.countdown-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-xs);
+}
+
+.countdown-label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.countdown-timer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: var(--bg-secondary);
+  padding: 8px 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-primary);
+}
+
+.timer-icon {
+  color: var(--accent-primary);
+  margin-right: var(--space-xs);
+}
+
+.time-block {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.time-value {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.time-unit {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.time-sep {
+  font-weight: 700;
+  color: var(--text-tertiary);
+}
+
+.drops-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-xl);
+}
+
+.drops-footer {
+  margin-top: var(--space-2xl);
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 1024px) {
+  .drops-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .drops-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .countdown-container {
+    align-items: flex-start;
+    width: 100%;
+  }
+  
+  .countdown-timer {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .drops-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .drops-wrapper {
+    padding: var(--space-xl) var(--space-md);
+  }
+}

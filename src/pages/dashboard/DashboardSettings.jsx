@@ -1,0 +1,732 @@
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { User, Palette, DollarSign, Monitor, Layers, Check, CheckCircle2, Loader2, XCircle, Sun, Moon, Contrast, AlertTriangle, Camera } from 'lucide-react';
+import { applyCustomTheme, clearCustomTheme, getLuminance, hexToRGB, getContrastRatio } from '../../utils/themeUtils';
+import CustomColorPicker from '../../components/common/CustomColorPicker';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import { useCurrency } from '../../context/CurrencyContext';
+import { SOFTWARE_LIST, CURRENCY_LIST, STYLE_LIST } from '../../lib/seed';
+import * as accountStore from '../../lib/accountStore';
+import Input from '../../components/ui/Input';
+import Textarea from '../../components/ui/Textarea';
+import { supabase, withTimeoutSafety } from '../../lib/supabase';
+import './DashboardPages.css';
+
+export default function DashboardSettings() {
+  const { profile, updateProfile } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const { currency, changeCurrency } = useCurrency();
+  
+  const [activeTab, setActiveTab] = useState('profile');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState(null);
+
+  const [customBg, setCustomBg] = useState(profile?.custom_theme?.bg || '#14151F');
+  const [customAccent, setCustomAccent] = useState(profile?.custom_theme?.accent || '#2563EB');
+  const [glowEnabled, setGlowEnabled] = useState(profile?.custom_theme?.heroGlow?.enabled !== false);
+  const [glowColor1, setGlowColor1] = useState(profile?.custom_theme?.heroGlow?.color1 || profile?.custom_theme?.accent || '#2563EB');
+  const [glowColor2, setGlowColor2] = useState(profile?.custom_theme?.heroGlow?.color2 || '#F5A623');
+  const [draftTheme, setDraftTheme] = useState(profile?.custom_theme ? 'custom' : (profile?.theme || 'dark'));
+  const [draftCurrency, setDraftCurrency] = useState(profile?.currency || 'USD');
+  const hasChangesRef = useRef(false);
+  const [themeWarning, setThemeWarning] = useState(null);
+
+  const [username, setUsername] = useState(profile?.username || '');
+  const [bio, setBio] = useState(profile?.bio || '');
+  const [avatarPreview, setAvatarPreview] = useState(profile?.avatar_url || '');
+  const avatarInputRef = useRef(null);
+  const [showFollowerCount, setShowFollowerCount] = useState(profile?.shop_settings?.show_follower_count || false);
+  const [usernameStatus, setUsernameStatus] = useState('idle');
+  const debounceRef = useRef(null);
+
+  const [selectedSoftware, setSelectedSoftware] = useState(profile?.software || []);
+  const [selectedStyle, setSelectedStyle] = useState(profile?.style || []);
+  const [isEditingTheme, setIsEditingTheme] = useState(false);
+
+  const hasChanges = 
+    isEditingTheme ||
+    username !== (profile?.username || '') ||
+    bio !== (profile?.bio || '') ||
+    avatarPreview !== (profile?.avatar_url || '') ||
+    showFollowerCount !== (profile?.shop_settings?.show_follower_count || false) ||
+    JSON.stringify(selectedSoftware) !== JSON.stringify(profile?.software || []) ||
+    JSON.stringify(selectedStyle) !== JSON.stringify(profile?.style || []) ||
+    draftCurrency !== (profile?.currency || 'USD') ||
+    draftTheme !== (profile?.custom_theme ? 'custom' : profile?.theme || 'dark') ||
+    customBg !== (profile?.custom_theme?.bg || '#14151F') ||
+    customAccent !== (profile?.custom_theme?.accent || '#2563EB') ||
+    glowEnabled !== (profile?.custom_theme?.heroGlow?.enabled !== false) ||
+    glowColor1 !== (profile?.custom_theme?.heroGlow?.color1 || profile?.custom_theme?.accent || '#2563EB') ||
+    glowColor2 !== (profile?.custom_theme?.heroGlow?.color2 || '#F5A623');
+
+  useEffect(() => {
+    hasChangesRef.current = hasChanges;
+  }, [hasChanges]);
+
+  useEffect(() => {
+    if (profile && !hasChangesRef.current) {
+      setUsername(profile.username || '');
+      setBio(profile.bio || '');
+      if (!avatarPreview) setAvatarPreview(profile.avatar_url || '');
+      setSelectedSoftware(profile.software || []);
+      setSelectedStyle(profile.style || []);
+      if (profile.custom_theme) {
+        setCustomBg(profile.custom_theme.bg);
+        setCustomAccent(profile.custom_theme.accent);
+        setGlowEnabled(profile.custom_theme.heroGlow?.enabled !== false);
+        setGlowColor1(profile.custom_theme.heroGlow?.color1 || profile.custom_theme.accent || '#2563EB');
+        setGlowColor2(profile.custom_theme.heroGlow?.color2 || '#F5A623');
+      }
+    }
+  }, [profile?.id, profile?.custom_theme]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasChangesRef.current) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (hasChangesRef.current && profile) {
+        setTheme(profile.custom_theme ? 'custom' : (profile.theme || 'dark'));
+        changeCurrency(profile.currency || 'USD');
+        if (profile.custom_theme) applyCustomTheme(profile.custom_theme);
+        else clearCustomTheme();
+      }
+    };
+  }, [profile, setTheme, changeCurrency]);
+
+  const checkUsername = useCallback((value) => {
+    if (!value || value.length < 3) { setUsernameStatus('idle'); return; }
+    if (!/^[a-zA-Z0-9_-]+$/.test(value)) { setUsernameStatus('invalid'); return; }
+    if (value.toLowerCase() === profile?.username?.toLowerCase()) { setUsernameStatus('idle'); return; }
+
+    setUsernameStatus('checking');
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(() => {
+      const taken = accountStore.isUsernameTaken(value, profile?.id);
+      setUsernameStatus(taken ? 'taken' : 'available');
+    }, 400);
+  }, [profile?.username, profile?.id]);
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      let safeType = file.type || 'image/jpeg';
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(safeType)) {
+        safeType = 'image/jpeg';
+      }
+
+      const uploadAvatar = async () => {
+        try {
+          const { data, error } = await withTimeoutSafety(() =>
+            supabase.functions.invoke('generate-upload-url', {
+              body: { 
+                folder: 'avatars', 
+                filename: file.name || 'avatar.jpg', 
+                contentType: safeType,
+                fileSize: file.size
+              }
+            })
+          );
+          if (error) throw error;
+          if (data?.error) throw new Error(data.error);
+
+          const { uploadUrl, publicUrl } = data;
+          
+          await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('PUT', uploadUrl, true);
+            xhr.setRequestHeader('Content-Type', safeType);
+            xhr.onload = () => {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                resolve();
+              } else {
+                reject(new Error(`S3 Upload failed with status ${xhr.status}`));
+              }
+            };
+            xhr.onerror = () => reject(new Error('Network error during upload'));
+            xhr.send(file);
+          });
+
+          setAvatarPreview(publicUrl);
+        } catch (err) {
+          console.error("Avatar upload failed:", err);
+        }
+      };
+      uploadAvatar();
+    }
+  };
+
+  const handleUsernameChange = (e) => {
+    const value = e.target.value.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 20);
+    setUsername(value);
+    checkUsername(value);
+  };
+
+  const toggleSoftware = (sw) => {
+    setSelectedSoftware(prev => 
+      prev.includes(sw) ? prev.filter(i => i !== sw) : [...prev, sw]
+    );
+  };
+
+  const toggleStyle = (st) => {
+    setSelectedStyle(prev => 
+      prev.includes(st) ? prev.filter(i => i !== st) : [...prev, st]
+    );
+  };
+
+
+  const handleSaveChanges = async () => {
+    setIsSaving(true);
+    const updates = {
+      username: username.toLowerCase(),
+      bio,
+      avatar_url: avatarPreview,
+      shop_settings: {
+        ...(profile?.shop_settings || {}),
+        show_follower_count: showFollowerCount
+      },
+      software: selectedSoftware,
+      style: selectedStyle,
+      currency: draftCurrency,
+      theme: draftTheme === 'custom' ? (profile?.theme || 'dark') : draftTheme
+    };
+    
+    if (draftTheme === 'custom') {
+      updates.custom_theme = { bg: customBg, accent: customAccent, heroGlow: { enabled: glowEnabled, color1: glowColor1, color2: glowColor2 } };
+      updates.theme = 'custom';
+    } else {
+      updates.custom_theme = null;
+    }
+
+    try {
+      const res = await updateProfile(updates);
+      setIsSaving(false);
+      if (res && res.error) {
+        setSaveMsg({ type: 'error', text: 'Failed to save settings.' });
+      } else {
+        setSaveMsg({ type: 'success', text: 'All changes saved successfully!' });
+        setTimeout(() => setSaveMsg(null), 3000);
+        hasChangesRef.current = false; setIsEditingTheme(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setIsSaving(false);
+      setSaveMsg({ type: 'error', text: 'An unexpected error occurred.' });
+    }
+  };
+
+  const handleDiscard = () => {
+    if (profile) {
+      setUsername(profile.username || '');
+      setBio(profile.bio || '');
+      setAvatarPreview(profile.avatar_url || '');
+      setShowFollowerCount(profile.shop_settings?.show_follower_count || false);
+      setSelectedSoftware(profile.software || []);
+      setSelectedStyle(profile.style || []);
+      
+      const pTheme = profile.custom_theme ? 'custom' : (profile.theme || 'dark');
+      setDraftTheme(pTheme);
+      setTheme(pTheme);
+      
+      const pCurr = profile.currency || 'USD';
+      setDraftCurrency(pCurr);
+      changeCurrency(pCurr);
+      
+      setCustomBg(profile.custom_theme?.bg || '#14151F');
+      setCustomAccent(profile.custom_theme?.accent || '#2563EB');
+      setGlowEnabled(profile.custom_theme?.heroGlow?.enabled !== false);
+      setGlowColor1(profile.custom_theme?.heroGlow?.color1 || profile.custom_theme?.accent || '#2563EB');
+      setGlowColor2(profile.custom_theme?.heroGlow?.color2 || '#F5A623');
+      
+      if (profile.custom_theme) applyCustomTheme(profile.custom_theme);
+      else clearCustomTheme();
+      
+      hasChangesRef.current = false; setIsEditingTheme(false);
+    }
+  };
+
+  const handleThemeChange = (newTheme) => {
+    setDraftTheme(newTheme);
+    setTheme(newTheme); // preview live
+    if (newTheme === 'custom') {
+      if (profile?.custom_theme) {
+        setCustomBg(profile.custom_theme.bg);
+        setCustomAccent(profile.custom_theme.accent);
+        setGlowEnabled(profile.custom_theme.heroGlow?.enabled !== false);
+        setGlowColor1(profile.custom_theme.heroGlow?.color1 || profile.custom_theme.accent || '#2563EB');
+        setGlowColor2(profile.custom_theme.heroGlow?.color2 || '#F5A623');
+        applyCustomTheme(profile.custom_theme);
+      } else {
+        applyCustomTheme({ bg: customBg, accent: customAccent, heroGlow: { enabled: glowEnabled, color1: glowColor1, color2: glowColor2 } });
+      }
+    } else {
+      clearCustomTheme();
+    }
+  };
+
+  const handleCurrencyChange = (code) => {
+    setDraftCurrency(code);
+    changeCurrency(code); // preview live
+  };
+
+  const handleCustomColorChange = (type, hex) => {
+    setDraftTheme('custom');
+    
+    const newBg = type === 'bg' ? hex : customBg;
+    const newAccent = type === 'accent' ? hex : customAccent;
+    setCustomBg(newBg);
+    setCustomAccent(newAccent);
+
+    applyCustomTheme({ bg: newBg, accent: newAccent, heroGlow: { enabled: glowEnabled, color1: glowColor1, color2: glowColor2 } });
+
+    const lum = getLuminance(hexToRGB(newBg));
+    const isLight = lum > 0.5;
+    const textColor = isLight ? '#14151F' : '#ECECEA';
+    const contrastWithText = getContrastRatio(getLuminance(hexToRGB(newAccent)), getLuminance(hexToRGB(textColor)));
+    const contrastWithBg = getContrastRatio(getLuminance(hexToRGB(newAccent)), lum);
+
+    if (contrastWithText < 4.5 && contrastWithBg < 4.5) {
+      setThemeWarning("This accent color may be hard to read. Consider adjusting it.");
+    } else {
+      setThemeWarning(null);
+    }
+  };
+
+  const handleGlowToggle = () => {
+    setDraftTheme('custom');
+    const newEnabled = !glowEnabled;
+    setGlowEnabled(newEnabled);
+    applyCustomTheme({ bg: customBg, accent: customAccent, heroGlow: { enabled: newEnabled, color1: glowColor1, color2: glowColor2 } });
+  };
+
+  const handleGlowColorChange = (index, hex) => {
+    setDraftTheme('custom');
+    const newColor1 = index === 1 ? hex : glowColor1;
+    const newColor2 = index === 2 ? hex : glowColor2;
+    if (index === 1) setGlowColor1(hex);
+    if (index === 2) setGlowColor2(hex);
+    applyCustomTheme({ bg: customBg, accent: customAccent, heroGlow: { enabled: glowEnabled, color1: newColor1, color2: newColor2 } });
+  };
+
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId);
+  };
+  const tabs = [
+    { id: 'profile', label: 'Public Profile', icon: User },
+    { id: 'software', label: 'Software Filters', icon: Monitor },
+    { id: 'style', label: 'Style Preferences', icon: Layers },
+    { id: 'theme', label: 'Appearance', icon: Palette },
+    { id: 'currency', label: 'Currency & Localization', icon: DollarSign },
+  ];
+
+  return (
+    <div className="dashboard-page pb-2xl">
+      <div className="dashboard-page-header">
+        <div>
+          <h1 className="dashboard-title">Settings</h1>
+          <p className="dashboard-subtitle">Manage your account preferences and store details.</p>
+        </div>
+      </div>
+
+      {saveMsg && (
+        <div style={{
+          padding: '16px',
+          borderRadius: 'var(--radius-lg)',
+          backgroundColor: saveMsg.type === 'error' ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
+          color: saveMsg.type === 'error' ? '#ef4444' : '#10b981',
+          display: 'flex', alignItems: 'center', gap: '12px',
+          fontSize: '14px', marginBottom: '24px',
+          border: `1px solid ${saveMsg.type === 'error' ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)'}`
+        }}>
+          {saveMsg.type === 'error' ? <XCircle size={20} /> : <CheckCircle2 size={20} />}
+          <span className="font-medium">{saveMsg.text}</span>
+        </div>
+      )}
+
+      <div className="settings-layout" style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
+        <div className="settings-tabs">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                className={`settings-tab ${activeTab === tab.id ? 'active' : ''}`}
+                onClick={() => handleTabClick(tab.id)}
+              >
+                <Icon size={18} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="settings-content" style={{ flex: 1, minWidth: 0 }}>
+          {activeTab === 'profile' && (
+            <div className="settings-card m-0">
+              <div className="card-header pb-md border-b border-border">
+                <h3 className="card-title text-lg">Public Profile</h3>
+                <p className="text-sm text-secondary mt-xs">This information will be displayed publicly on your store page.</p>
+              </div>
+              <div className="card-body pt-xl">
+                
+                <div className="form-group mb-xl max-w-md">
+                  <label className="text-sm font-bold block mb-sm">Profile Picture</label>
+                  <div className="flex items-center gap-md">
+                    <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-border bg-bg-tertiary flex-shrink-0 flex items-center justify-center">
+                      {avatarPreview ? (
+                        <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <User size={32} className="text-secondary" />
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-sm">
+                      <button 
+                        className="btn btn-outline btn-sm flex items-center justify-center gap-xs"
+                        onClick={() => avatarInputRef.current?.click()}
+                      >
+                        <Camera size={14} /> Upload Image
+                      </button>
+                      <input 
+                        type="file" 
+                        hidden 
+                        ref={avatarInputRef} 
+                        onChange={handleAvatarChange} 
+                        accept="image/*" 
+                      />
+                      <p className="text-xs text-secondary">Recommended: 400x400px JPEG/PNG</p>
+                      {avatarPreview && avatarPreview !== profile?.avatar_url && (
+                        <button 
+                          className="text-xs text-red-500 text-left hover:underline"
+                          onClick={() => setAvatarPreview(profile?.avatar_url || '')}
+                        >
+                          Remove unsaved image
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-group mb-xl max-w-md">
+                  <Input
+                    label="Username"
+                    prefix="Nothi.com/"
+                    value={username}
+                    onChange={handleUsernameChange}
+                    maxLength={20}
+                  />
+                  <div className="mt-sm text-sm h-5">
+                    {usernameStatus === 'checking' && (
+                      <span className="text-secondary flex items-center gap-xs">
+                        <Loader2 size={14} className="spin" /> Checking availability...
+                      </span>
+                    )}
+                    {usernameStatus === 'available' && (
+                      <span className="text-success flex items-center gap-xs">
+                        <CheckCircle2 size={14} /> Username available
+                      </span>
+                    )}
+                    {usernameStatus === 'taken' && (
+                      <span className="text-error flex items-center gap-xs">
+                        <XCircle size={14} /> Username already taken
+                      </span>
+                    )}
+                    {usernameStatus === 'invalid' && (
+                      <span className="text-error flex items-center gap-xs">
+                        <XCircle size={14} /> Letters, numbers, underscores, dashes only
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="form-group mb-xl max-w-2xl">
+                  <Textarea
+                    label="Bio"
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="Tell your customers about yourself and your work..."
+                    maxLength={200}
+                    minRows={4}
+                  />
+                </div>
+
+                <div className="form-group mb-xl max-w-2xl border border-border rounded-lg p-md">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-sm">Show Follower Count</h4>
+                      <p className="text-xs text-secondary mt-xs">Display your follower count publicly on your store page header.</p>
+                    </div>
+                    <button 
+                      className={`relative w-12 h-6 rounded-full transition-colors ${showFollowerCount ? 'bg-accent' : 'bg-bg-tertiary'}`}
+                      onClick={() => setShowFollowerCount(!showFollowerCount)}
+                    >
+                      <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${showFollowerCount ? 'left-7' : 'left-1'}`} />
+                    </button>
+                  </div>
+                </div>
+
+                
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'software' && (
+            <div className="settings-card m-0">
+              <div className="card-header pb-md border-b border-border">
+                <h3 className="card-title text-lg">Software Preferences</h3>
+                <p className="text-sm text-secondary mt-xs">Select the tools you use. Your marketplace feed will be tailored to these selections.</p>
+              </div>
+              <div className="card-body pt-xl">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-md mb-xl">
+                  {SOFTWARE_LIST.map((sw) => {
+                    const swName = typeof sw === 'string' ? sw : sw.name;
+                    const isSelected = selectedSoftware.includes(swName);
+                    return (
+                      <button
+                        key={swName}
+                        className={`flex items-center justify-between p-md border rounded-lg transition-all ${isSelected ? 'border-accent bg-accent-subtle text-accent font-medium shadow-sm' : 'border-border bg-bg-card text-secondary hover:border-tertiary'}`}
+                        onClick={() => toggleSoftware(swName)}
+                      >
+                        <span>{swName}</span>
+                        {isSelected && <Check size={16} />}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'style' && (
+            <div className="settings-card m-0">
+              <div className="card-header pb-md border-b border-border">
+                <h3 className="card-title text-lg">Style Preferences</h3>
+                <p className="text-sm text-secondary mt-xs">Select your editing styles. Your marketplace feed will be tailored to these selections.</p>
+              </div>
+              <div className="card-body pt-xl">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-md mb-xl">
+                  {STYLE_LIST.map((st) => {
+                    const stName = typeof st === 'string' ? st : st.name;
+                    const isSelected = selectedStyle.includes(stName);
+                    return (
+                      <button
+                        key={stName}
+                        className={`flex items-center justify-between p-md border rounded-lg transition-all ${isSelected ? 'border-accent bg-accent-subtle text-accent font-medium shadow-sm' : 'border-border bg-bg-card text-secondary hover:border-tertiary'}`}
+                        onClick={() => toggleStyle(stName)}
+                      >
+                        <span>{stName}</span>
+                        {isSelected && <Check size={16} />}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'theme' && (
+            <div className="settings-card m-0">
+              <div className="card-header pb-md border-b border-border">
+                <h3 className="card-title text-lg">Appearance</h3>
+                <p className="text-sm text-secondary mt-xs">Customize how Nothi looks on this device.</p>
+              </div>
+              <div className="card-body pt-xl">
+                <div className="flex gap-lg max-w-2xl mb-xl">
+                  <button
+                    className={`flex-1 flex flex-col items-center gap-md p-xl border-2 rounded-xl transition-all ${theme === 'light' ? 'border-accent bg-accent-subtle text-accent shadow-md' : 'border-border bg-bg-card text-secondary hover:border-tertiary'}`}
+                    onClick={() => handleThemeChange('light')}
+                  >
+                    <Sun size={32} />
+                    <span className="font-semibold text-lg">Light</span>
+                  </button>
+                  <button
+                    className={`flex-1 flex flex-col items-center gap-md p-xl border-2 rounded-xl transition-all ${theme === 'dim' ? 'border-accent bg-accent-subtle text-accent shadow-md' : 'border-border bg-bg-card text-secondary hover:border-tertiary'}`}
+                    onClick={() => handleThemeChange('dim')}
+                  >
+                    <Contrast size={32} />
+                    <span className="font-semibold text-lg">Dim</span>
+                  </button>
+                  <button
+                    className={`flex-1 flex flex-col items-center gap-md p-xl border-2 rounded-xl transition-all ${theme === 'dark' ? 'border-accent bg-accent-subtle text-accent shadow-md' : 'border-border bg-bg-card text-secondary hover:border-tertiary'}`}
+                    onClick={() => handleThemeChange('dark')}
+                  >
+                    <Moon size={32} />
+                    <span className="font-semibold text-lg">Dark</span>
+                  </button>
+                  {(profile?.custom_theme || draftTheme === 'custom') && (
+                    <button
+                      className={`flex-1 flex flex-col items-center gap-md p-xl border-2 rounded-xl transition-all ${theme === 'custom' ? 'border-accent bg-accent-subtle text-accent shadow-md' : 'border-border bg-bg-card text-secondary hover:border-tertiary'}`}
+                      onClick={() => handleThemeChange('custom')}
+                    >
+                      <Palette size={32} />
+                      <span className="font-semibold text-lg">Custom</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Custom Theme Section */}
+                  <div className="pt-xl border-t border-border">
+                    <div className="mb-md">
+                      <div className="flex items-center gap-md">
+                        <h3 className="card-title text-md">Custom Theme</h3>
+                        {isEditingTheme && (
+                          <span className="text-xs px-2 py-1 rounded bg-warning/10 text-warning border border-warning/30 font-medium">
+                            Editing Custom Theme — unsaved changes
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-secondary mt-xs">Pick a background and accent color. We will automatically calculate perfect text and card colors to ensure readability.</p>
+                    </div>
+
+                  {themeWarning && (
+                    <div className="mb-lg p-md bg-[var(--color-bg-tertiary)] border border-warning rounded-lg flex gap-md items-start">
+                      <AlertTriangle size={18} className="text-warning mt-1" />
+                      <span className="text-sm text-secondary">{themeWarning}</span>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-xl max-w-3xl mb-xl">
+                    <div className="flex flex-col gap-sm">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium">Background Color</label>
+                        <div className="flex items-center gap-xs">
+                          <div className="w-4 h-4 rounded-full shadow-sm" style={{ backgroundColor: customBg }}></div>
+                          <span className="text-xs text-secondary font-mono uppercase">{customBg}</span>
+                        </div>
+                      </div>
+                      <CustomColorPicker color={customBg} onChange={(hex) => handleCustomColorChange('bg', hex)} onDragStart={() => setIsEditingTheme(true)} />
+                    </div>
+                    
+                    <div className="flex flex-col gap-sm">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium">Accent Color</label>
+                        <div className="flex items-center gap-xs">
+                          <div className="w-4 h-4 rounded-full shadow-sm" style={{ backgroundColor: customAccent }}></div>
+                          <span className="text-xs text-secondary font-mono uppercase">{customAccent}</span>
+                        </div>
+                      </div>
+                      <CustomColorPicker color={customAccent} onChange={(hex) => handleCustomColorChange('accent', hex)} onDragStart={() => setIsEditingTheme(true)} />
+                    </div>
+                  </div>
+
+                  <div className="pt-xl border-t border-border mb-xl">
+                    <div className="mb-md flex items-center justify-between">
+                      <div>
+                        <h3 className="card-title text-md">Hero Glow</h3>
+                        <p className="text-sm text-secondary mt-xs">Customize the atmospheric radial glows in the hero section.</p>
+                      </div>
+                      <div className="flex items-center gap-sm">
+                        <span className="text-sm text-secondary font-medium">{glowEnabled ? 'Enabled' : 'Disabled'}</span>
+                        <button 
+                          className={`relative w-12 h-6 rounded-full transition-colors ${glowEnabled ? 'bg-accent' : 'bg-bg-tertiary'}`}
+                          onClick={handleGlowToggle}
+                        >
+                          <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${glowEnabled ? 'left-7' : 'left-1'}`} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {glowEnabled && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-xl max-w-3xl">
+                        <div className="flex flex-col gap-sm">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm font-medium">Top Left Glow</label>
+                            <div className="flex items-center gap-xs">
+                              <div className="w-4 h-4 rounded-full shadow-sm" style={{ backgroundColor: glowColor1 }}></div>
+                              <span className="text-xs text-secondary font-mono uppercase">{glowColor1}</span>
+                            </div>
+                          </div>
+                          <CustomColorPicker color={glowColor1} onChange={(hex) => handleGlowColorChange(1, hex)} onDragStart={() => setIsEditingTheme(true)} />
+                        </div>
+                        
+                        <div className="flex flex-col gap-sm">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm font-medium">Bottom Right Glow</label>
+                            <div className="flex items-center gap-xs">
+                              <div className="w-4 h-4 rounded-full shadow-sm" style={{ backgroundColor: glowColor2 }}></div>
+                              <span className="text-xs text-secondary font-mono uppercase">{glowColor2}</span>
+                            </div>
+                          </div>
+                          <CustomColorPicker color={glowColor2} onChange={(hex) => handleGlowColorChange(2, hex)} onDragStart={() => setIsEditingTheme(true)} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'currency' && (
+            <div className="settings-card m-0">
+              <div className="card-header pb-md border-b border-border">
+                <h3 className="card-title text-lg">Currency & Localization</h3>
+                <p className="text-sm text-secondary mt-xs">Prices across the marketplace will be displayed in this currency.</p>
+              </div>
+              <div className="card-body pt-xl">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md">
+                  {CURRENCY_LIST.map((curr) => {
+                    const isSelected = currency === curr.code;
+                    return (
+                      <button
+                        key={curr.code}
+                        className={`flex items-center gap-md p-md border rounded-lg transition-all ${isSelected ? 'border-accent bg-accent-subtle shadow-sm' : 'border-border bg-bg-card hover:border-tertiary'}`}
+                        onClick={() => handleCurrencyChange(curr.code)}
+                      >
+                        <div className={`w-10 h-10 rounded-full flex-center font-bold text-lg ${isSelected ? 'bg-accent text-white' : 'bg-bg-tertiary text-primary'}`}>
+                          {curr.symbol}
+                        </div>
+                        <div className="text-left flex-1">
+                          <div className={`font-bold ${isSelected ? 'text-accent' : 'text-primary'}`}>{curr.code}</div>
+                          <div className="text-xs text-secondary">{curr.name}</div>
+                        </div>
+                        {isSelected && <CheckCircle2 size={20} className="text-accent" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+              </div></div>
+      {hasChanges && (
+        <div className="fixed bottom-0 left-0 right-0 p-md pointer-events-none" style={{ zIndex: 60 }}>
+          <div className="mx-auto max-w-[600px] bg-bg-card/90 backdrop-blur-xl border border-border p-md rounded-2xl shadow-2xl flex items-center justify-between pointer-events-auto">
+            <div className="flex flex-col">
+              <span className="font-bold text-sm">Unsaved Changes</span>
+              <span className="text-xs text-secondary">You have modified your settings</span>
+            </div>
+            <div className="flex gap-md">
+              <button 
+                className="btn btn-secondary px-lg rounded-full"
+                onClick={handleDiscard}
+                disabled={isSaving}
+              >
+                Discard
+              </button>
+              <button 
+                className="btn btn-primary px-lg rounded-full"
+                onClick={handleSaveChanges}
+                disabled={isSaving || usernameStatus === 'taken' || username.length < 3 || usernameStatus === 'invalid'}
+              >
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

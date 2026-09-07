@@ -1,0 +1,152 @@
+.digi-currency-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.digi-currency-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+  width: 100%;
+  height: 56px;
+}
+
+.digi-currency-container:hover:not(.disabled) {
+  border-color: var(--color-border-hover, var(--color-text-tertiary));
+}
+
+.digi-currency-container.focused:not(.disabled) {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 4px rgba(var(--color-accent-rgb, 99, 102, 241), 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+  background-color: var(--color-bg-secondary);
+}
+
+.digi-currency-container.error {
+  border-color: var(--color-danger);
+}
+.digi-currency-container.error.focused {
+  box-shadow: 0 0 0 4px rgba(var(--color-danger-rgb, 239, 68, 68), 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.digi-currency-container.disabled {
+  opacity: 0.6;
+  background-color: var(--color-bg-secondary);
+  cursor: not-allowed;
+}
+
+/* Currency Selector Button inside input */
+.digi-currency-selector {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-3);
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  transition: color 0.2s ease, background-color 0.2s ease;
+  position: relative;
+}
+.digi-currency-selector:hover:not(:disabled) {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-hover);
+}
+.digi-currency-selector:focus {
+  outline: none;
+  color: var(--color-accent);
+}
+.digi-currency-selector::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 1px;
+  background-color: var(--color-border);
+}
+
+/* Dropdown Menu (reused logic from Select) */
+.digi-currency-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 140px; /* Smaller menu just for currencies */
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  z-index: 100;
+  overflow: hidden;
+  max-height: 240px;
+  display: flex;
+  flex-direction: column;
+  animation: digiSelectMenuIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top left;
+}
+
+/* Number Input Element */
+.digi-currency-input {
+  flex: 1;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono, monospace);
+  font-size: var(--font-size-lg);
+  outline: none;
+  padding: 0 var(--space-4);
+  margin: 0;
+  min-width: 0;
+}
+
+.digi-currency-input:disabled {
+  cursor: not-allowed;
+}
+.digi-currency-input::placeholder {
+  color: transparent;
+}
+.digi-currency-input.no-floating-label::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+/* Floating Label logic */
+.digi-currency-label {
+  position: absolute;
+  left: calc(var(--space-4) + 60px); /* offset by currency selector width approximately */
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-tertiary);
+  pointer-events: none;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), font-size 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s ease;
+  transform-origin: left top;
+}
+
+/* Shrink and move up */
+.digi-currency-container.focused .digi-currency-label,
+.digi-currency-container.has-value .digi-currency-label {
+  transform: translateY(calc(-50% - 14px));
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.digi-currency-container.focused .digi-currency-label {
+  color: var(--color-accent);
+}
+.digi-currency-container.error.focused .digi-currency-label {
+  color: var(--color-danger);
+}
+
+.digi-currency-container.focused .digi-currency-input:not(.no-floating-label),
+.digi-currency-container.has-value .digi-currency-input:not(.no-floating-label) {
+  padding-top: 16px;
+}

@@ -1,0 +1,34 @@
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 24px;
+  gap: 16px;
+  background-color: var(--color-bg);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.theme-card:hover {
+  border-color: var(--color-border-strong);
+  transform: translateY(-2px);
+}
+
+.theme-card.selected {
+  border-color: var(--color-accent);
+  background-color: var(--color-bg-secondary);
+}
+
+.theme-card svg {
+  color: var(--color-text-secondary);
+}
+
+.theme-card.selected svg {
+  color: var(--color-accent);
+}

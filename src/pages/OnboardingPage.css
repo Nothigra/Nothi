@@ -1,0 +1,324 @@
+.onboarding-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-bg);
+  padding: 24px;
+}
+
+.onboarding-container {
+  width: 100%;
+  max-width: 600px;
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 48px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.dark .onboarding-container, .dim .onboarding-container {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.onboarding-progress {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 40px;
+  justify-content: center;
+}
+
+.progress-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-border-strong);
+  transition: all 0.3s ease;
+}
+
+.progress-dot.active {
+  background-color: var(--color-accent);
+  width: 24px;
+  border-radius: 4px;
+}
+
+.progress-dot.completed {
+  background-color: var(--color-accent);
+  opacity: 0.5;
+}
+
+.onboarding-content-wrapper {
+  min-height: 350px;
+  display: flex;
+  flex-direction: column;
+}
+
+.onboarding-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--color-text-primary);
+  text-align: center;
+}
+
+.onboarding-subtitle {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.step-content-area {
+  flex-grow: 1;
+}
+
+/* Step 1: Username */
+.onboarding-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.input-with-prefix {
+  display: flex;
+  align-items: center;
+  background-color: var(--color-bg);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0 16px;
+  height: 56px;
+  transition: border-color 0.2s;
+}
+
+.input-with-prefix:focus-within {
+  border-color: var(--color-accent);
+}
+
+.input-with-prefix .prefix {
+  color: var(--color-text-tertiary);
+  font-size: 16px;
+  user-select: none;
+}
+
+.input-with-prefix input {
+  flex-grow: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text-primary);
+  font-size: 16px;
+  font-weight: 500;
+  padding: 0;
+}
+
+.username-status-row {
+  min-height: 24px;
+  margin-top: 8px;
+}
+
+.username-available {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-success, #10b981);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.username-checking {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.username-taken {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-danger, #ef4444);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Step 2 & 3 & 4: Grid Layouts */
+.onboarding-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.onboarding-grid.two-cols {
+  grid-template-columns: 1fr 1fr;
+}
+
+.onboarding-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: var(--color-bg);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.onboarding-card:hover {
+  border-color: var(--color-border-strong);
+  transform: translateY(-2px);
+}
+
+.onboarding-card.selected {
+  border-color: var(--color-accent);
+  background-color: var(--color-bg-secondary);
+}
+
+
+
+.card-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid var(--color-border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.onboarding-card.selected .card-checkbox {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+/* Currency Grid */
+.currency-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.currency-symbol {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--color-bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.onboarding-card.selected .currency-symbol {
+  color: var(--color-accent);
+  background-color: var(--color-bg);
+}
+
+.currency-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.currency-code {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.currency-name {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+/* Error */
+.onboarding-error {
+  color: var(--color-error, #ef4444);
+  text-align: center;
+  font-size: 14px;
+  margin-bottom: 24px;
+  padding: 12px;
+  background-color: rgba(239, 68, 68, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+/* Navigation */
+.onboarding-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
+}
+
+.btn-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-back {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid transparent;
+}
+
+.btn-back:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg);
+}
+
+.btn-back.invisible {
+  visibility: hidden;
+}
+
+.btn-next {
+  background-color: var(--color-text-primary);
+  color: var(--color-bg);
+  border: none;
+}
+
+.btn-next:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-next:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .onboarding-container {
+    padding: 32px 24px;
+  }
+  
+  .onboarding-grid.two-cols,
+  .currency-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .input-with-prefix {
+    padding: 0 12px;
+  }
+  
+  .input-with-prefix .prefix {
+    font-size: 14px;
+  }
+}

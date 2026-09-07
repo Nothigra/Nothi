@@ -1,0 +1,199 @@
+.media-uploader-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.media-uploader-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.media-uploader-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  background-color: var(--color-bg-secondary);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.media-uploader-dropzone:hover {
+  background-color: var(--color-bg-tertiary);
+  border-color: var(--color-border-strong);
+}
+
+.media-uploader-dropzone-icon {
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-2);
+}
+
+.media-uploader-dropzone-title {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-1);
+}
+
+.media-uploader-dropzone-sub {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.media-item-card {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  aspect-ratio: 1;
+}
+
+.media-item-card.has-error {
+  border-color: var(--color-danger, #ef4444);
+}
+
+.media-item-preview {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.media-item-preview img,
+.media-item-preview video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.media-item-video-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  z-index: 2;
+}
+
+.media-item-fallback {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.media-item-change-poster {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.media-item-change-poster:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.media-item-uploading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  padding: var(--space-3);
+}
+
+.media-item-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-1);
+  overflow: hidden;
+}
+
+.media-item-progress-fill {
+  height: 100%;
+  background: var(--color-accent);
+  transition: width 0.3s ease;
+}
+
+.media-item-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-1);
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+}
+
+.media-action-btn {
+  background: transparent;
+  border: none;
+  padding: var(--space-1);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.media-action-btn:hover:not(:disabled) {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+.media-action-btn.danger:hover:not(:disabled) {
+  color: var(--color-danger, #ef4444);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.media-action-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.media-item-error {
+  position: absolute;
+  bottom: 32px;
+  left: 0;
+  right: 0;
+  background: var(--color-danger, #ef4444);
+  color: #fff;
+  font-size: var(--font-size-xs);
+  padding: var(--space-1);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  z-index: 5;
+}

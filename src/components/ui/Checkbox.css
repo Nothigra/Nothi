@@ -1,0 +1,72 @@
+.digi-checkbox-wrapper {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  cursor: pointer;
+  user-select: none;
+}
+
+.digi-checkbox-wrapper.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.digi-checkbox-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.digi-checkbox-box {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--color-border);
+  background-color: var(--color-bg-tertiary);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.digi-checkbox-wrapper:hover .digi-checkbox-box {
+  border-color: var(--color-border-hover, var(--color-text-tertiary));
+}
+
+.digi-checkbox-input:focus-visible + .digi-checkbox-box {
+  box-shadow: 0 0 0 4px rgba(var(--color-accent-rgb, 99, 102, 241), 0.2);
+  border-color: var(--color-accent);
+}
+
+.digi-checkbox-input:checked + .digi-checkbox-box {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.digi-checkbox-check {
+  color: white;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.digi-checkbox-input:checked + .digi-checkbox-box .digi-checkbox-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.digi-checkbox-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+.digi-checkbox-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+}

@@ -1,0 +1,260 @@
+.digi-input-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.digi-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease, transform 0.25s ease;
+  width: 100%;
+}
+
+.digi-input-container:hover:not(.disabled) {
+  border-color: var(--color-border-hover, var(--color-text-tertiary));
+}
+
+.digi-input-container.focused:not(.disabled) {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 4px rgba(var(--color-accent-rgb, 99, 102, 241), 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+  background-color: var(--color-bg-secondary);
+}
+
+.digi-input-container.error {
+  border-color: var(--color-danger);
+}
+.digi-input-container.error.focused {
+  box-shadow: 0 0 0 4px rgba(var(--color-danger-rgb, 239, 68, 68), 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.digi-input-container.success {
+  border-color: var(--color-success);
+}
+.digi-input-container.success.focused {
+  box-shadow: 0 0 0 4px rgba(var(--color-success-rgb, 16, 185, 129), 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.digi-input-container.disabled {
+  opacity: 0.6;
+  background-color: var(--color-bg-secondary);
+  cursor: not-allowed;
+}
+
+/* Base Input Element */
+.digi-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  outline: none;
+  padding: 0;
+  margin: 0;
+}
+
+.digi-input:disabled {
+  cursor: not-allowed;
+}
+
+.digi-input.no-floating-label {
+  padding-top: 0 !important;
+}
+
+.digi-input::placeholder {
+  color: transparent; /* Hidden because we use floating label */
+}
+.digi-input.no-floating-label::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+/* Floating Label */
+.digi-label-floating {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-tertiary);
+  pointer-events: none;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), font-size 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s ease;
+  transform-origin: left top;
+}
+
+/* Shrink and move up when focused or not empty */
+.digi-input-container.focused .digi-label-floating,
+.digi-input-container.has-value .digi-label-floating,
+.digi-input-container.force-floating .digi-label-floating {
+  transform: translateY(calc(-50% - 12px));
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.digi-input-container.focused .digi-label-floating {
+  color: var(--color-accent);
+}
+.digi-input-container.error.focused .digi-label-floating {
+  color: var(--color-danger);
+}
+
+/* Sizes */
+/* Medium (Default) */
+.digi-input-size-md {
+  min-height: 56px;
+  padding: 0 var(--space-4);
+}
+.digi-input-size-md .digi-label-floating {
+  left: var(--space-4);
+}
+.digi-input-size-md .digi-input {
+  padding-top: 16px; /* Push text down to make room for floating label */
+}
+
+/* Small */
+.digi-input-size-sm {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+}
+.digi-input-size-sm .digi-label-floating {
+  left: var(--space-3);
+  font-size: 0.875rem;
+}
+.digi-input-size-sm.focused .digi-label-floating,
+.digi-input-size-sm.has-value .digi-label-floating,
+.digi-input-size-sm.force-floating .digi-label-floating {
+  transform: translateY(calc(-50% - 10px));
+  font-size: 0.65rem;
+}
+.digi-input-size-sm .digi-input {
+  font-size: 0.875rem;
+  padding-top: 12px;
+}
+
+/* Large */
+.digi-input-size-lg {
+  min-height: 64px;
+  padding: 0 var(--space-5);
+}
+.digi-input-size-lg .digi-label-floating {
+  left: var(--space-5);
+  font-size: 1.125rem;
+}
+.digi-input-size-lg.focused .digi-label-floating,
+.digi-input-size-lg.has-value .digi-label-floating,
+.digi-input-size-lg.force-floating .digi-label-floating {
+  transform: translateY(calc(-50% - 14px));
+  font-size: 0.875rem;
+}
+.digi-input-size-lg .digi-input {
+  font-size: 1.125rem;
+  padding-top: 18px;
+}
+
+/* Padding adjustments for icons and prefix */
+.digi-input-has-left-icon .digi-label-floating {
+  left: 44px;
+}
+.digi-input-size-sm.digi-input-has-left-icon .digi-label-floating {
+  left: 36px;
+}
+.digi-input-size-lg.digi-input-has-left-icon .digi-label-floating {
+  left: 52px;
+}
+.digi-input-has-prefix .digi-label-floating {
+  left: 140px; /* Approximate width of prefix, can be overridden by inline style if needed */
+}
+
+/* Prefix */
+.digi-input-prefix {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  padding-left: var(--space-4);
+  padding-right: var(--space-1);
+  white-space: nowrap;
+  font-size: var(--font-size-base);
+  margin-top: 14px; /* push down if floating */
+}
+.digi-input-size-sm .digi-input-prefix {
+  font-size: var(--font-size-sm);
+  padding-left: var(--space-3);
+  margin-top: 10px;
+}
+.digi-input-size-lg .digi-input-prefix {
+  font-size: var(--font-size-lg);
+  padding-left: var(--space-5);
+  margin-top: 16px;
+}
+.no-floating-label ~ .digi-input-prefix {
+  margin-top: 0;
+}
+
+/* Icons */
+.digi-input-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  transition: color 0.25s ease;
+}
+.digi-input-container.focused .digi-input-icon.left {
+  color: var(--color-accent);
+}
+.digi-input-icon.left {
+  margin-right: var(--space-2);
+}
+.digi-input-icon.right {
+  margin-left: var(--space-2);
+}
+.digi-input-icon-btn {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+.digi-input-icon-btn:hover {
+  background-color: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+/* Non-floating variant */
+.digi-input-no-floating {
+  padding-top: 0 !important;
+}
+
+/* Hint & Error Text */
+.digi-input-message {
+  font-size: 0.75rem;
+  margin-top: 6px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: slideDownFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.digi-input-message.error {
+  color: var(--color-danger);
+}
+.digi-input-message.hint {
+  color: var(--color-text-secondary);
+}
+
+@keyframes slideDownFade {
+  0% { opacity: 0; transform: translateY(-4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}

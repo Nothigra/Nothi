@@ -1,0 +1,96 @@
+.bg-customizer {
+  width: 100%;
+}
+
+.bg-type-selector {
+  display: flex;
+  background-color: var(--color-bg-tertiary);
+  padding: 2px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+}
+
+.bg-type-btn {
+  flex: 1;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  color: var(--color-text-secondary);
+  text-align: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.bg-type-btn:hover {
+  color: var(--color-text-primary);
+}
+
+.bg-type-btn.active {
+  background-color: var(--color-bg-card);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-primary);
+}
+
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-sm);
+}
+
+.preset-btn {
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+  padding: 0;
+}
+
+.preset-btn:hover {
+  transform: scale(1.05);
+  border-color: var(--color-text-tertiary);
+}
+
+.preset-btn.active {
+  border: 2px solid var(--color-text-primary);
+  transform: scale(1.1);
+}
+
+.stop-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.stop-btn:hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-text-tertiary);
+}
+
+.stop-btn.active {
+  border: 2px solid var(--color-accent);
+  background: var(--color-bg-card);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+  transform: scale(1.02);
+}
+
+.stop-color {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.1);
+}

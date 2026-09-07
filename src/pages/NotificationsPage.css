@@ -1,0 +1,40 @@
+.max-w-3xl { max-width: 48rem; margin: 0 auto; }
+
+.notification-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  position: relative;
+  transition: transform var(--transition-fast);
+}
+
+.notification-card:hover {
+  transform: translateX(4px);
+}
+
+.notification-card.unread {
+  background: linear-gradient(to right, rgba(99, 102, 241, 0.05), var(--bg-secondary));
+  border-left: 1px solid var(--accent-primary);
+}
+
+.unread-indicator {
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+}
+
+.notif-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}

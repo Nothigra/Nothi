@@ -1,0 +1,58 @@
+.trusted-brands {
+  padding: var(--space-2xl) 0;
+  border-top: 1px solid var(--border-primary);
+  border-bottom: 1px solid var(--border-primary);
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+
+.brands-title {
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-xl);
+}
+
+.marquee-container {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  /* Fade edges */
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.marquee-content {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+
+.brand-item {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text-tertiary);
+  padding: 0 var(--space-2xl);
+  user-select: none;
+  opacity: 0.5;
+  transition: opacity var(--transition-fast);
+}
+
+.brand-item:hover {
+  opacity: 1;
+  color: var(--color-text-secondary);
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@media (max-width: 768px) {
+  .brand-item {
+    font-size: var(--font-size-md);
+    padding: 0 var(--space-xl);
+  }
+}

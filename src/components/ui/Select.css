@@ -1,0 +1,265 @@
+.digi-select-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.digi-select-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+  width: 100%;
+  cursor: pointer;
+  user-select: none;
+}
+
+.digi-select-container:hover:not(.disabled) {
+  border-color: var(--color-border-hover, var(--color-text-tertiary));
+}
+
+.digi-select-container.focused:not(.disabled),
+.digi-select-container.open:not(.disabled) {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 4px rgba(var(--color-accent-rgb, 99, 102, 241), 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+  background-color: var(--color-bg-secondary);
+}
+
+.digi-select-container.error {
+  border-color: var(--color-danger);
+}
+.digi-select-container.error.focused,
+.digi-select-container.error.open {
+  box-shadow: 0 0 0 4px rgba(var(--color-danger-rgb, 239, 68, 68), 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.digi-select-container.disabled {
+  opacity: 0.6;
+  background-color: var(--color-bg-secondary);
+  cursor: not-allowed;
+}
+
+/* Base Select Display Element */
+.digi-select-display {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  outline: none;
+  padding: 16px var(--space-4) 0 var(--space-4); /* Space for floating label */
+  margin: 0;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+}
+
+.digi-select-display.no-floating-label {
+  padding-top: 0;
+}
+
+.digi-select-display.placeholder {
+  color: transparent; /* Handled by floating label */
+}
+.digi-select-display.no-floating-label.placeholder {
+  color: var(--color-text-tertiary);
+}
+
+/* Tags for multiple select */
+.digi-select-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  width: 100%;
+}
+
+.digi-select-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background-color: rgba(var(--color-accent-rgb, 99, 102, 241), 0.15);
+  color: var(--color-accent);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.digi-select-tag-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.digi-select-tag-close:hover {
+  opacity: 1;
+}
+
+/* Floating Label */
+.digi-select-label {
+  position: absolute;
+  left: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-tertiary);
+  pointer-events: none;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), font-size 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s ease;
+  transform-origin: left top;
+}
+
+/* Shrink and move up */
+.digi-select-container.open .digi-select-label,
+.digi-select-container.has-value .digi-select-label,
+.digi-select-container.force-floating .digi-select-label {
+  transform: translateY(calc(-50% - 12px));
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.digi-select-container.open .digi-select-label {
+  color: var(--color-accent);
+}
+.digi-select-container.error.open .digi-select-label {
+  color: var(--color-danger);
+}
+
+/* Dropdown Arrow */
+.digi-select-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--space-4);
+  color: var(--color-text-secondary);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s ease;
+}
+.digi-select-container.open .digi-select-arrow {
+  transform: rotate(180deg);
+  color: var(--color-accent);
+}
+
+/* Dropdown Menu */
+.digi-select-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  z-index: 100;
+  overflow: hidden;
+  max-height: 280px;
+  display: flex;
+  flex-direction: column;
+  animation: digiSelectMenuIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top;
+}
+
+@keyframes digiSelectMenuIn {
+  from { opacity: 0; transform: scaleY(0.95); }
+  to { opacity: 1; transform: scaleY(1); }
+}
+
+.digi-select-search {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+.digi-select-search input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  outline: none;
+  transition: all 0.2s ease;
+}
+.digi-select-search input:focus {
+  border-color: var(--color-accent);
+  background-color: var(--color-bg-secondary);
+}
+
+.digi-select-list {
+  overflow-y: auto;
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Custom Scrollbar for Dropdown */
+.digi-select-list::-webkit-scrollbar {
+  width: 6px;
+}
+.digi-select-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.digi-select-list::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 6px;
+}
+
+.digi-select-option {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.digi-select-option:hover,
+.digi-select-option.highlighted {
+  background-color: var(--color-bg-hover);
+}
+
+.digi-select-option.selected {
+  background-color: rgba(var(--color-accent-rgb, 99, 102, 241), 0.1);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.digi-select-option-check {
+  color: var(--color-accent);
+}
+
+.digi-select-empty {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+/* Messages */
+.digi-select-message {
+  font-size: 0.75rem;
+  margin-top: 6px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.digi-select-message.error {
+  color: var(--color-danger);
+}
+.digi-select-message.hint {
+  color: var(--color-text-secondary);
+}

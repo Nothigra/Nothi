@@ -1,0 +1,72 @@
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { privacyContent } from '../data/legal/privacyContent';
+import './ContactPage.css'; 
+import './LegalPage.css'; 
+
+export default function PrivacyPage() {
+  const { t, i18n } = useTranslation();
+  
+  // Local state for the document language, independent of global i18n
+  const defaultLang = ['en', 'fr', 'es'].includes(i18n.language?.split('-')[0]) 
+    ? i18n.language.split('-')[0] 
+    : 'en';
+    
+  const [docLang, setDocLang] = useState(defaultLang);
+
+  const getDocTitle = () => {
+    switch(docLang) {
+      case 'fr': return "Politique de Confidentialité";
+      case 'es': return "Política de Privacidad";
+      default: return "Privacy Policy";
+    }
+  };
+
+  return (
+    <div className="static-page legal-page">
+      <div className="static-header">
+        <motion.h1 
+          className="static-title"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          {getDocTitle()}
+        </motion.h1>
+      </div>
+
+      <motion.div 
+        className="legal-content-wrapper"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+      >
+        <div className="language-selector-local">
+          <button 
+            className={`btn-local-lang ${docLang === 'en' ? 'active' : ''}`}
+            onClick={() => setDocLang('en')}
+          >
+            EN
+          </button>
+          <button 
+            className={`btn-local-lang ${docLang === 'fr' ? 'active' : ''}`}
+            onClick={() => setDocLang('fr')}
+          >
+            FR
+          </button>
+          <button 
+            className={`btn-local-lang ${docLang === 'es' ? 'active' : ''}`}
+            onClick={() => setDocLang('es')}
+          >
+            ES
+          </button>
+        </div>
+
+        <div className="legal-document prose">
+          {privacyContent[docLang]}
+        </div>
+      </motion.div>
+    </div>
+  );
+}

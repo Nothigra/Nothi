@@ -1,0 +1,174 @@
+/* RewardsPage.css */
+
+/* Global Tokens for Rewards Gamification */
+:root {
+  --rank-novice-bg: #94A3B8;
+  --rank-apprentice-bg: #10B981;
+  --rank-creator-bg: #06B6D4;
+  --rank-craftsman-bg: #3B82F6;
+  --rank-specialist-bg: #1D4ED8;
+  --rank-expert-bg: #8B5CF6;
+  --rank-professional-bg: #D946EF;
+  --rank-veteran-bg: #E11D48;
+  --rank-master-bg: #F59E0B;
+  --rank-legend-bg: linear-gradient(135deg, #FF4500, #FF8C00, #FFD700);
+
+  --gradient-streak: linear-gradient(135deg, #F97316, #EF4444);
+  --gradient-xp-bar: linear-gradient(90deg, var(--color-accent), #A855F7);
+}
+
+.rewards-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Background Ambiance */
+.rewards-hero-bg {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Depth & Glow Effects */
+.card-glow-active {
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+}
+
+.card-elevated {
+  box-shadow: var(--shadow-md);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+}
+
+/* Streak Flame Animations */
+.streak-flame-pulse {
+  animation: flamePulse 2.5s infinite ease-in-out;
+}
+@keyframes flamePulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(249, 115, 22, 0.4)); }
+  50% { transform: scale(1.1); filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.8)); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(249, 115, 22, 0.4)); }
+}
+
+/* Level Badge Styling (Shield/Hexagon) */
+.rank-badge-shield {
+  position: relative;
+  width: 80px;
+  height: 90px;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: var(--shadow-lg);
+  flex-shrink: 0;
+}
+.rank-badge-shield::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  background: rgba(0,0,0,0.2);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  z-index: -1;
+}
+
+.rank-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  opacity: 0.9;
+  margin-bottom: -2px;
+}
+.rank-sublevel {
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* Progress bar overwrite */
+.progress-track {
+  height: 12px;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+.progress-fill {
+  height: 100%;
+  background: var(--gradient-xp-bar);
+  border-radius: var(--radius-full);
+  transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+}
+
+/* Layout Divider */
+.desktop-divider {
+  display: none;
+}
+@media (min-width: 768px) {
+  .desktop-divider {
+    display: block;
+    width: 1px;
+    background: var(--color-border);
+    margin: 0 var(--space-4);
+  }
+  .mobile-divider {
+    display: none;
+  }
+}
+
+/* Reduced Motion Fallbacks */
+@media (prefers-reduced-motion: reduce) {
+  .streak-flame-pulse {
+    animation: none !important;
+    filter: none !important;
+  }
+  .progress-fill {
+    transition: none !important;
+  }
+  .card-glow-active {
+    box-shadow: var(--shadow-md) !important;
+  }
+  .confetti-particle {
+    display: none !important;
+  }
+}
+
+/* Claim Button Animated Outline */
+.btn-claim-animated { position: relative; z-index: 1; overflow: hidden; }
+.btn-claim-animated::before { content: ''; position: absolute; inset: -4px; z-index: -1; background: conic-gradient(from 0deg, var(--color-accent), #A855F7, var(--color-accent), #06B6D4, var(--color-accent)); animation: spinBorder 4s linear infinite; opacity: 0.8; }
+.btn-claim-animated::after { content: ''; position: absolute; inset: 2px; background: var(--color-accent); z-index: -1; border-radius: calc(var(--radius-xl) - 2px); }
+@keyframes spinBorder { 100% { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .btn-claim-animated::before { animation: none !important; } }
+
+
+/* Hide scrollbar for timeline */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.timeline-track-inner {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  min-width: 100%;
+  margin: 0 auto;
+  padding: 0 1rem;
+  position: relative;
+  /* Centering trick that does not clip the left side on overflow */
+  justify-content: safe center;
+}

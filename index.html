@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Nothi — The #1 marketplace for video editors. Buy and sell presets, transitions, LUTs, project files and digital assets." />
+    <meta name="theme-color" content="#6366F1" />
+    <meta property="og:title" content="Nothi — Marketplace for Video Editors" />
+    <meta property="og:description" content="Buy and sell premium digital assets for video editing. Presets, transitions, LUTs, overlays, SFX and more." />
+    <meta property="og:type" content="website" />
+    <title>Nothi — Marketplace for Video Editors</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <script>
+      // Prevent flash of wrong theme
+      (function() {
+        var theme = localStorage.getItem('digilab-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        // RTL support
+        var lang = localStorage.getItem('digilab-lang') || 'en';
+        if (lang === 'ar') {
+          document.documentElement.setAttribute('dir', 'rtl');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

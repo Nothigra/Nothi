@@ -1,0 +1,103 @@
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-lg);
+}
+
+.badge-card {
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.badge-card.unlocked {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-sm);
+}
+.badge-card.unlocked:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-accent);
+}
+
+.badge-card.locked {
+  opacity: 0.6;
+  background-color: var(--color-bg-secondary);
+}
+.badge-card.locked:hover {
+  opacity: 0.8;
+}
+
+.badge-card-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.badge-card.unlocked .badge-card-icon-wrapper {
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-subtle) 100%);
+  color: var(--color-bg);
+}
+
+.badge-card.locked .badge-card-icon-wrapper {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-tertiary);
+  filter: grayscale(100%);
+}
+
+.badge-lock-overlay {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background-color: var(--color-bg-card);
+  color: var(--color-text-secondary);
+  border-radius: 50%;
+  padding: 4px;
+  border: 2px solid var(--color-border);
+}
+
+.badge-check-overlay {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background-color: var(--color-success);
+  color: var(--color-bg);
+  border-radius: 50%;
+  padding: 4px;
+  border: 2px solid var(--color-bg-card);
+}
+
+.badge-card-title {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.badge-card-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.badge-unlocked-label {
+  display: inline-block;
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-success);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}

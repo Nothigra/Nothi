@@ -1,0 +1,160 @@
+.digi-textarea-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.digi-textarea-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+  width: 100%;
+}
+
+.digi-textarea-container:hover:not(.disabled) {
+  border-color: var(--color-border-hover, var(--color-text-tertiary));
+}
+
+.digi-textarea-container.focused:not(.disabled) {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 4px rgba(var(--color-accent-rgb, 99, 102, 241), 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+  background-color: var(--color-bg-secondary);
+}
+
+.digi-textarea-container.error {
+  border-color: var(--color-danger);
+}
+.digi-textarea-container.error.focused {
+  box-shadow: 0 0 0 4px rgba(var(--color-danger-rgb, 239, 68, 68), 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.digi-textarea-container.disabled {
+  opacity: 0.6;
+  background-color: var(--color-bg-secondary);
+  cursor: not-allowed;
+}
+
+/* Base Textarea Element */
+.digi-textarea {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  outline: none;
+  padding: 24px var(--space-4) 16px var(--space-4); /* Space for floating label */
+  margin: 0;
+  resize: vertical;
+  min-height: 100px;
+  line-height: var(--leading-relaxed);
+}
+
+.digi-textarea.auto-grow {
+  resize: none;
+  overflow: hidden;
+}
+
+.digi-textarea:disabled {
+  cursor: not-allowed;
+}
+
+.digi-textarea::placeholder {
+  color: transparent;
+}
+.digi-textarea.no-floating-label {
+  padding-top: 16px;
+}
+.digi-textarea.no-floating-label::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+/* Custom Scrollbar for Textarea */
+.digi-textarea::-webkit-scrollbar {
+  width: 8px;
+}
+.digi-textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+.digi-textarea::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.digi-textarea::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-text-tertiary);
+}
+
+/* Floating Label */
+.digi-textarea-label {
+  position: absolute;
+  left: var(--space-4);
+  top: 24px; /* Align with top padding */
+  color: var(--color-text-tertiary);
+  pointer-events: none;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), font-size 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s ease;
+  transform-origin: left top;
+}
+
+/* Shrink and move up */
+.digi-textarea-container.focused .digi-textarea-label,
+.digi-textarea-container.has-value .digi-textarea-label {
+  transform: translateY(-14px);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.digi-textarea-container.focused .digi-textarea-label {
+  color: var(--color-accent);
+}
+.digi-textarea-container.error.focused .digi-textarea-label {
+  color: var(--color-danger);
+}
+
+/* Footer (Counter) */
+.digi-textarea-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--space-4) var(--space-3) var(--space-4);
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+  background: transparent;
+}
+
+.digi-textarea-counter {
+  margin-left: auto;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.2s ease;
+}
+.digi-textarea-counter.near-limit {
+  color: var(--color-warning, #f59e0b);
+}
+.digi-textarea-counter.at-limit {
+  color: var(--color-danger);
+}
+
+/* Messages */
+.digi-textarea-message {
+  font-size: 0.75rem;
+  margin-top: 6px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: slideDownFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.digi-textarea-message.error {
+  color: var(--color-danger);
+}
+.digi-textarea-message.hint {
+  color: var(--color-text-secondary);
+}
