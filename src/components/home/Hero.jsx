@@ -140,12 +140,10 @@ function MouseLight() {
 
 /* ─────────────── Social Proof ─────────────── */
 function SocialProof() {
-  const { t } = useTranslation();
-  const avatarColors = ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981'];
   return (
     <div className="hero-social-proof">
       <div className="social-avatars">
-        {avatarColors.map((color, i) => (
+        {['#3B3B3B', '#565656', '#717171', '#8C8C8C', '#A6A6A6'].map((color, i) => (
           <div
             key={i}
             className="social-avatar"
@@ -162,7 +160,7 @@ function SocialProof() {
           ))}
           <span className="social-rating">4.9/5</span>
         </div>
-        <span className="social-text">{t('hero.trustedBy', { count: '12,000' })}</span>
+        <span className="social-text">Loved by editors worldwide</span>
       </div>
     </div>
   );
@@ -193,14 +191,21 @@ const typewriterLetter = {
 function TypewriterText({ text, className }) {
   return (
     <span className={className}>
-      {text.split('').map((char, i) => (
-        <motion.span 
-          key={i} 
-          variants={typewriterLetter}
-          style={{ display: 'inline-block', whiteSpace: 'pre' }}
-        >
-          {char}
-        </motion.span>
+      {text.split(' ').map((word, wi, arr) => (
+        <span key={wi}>
+          <span style={{ display: 'inline-block', whiteSpace: 'pre' }}>
+            {word.split('').map((char, i) => (
+              <motion.span
+                key={i}
+                variants={typewriterLetter}
+                style={{ display: 'inline-block' }}
+              >
+                {char}
+              </motion.span>
+            ))}
+          </span>
+          {wi < arr.length - 1 ? ' ' : ''}
+        </span>
       ))}
     </span>
   );
@@ -208,10 +213,12 @@ function TypewriterText({ text, className }) {
 
 /* ─────────────── Hero Component ─────────────── */
 export default function Hero() {
-  const { t } = useTranslation();
   return (
     <section className="hero-section">
 
+      {/* Background motion visual */}
+      <div className="hero-bg-visual" aria-hidden="true" />
+      <div className="hero-bg-fade" aria-hidden="true" />
 
       {/* Mouse-following light */}
       <MouseLight />
@@ -228,10 +235,9 @@ export default function Hero() {
             initial="visible"
             animate="visible"
           >
-            <TypewriterText text={t('hero.headlinePrefix', 'The N°1 ')} />
-            <TypewriterText text={t('hero.headlineHighlight', 'Marketplace')} className="headline-accent" />
+            <TypewriterText text="Built by editors." />
             <br />
-            <TypewriterText text={t('hero.headlineSuffix', 'for Editors')} />
+            <TypewriterText text="For editors." className="headline-italic" />
           </motion.h1>
 
           {/* Subtitle */}
@@ -242,7 +248,7 @@ export default function Hero() {
             animate="visible"
             style={{ display: 'flex', justifyContent: 'center' }}
           >
-            <TypewriterText text={t('hero.subheadline', 'Start selling your work today for free.')} />
+            <TypewriterText text="Buy and sell premium LUTs, presets, and transitions from the best in the craft." />
           </motion.p>
 
           {/* Search */}

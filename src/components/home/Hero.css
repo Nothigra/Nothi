@@ -10,9 +10,48 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  background: var(--color-bg);
+}
+
+/* ── Background motion visual ── */
+.hero-bg-visual {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url('/hero-motion-bg.jpg');
+  background-size: cover;
+  background-position: center 60%;
+  opacity: 0.32;
+  pointer-events: none;
+}
+
+/* Light mode: invert the (pure grayscale) image so dark trails sit on a light wash */
+:root .hero-bg-visual,
+[data-theme="light"] .hero-bg-visual {
+  filter: invert(1);
+  opacity: 0.22;
+}
+
+.dark .hero-bg-visual {
+  opacity: 0.35;
+}
+
+/* Fade the visual into the page background at every edge, and dim it heavily
+   right behind the text column so copy stays crisp and easy to read. */
+.hero-bg-fade {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 65% at 50% 42%, var(--color-bg) 0%, color-mix(in srgb, var(--color-bg) 75%, transparent) 45%, transparent 80%),
+    linear-gradient(to bottom, var(--color-bg) 0%, transparent 22%, transparent 68%, var(--color-bg) 100%),
+    linear-gradient(to right, var(--color-bg) 0%, transparent 12%, transparent 88%, var(--color-bg) 100%);
 }
 
 .hero-inner {
+  position: relative;
+  z-index: 2;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
@@ -44,8 +83,8 @@
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(37, 99, 235, 0.06) 0%,
-    rgba(37, 99, 235, 0.02) 40%,
+    rgba(0, 0, 0, 0.05) 0%,
+    rgba(0, 0, 0, 0.02) 40%,
     transparent 70%
   );
   pointer-events: none;
@@ -58,17 +97,8 @@
 .dark .hero-mouse-light {
   background: radial-gradient(
     circle,
-    rgba(138, 123, 255, 0.08) 0%,
-    rgba(138, 123, 255, 0.03) 40%,
-    transparent 70%
-  );
-}
-
-.dim .hero-mouse-light {
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.04) 0%,
-    rgba(255, 255, 255, 0.01) 40%,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.02) 40%,
     transparent 70%
   );
 }
@@ -80,27 +110,16 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: 
-    radial-gradient(circle at 20% 30%, rgba(138, 123, 255, 0.12), transparent 45%),
-    radial-gradient(circle at 80% 70%, rgba(245, 166, 35, 0.06), transparent 50%);
-  filter: blur(80px);
+  background: radial-gradient(circle at 50% 40%, rgba(0, 0, 0, 0.05), transparent 55%);
   pointer-events: none;
   z-index: 1;
 }
 
 .dark .hero-glow-radial {
   background: radial-gradient(
-    ellipse at 50% 50%,
-    rgba(138, 123, 255, 0.05),
-    transparent 70%
-  );
-}
-
-.dim .hero-glow-radial {
-  background: radial-gradient(
-    ellipse at 50% 50%,
-    rgba(255, 255, 255, 0.03),
-    transparent 70%
+    ellipse at 50% 40%,
+    rgba(255, 255, 255, 0.04),
+    transparent 65%
   );
 }
 
@@ -114,16 +133,18 @@
 /* ✦ Headline ✦ */
 .hero-headline {
   font-family: "Inter Tight", var(--font-display);
-  font-size: clamp(36px, 8vw, 72px);
+  font-size: clamp(40px, 9vw, 88px);
   font-weight: 600;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.04em;
   color: var(--color-text-primary);
   margin-bottom: 24px;
-  line-height: 1.05;
+  line-height: 1.02;
 }
 
-.headline-accent {
-  color: var(--color-accent);
+.headline-italic {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--color-text-secondary);
 }
 
 /* ── Subheadline ── */
@@ -132,7 +153,7 @@
   font-size: clamp(15px, 4vw, 19px);
   font-weight: 400;
   color: var(--color-text-secondary);
-  max-width: 420px;
+  max-width: 520px;
   margin: 0 auto 48px auto;
   line-height: 1.6;
   letter-spacing: -0.01em;
@@ -183,11 +204,6 @@
 .dark .hero-search-form {
   background: rgba(20, 20, 20, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.dim .hero-search-form {
-  background: rgba(39, 41, 45, 0.6); /* based on #27292D */
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .hero-search-wrapper.focused .hero-search-form {
@@ -309,11 +325,6 @@
   border-color: rgba(255, 255, 255, 0.06);
 }
 
-.dim .software-pill {
-  background: rgba(44, 46, 51, 0.6); /* based on #2C2E33 */
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
 .software-pill:hover {
   background: var(--color-bg);
   color: var(--color-text-primary);
@@ -326,12 +337,6 @@
   background: rgba(30, 30, 30, 0.8);
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-}
-
-.dim .software-pill:hover {
-  background: rgba(53, 55, 60, 0.8); /* based on #35373C */
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 /* ============================================================
