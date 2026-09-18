@@ -85,16 +85,11 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
         state={{ product: product }}
         className="product-card-link-overlay" 
         aria-label={`View ${localizedTitle}`}
-        style={{ display: 'block', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, cursor: 'pointer', backgroundColor: 'transparent' }} 
       />
-      <div 
-        className="product-thumbnail relative" 
-        style={{ width: '100%', paddingBottom: '75%', display: 'block', overflow: 'hidden', backgroundColor: 'var(--color-bg-tertiary)', borderBottom: '1px solid var(--color-border)' }}
-      >
+      <div className="product-thumbnail relative">
         {onRemove && (
           <button 
-            className="absolute top-sm right-sm w-8 h-8 rounded-full bg-bg-card flex items-center justify-center shadow-md hover:bg-red-50 text-red-500 transition-colors border border-border"
-            style={{ zIndex: 10 }}
+            className="absolute top-sm right-sm w-8 h-8 rounded-full bg-bg-card flex items-center justify-center shadow-md hover:bg-red-50 text-red-500 transition-colors border border-border z-10"
             onClick={(e) => { 
               e.preventDefault(); 
               e.stopPropagation(); 
@@ -118,15 +113,14 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
             src={thumbnailUrl} 
             alt={localizedTitle} 
             className="thumbnail-img" 
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
             onError={() => setImgError(true)}
           />
         ) : (
           <div 
             className="thumbnail-fallback" 
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: `color-mix(in srgb, var(${catStyle.var}) 8%, transparent)` }}
+            style={{ backgroundColor: `color-mix(in srgb, var(${catStyle.var}) 8%, transparent)` }}
           >
-            <CategoryIcon size={40} className="fallback-icon" style={{ color: `var(${catStyle.var})`, opacity: 0.25 }} />
+            <CategoryIcon size={40} className="fallback-icon" style={{ color: `var(${catStyle.var})` }} />
           </div>
         )}
         <div 
@@ -141,14 +135,14 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
       </div>
       
       <div className="product-content">
-        <Link to={`/creator/${creatorName}`} className="product-creator" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Link to={`/creator/${creatorName}`} className="product-creator">
           <AvatarFrame 
             tier={product.tier || 'none'} 
             imageUrl={product.creator_avatar} 
             size="sm" 
             fallbackLetter={creatorName.charAt(0).toUpperCase()} 
           />
-          <span className="creator-name" style={{ marginLeft: '4px' }}>{creatorName}</span>
+          <span className="creator-name">{creatorName}</span>
         </Link>
         
         <h3 className="product-title" title={localizedTitle}>
@@ -184,7 +178,7 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
           )}
         </div>
         
-        <div className="product-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="product-footer">
           <div className="product-price-wrap">
             {salePrice ? (
               <>
@@ -195,7 +189,7 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
               <span className="price-current">{formatPrice(product.price)}</span>
             )}
           </div>
-          <div className="product-rating" style={{ margin: 0 }}>
+          <div className="product-rating">
             <Star size={12} fill="currentColor" className="star-icon" />
             <span>{product.rating}</span>
             <span className="review-count">({reviewCount})</span>
