@@ -9,13 +9,11 @@ export default function ThemeCard({ themeKey, isSelected, onSelect }) {
     >
       {themeKey === 'light' ? (
         <Sun size={32} />
-      ) : themeKey === 'dim' ? (
-        <Moon size={32} opacity={0.5} />
       ) : (
         <Moon size={32} />
       )}
       <span className="card-title">
-        {themeKey === 'light' ? 'Light Mode' : themeKey === 'dim' ? 'Dim Mode' : 'Dark Mode'}
+        {themeKey === 'light' ? 'Light Mode' : 'Dark Mode'}
       </span>
     </button>
   );

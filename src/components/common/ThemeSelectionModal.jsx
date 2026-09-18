@@ -47,7 +47,6 @@ export default function ThemeSelectionModal() {
         <div className="theme-modal-body">
           <div className="theme-modal-grid">
             <ThemeCard themeKey="light" isSelected={theme === 'light'} onSelect={handleSelect} />
-            <ThemeCard themeKey="dim" isSelected={theme === 'dim'} onSelect={handleSelect} />
             <ThemeCard themeKey="dark" isSelected={theme === 'dark'} onSelect={handleSelect} />
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Menu, X, Sun, Moon, Contrast, ShoppingCart, Heart, Gift, Palette, MessageSquare } from 'lucide-react';
+import { Menu, X, Sun, Moon, ShoppingCart, Heart, Gift, Palette, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useGamification } from '../../context/GamificationContext';
@@ -138,7 +138,7 @@ export default function Navbar() {
                 onClick={() => setIsThemeOpen(!isThemeOpen)}
                 aria-label="Toggle theme"
               >
-                {theme === 'light' ? <Sun size={18} /> : theme === 'dim' ? <Contrast size={18} /> : theme === 'custom' ? <Palette size={18} className="text-accent" /> : <Moon size={18} />}
+                {theme === 'light' ? <Sun size={18} /> : theme === 'custom' ? <Palette size={18} className="text-accent" /> : <Moon size={18} />}
               </button>
               
               <AnimatePresence>
@@ -153,9 +153,6 @@ export default function Navbar() {
                   >
                     <button onClick={() => { toggleTheme('light'); setIsThemeOpen(false); }} className={`nav-link flex items-center gap-2 w-full text-left ${theme === 'light' ? 'text-primary font-bold' : ''}`} style={{ padding: '8px 12px' }}>
                       <Sun size={16} /> Light
-                    </button>
-                    <button onClick={() => { toggleTheme('dim'); setIsThemeOpen(false); }} className={`nav-link flex items-center gap-2 w-full text-left ${theme === 'dim' ? 'text-primary font-bold' : ''}`} style={{ padding: '8px 12px' }}>
-                      <Contrast size={16} /> Dim
                     </button>
                     <button onClick={() => { toggleTheme('dark'); setIsThemeOpen(false); }} className={`nav-link flex items-center gap-2 w-full text-left ${theme === 'dark' ? 'text-primary font-bold' : ''}`} style={{ padding: '8px 12px' }}>
                       <Moon size={16} /> Dark

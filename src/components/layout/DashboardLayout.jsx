@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, Package, ShoppingBag, BarChart3, 
   CreditCard, Settings, LogOut, Menu, X, Plus, Users, 
-  Store, Search, Bell, Moon, Sun, Heart, Download, Shield, Contrast, Palette, MessageSquare
+  Store, Search, Bell, Moon, Sun, Heart, Download, Shield, Palette, MessageSquare
 } from 'lucide-react';
 import { messagingService as mockMessagingService } from '../../lib/MessagingService';
 import { getUserMessages, groupMessagesIntoConversations, subscribeToMessages } from '../../api/messageApi';
@@ -224,7 +224,7 @@ export default function DashboardLayout() {
         <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px 32px' }}>
           <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <button className="header-action-btn flex-center" onClick={toggleTheme} style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
-              {theme === 'light' ? <Sun size={18} /> : theme === 'dim' ? <Contrast size={18} /> : theme === 'custom' ? <Palette size={18} className="text-accent" /> : <Moon size={18} />}
+              {theme === 'light' ? <Sun size={18} /> : theme === 'custom' ? <Palette size={18} className="text-accent" /> : <Moon size={18} />}
             </button>
 
             <Link to="/dashboard/settings" className="header-profile" style={{ display: 'flex', alignItems: 'center' }}>
