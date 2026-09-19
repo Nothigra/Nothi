@@ -20,11 +20,7 @@
 }
 
 .dark .cta-glow {
-  background: radial-gradient(ellipse at center, rgba(138, 123, 255, 0.1), transparent 70%);
-}
-
-.dim .cta-glow {
-  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.05), transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.06), transparent 70%);
 }
 
 .cta-card {

@@ -19,7 +19,7 @@
   flex-direction: column;
 }
 
-.dark .onboarding-container, .dim .onboarding-container {
+.dark .onboarding-container {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 

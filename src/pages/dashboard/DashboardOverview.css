@@ -24,7 +24,7 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
 }
 
-.dark .stat-card:hover, .dim .stat-card:hover {
+.dark .stat-card:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 

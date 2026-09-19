@@ -109,7 +109,7 @@ export default function DashboardOverview() {
 
         <div className="premium-stat-card">
           <div className="flex justify-between items-start mb-md">
-            <div className="stat-icon-wrapper" style={{color: '#8b5cf6', backgroundColor: '#8b5cf620'}}>
+            <div className="stat-icon-wrapper text-accent bg-accent-subtle">
               <ShoppingBag size={20} />
             </div>
           </div>
@@ -119,7 +119,7 @@ export default function DashboardOverview() {
 
         <div className="premium-stat-card">
           <div className="flex justify-between items-start mb-md">
-            <div className="stat-icon-wrapper" style={{color: '#F59E0B', backgroundColor: 'rgba(245, 158, 11, 0.1)'}}>
+            <div className="stat-icon-wrapper text-accent bg-accent-subtle">
               <Eye size={20} />
             </div>
           </div>
@@ -129,7 +129,7 @@ export default function DashboardOverview() {
 
         <div className="premium-stat-card">
           <div className="flex justify-between items-start mb-md">
-            <div className="stat-icon-wrapper" style={{color: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.1)'}}>
+            <div className="stat-icon-wrapper text-accent bg-accent-subtle">
               <TrendingUp size={20} />
             </div>
           </div>

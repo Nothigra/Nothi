@@ -195,9 +195,7 @@
    ============================================================ */
 :root,
 [data-theme="dark"],
-.dark,
-[data-theme="dim"],
-.dim {
+.dark {
   --bg-primary: var(--color-bg);
   --bg-secondary: var(--color-bg-secondary);
   --bg-tertiary: var(--color-bg-tertiary);
@@ -295,7 +293,7 @@ body::before {
   mask-image: radial-gradient(circle at 50% 0%, black 10%, transparent 100%);
 }
 
-.dark body::before, .dim body::before {
+.dark body::before {
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
