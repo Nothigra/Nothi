@@ -33,7 +33,6 @@ export default function Categories() {
                 key={category.id}
                 to={`/marketplace?category=${category.id}`} 
                 className="category-card"
-                style={{ '--cat-color': category.color }}
               >
                 <div className="category-icon-wrapper">
                   <Icon size={20} className="cat-icon" />

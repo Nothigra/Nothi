@@ -36,17 +36,6 @@ const CAT_STYLES = {
   'templates': { var: '--cat-templates', Icon: LayoutTemplate }
 };
 
-const SW_STYLES = {
-  'After Effects': '--sw-after-effects',
-  'Premiere Pro': '--sw-premiere-pro',
-  'DaVinci Resolve': '--sw-davinci-resolve',
-  'Blender': '--sw-blender',
-  'Final Cut Pro': '--sw-final-cut-pro',
-  'Lightroom': '--sw-lightroom',
-  'CapCut': '--sw-capcut',
-  'Photoshop': '--sw-photoshop'
-};
-
 export default function ProductCard({ product, cardStyle = {}, onRemove }) {
   const { t, i18n } = useTranslation();
   const { formatPrice } = useCurrency();
@@ -158,21 +147,11 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
 
         
         <div className="product-software">
-          {product.software && product.software.slice(0, 3).map((soft, index) => {
-            const swVar = SW_STYLES[soft] || '--color-text-secondary';
-            return (
-              <span 
-                key={index} 
-                className="software-tag"
-                style={{
-                  backgroundColor: `color-mix(in srgb, var(${swVar}) 8%, transparent)`,
-                  color: `var(${swVar})`
-                }}
-              >
-                {soft}
-              </span>
-            );
-          })}
+          {product.software && product.software.slice(0, 3).map((soft, index) => (
+            <span key={index} className="software-tag">
+              {soft}
+            </span>
+          ))}
           {product.software && product.software.length > 3 && (
             <span className="software-tag fallback-tag">+{product.software.length - 3}</span>
           )}

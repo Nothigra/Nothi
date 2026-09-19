@@ -167,6 +167,8 @@
   align-items: center;
   font-size: 12px;
   font-weight: 600;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
 }
 
 .fallback-tag {
