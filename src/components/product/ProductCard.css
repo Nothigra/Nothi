@@ -58,7 +58,8 @@
 }
 
 .fallback-icon {
-  opacity: 0.25;
+  opacity: 0.3;
+  color: var(--color-text-tertiary);
 }
 
 .product-card:hover .thumbnail-img,
@@ -76,7 +77,9 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 700;
-  /* Colors managed by style tags */
+  background-color: color-mix(in srgb, var(--color-bg) 70%, transparent);
+  color: var(--color-text-primary);
+  backdrop-filter: blur(4px);
 }
 
 .product-content {

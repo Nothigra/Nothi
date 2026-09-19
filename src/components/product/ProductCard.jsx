@@ -105,20 +105,11 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
             onError={() => setImgError(true)}
           />
         ) : (
-          <div 
-            className="thumbnail-fallback" 
-            style={{ backgroundColor: `color-mix(in srgb, var(${catStyle.var}) 8%, transparent)` }}
-          >
-            <CategoryIcon size={40} className="fallback-icon" style={{ color: `var(${catStyle.var})` }} />
+          <div className="thumbnail-fallback">
+            <CategoryIcon size={40} className="fallback-icon" />
           </div>
         )}
-        <div 
-          className="category-badge" 
-          style={{ 
-            backgroundColor: `color-mix(in srgb, var(${catStyle.var}) 10%, transparent)`, 
-            color: `var(${catStyle.var})` 
-          }}
-        >
+        <div className="category-badge">
           {t(`categories.${catKey}`, { defaultValue: product.category })}
         </div>
       </div>
