@@ -298,7 +298,7 @@
 
 .settings-nav-item.active {
   background: var(--color-accent);
-  color: white;
+  color: var(--color-accent-text);
 }
 
 .settings-content {
@@ -442,7 +442,7 @@
 
 .settings-tab.active {
   background: var(--color-accent);
-  color: white;
+  color: var(--color-accent-text);
 }
 
 @media (max-width: 1024px) {
@@ -553,7 +553,7 @@
 
 .quick-action-card:hover .quick-action-icon {
   background: var(--color-accent);
-  color: white;
+  color: var(--color-accent-text);
 }
 
 .quick-action-content {

@@ -122,9 +122,16 @@ export function AuthProvider({ children }) {
     if (!isMockMode) {
       return await supabase.auth.verifyOtp({ email, token, type });
     }
-    // Mock mode implementation: simulate success
-    const result = store.signIn(email, 'mockpassword'); // just bypass
-    setAccountState(result.account);
+    // Mock mode implementation: the OTP step verifies email ownership only —
+    // the account was already created (and its real password stored) during
+    // signUp, so we just look it up directly and set the session, without
+    // re-checking a password here (there's nothing to re-check against).
+    const account = store.findAccountByEmail(email);
+    if (!account) {
+      return { data: null, error: { message: 'No account found with this email address.' } };
+    }
+    store.setSession(account.id);
+    setAccountState(account);
     return { data: { session: {} }, error: null };
   }, [setAccountState]);
 

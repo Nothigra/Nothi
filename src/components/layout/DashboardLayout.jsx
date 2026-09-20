@@ -158,7 +158,7 @@ export default function DashboardLayout() {
                   title={isCollapsed ? link.name : ''}
                   style={isPublish ? { 
                     backgroundColor: 'var(--color-accent)', 
-                    color: 'white', 
+                    color: 'var(--color-accent-text)', 
                     marginBottom: '16px',
                     fontWeight: 600
                   } : {}}

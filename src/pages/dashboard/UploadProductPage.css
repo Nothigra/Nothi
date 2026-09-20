@@ -101,7 +101,7 @@
 
 .up-dropzone:hover .up-dropzone-icon {
   background: var(--color-accent);
-  color: white;
+  color: var(--color-accent-text);
   transform: scale(1.08);
 }
 
@@ -241,7 +241,7 @@
 .up-step.completed .up-step-dot {
   background: var(--color-accent);
   border-color: var(--color-accent);
-  color: white;
+  color: var(--color-accent-text);
 }
 
 .up-step.active .up-step-dot {
@@ -270,8 +270,8 @@
   padding: 14px 28px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--color-accent) 0%, #8b5cf6 100%);
-  color: white;
+  background: var(--color-accent);
+  color: var(--color-accent-text);
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -382,7 +382,7 @@
   top: 0;
   right: 0;
   background: var(--color-accent);
-  color: white;
+  color: var(--color-accent-text);
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;

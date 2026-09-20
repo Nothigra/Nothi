@@ -147,7 +147,7 @@
 
 .filter-pill.active {
   background: var(--color-accent);
-  color: white;
+  color: var(--color-accent-text);
   border-color: var(--color-accent);
 }
 
