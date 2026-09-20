@@ -54,7 +54,7 @@ export default function MobileMenu({ isOpen, onClose, navLinks }) {
                 className="mobile-nav-link"
                 onClick={onClose}
               >
-                {link.label}
+                {t(`nav.${link.label}`)}
               </Link>
             ))}
           </nav>

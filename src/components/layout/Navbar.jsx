@@ -208,7 +208,7 @@ export default function Navbar() {
             </div>
 
             {/* Rewards */}
-            <Link to="/rewards" className="action-btn relative" title="Rewards">
+            <Link to="/rewards" className="action-btn relative hidden-mobile" title="Rewards">
               <Gift size={16} />
               {(hasUnclaimedReward || hasNewXp) && (
                 <span className={`absolute top-1 right-1 w-2 h-2 rounded-full border-2 border-bg-card ${hasUnclaimedReward ? 'bg-danger' : 'bg-accent'}`}></span>
@@ -283,7 +283,7 @@ export default function Navbar() {
       <MobileMenu 
         isOpen={isMobileMenuOpen} 
         onClose={() => setIsMobileMenuOpen(false)} 
-        navLinks={navLinks}
+        navLinks={navLinks.filter(l => l.path !== '/' && l.path !== '/marketplace')}
       />
     </>
   );
