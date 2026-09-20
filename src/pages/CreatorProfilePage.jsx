@@ -966,7 +966,7 @@ export default function CreatorProfilePage() {
               <div className="edit-action-panel-inner">
                 <button 
                   className="btn w-full flex-center justify-center gap-sm transition-transform hover:scale-105 rounded-lg py-sm px-md shadow-md mb-xs"
-                  style={{ background: 'linear-gradient(135deg, var(--color-accent), #8b5cf6)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.4)' }}
+                  style={{ background: 'var(--color-accent)', color: 'var(--color-accent-text)', border: '1px solid var(--color-border-strong)' }}
                   onClick={() => openEditSection('appearance')}
                 >
                   <Palette size={16} />
@@ -1083,7 +1083,7 @@ export default function CreatorProfilePage() {
             </div>
             <div className="profile-stat">
               <div className="flex items-center gap-xs">
-                <Star size={18} className="relative top-[-1px]" style={{ color: '#F59E0B' }} fill="currentColor" />
+                <Star size={18} className="relative top-[-1px]" style={{ color: 'var(--color-gold, #B8972A)' }} fill="currentColor" />
                 <span className="stat-num">{creator.rating || '5.0'}</span>
               </div>
               <span className="stat-lbl">Rating</span>
