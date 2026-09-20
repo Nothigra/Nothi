@@ -277,12 +277,12 @@
   letter-spacing: 0.03em;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 16px rgba(138, 123, 255, 0.25);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-accent) 25%, transparent);
 }
 
 .up-boost-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 24px rgba(138, 123, 255, 0.35);
+  box-shadow: 0 6px 24px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
 /* File Info in Dropzone */

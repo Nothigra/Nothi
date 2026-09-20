@@ -13,7 +13,7 @@
   transform: translate(-50%, -50%);
   width: 80%;
   height: 80%;
-  background: radial-gradient(ellipse at center, rgba(124, 108, 255, 0.15), transparent 70%);
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--color-accent) 15%, transparent), transparent 70%);
   filter: blur(80px);
   z-index: 0;
   pointer-events: none;

@@ -175,14 +175,14 @@
 
 .hero-search-wrapper.focused {
   box-shadow:
-    0 0 0 3px rgba(138, 123, 255, 0.25),
+    0 0 0 3px color-mix(in srgb, var(--color-accent) 25%, transparent),
     var(--shadow-lg);
 }
 
 .dark .hero-search-wrapper.focused {
   box-shadow:
-    0 0 0 3px rgba(138, 123, 255, 0.1),
-    0 12px 40px rgba(138, 123, 255, 0.12);
+    0 0 0 3px color-mix(in srgb, var(--color-accent) 10%, transparent),
+    0 12px 40px color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
 
 .hero-search-form {

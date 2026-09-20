@@ -14,7 +14,7 @@
 }
 
 .notification-card.unread {
-  background: linear-gradient(to right, rgba(99, 102, 241, 0.05), var(--bg-secondary));
+  background: linear-gradient(to right, color-mix(in srgb, var(--color-accent) 5%, transparent), var(--bg-secondary));
   border-left: 1px solid var(--accent-primary);
 }
 

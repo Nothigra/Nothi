@@ -82,8 +82,8 @@
 }
 
 .seller-item {
-  background: linear-gradient(to right, rgba(99, 102, 241, 0.02), transparent);
+  background: linear-gradient(to right, color-mix(in srgb, var(--color-accent) 2%, transparent), transparent);
 }
 .seller-item:hover {
-  background: linear-gradient(to right, rgba(99, 102, 241, 0.05), var(--color-bg-secondary));
+  background: linear-gradient(to right, color-mix(in srgb, var(--color-accent) 5%, transparent), var(--color-bg-secondary));
 }
