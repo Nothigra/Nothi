@@ -10,10 +10,10 @@ import BadgeIcon from '../components/common/BadgeIcon';
 import './RewardsPage.css';
 
 const getSalesTier = (sales) => {
-  if (sales >= 100) return { name: "Platinum Seller", color: "var(--rank-legend-bg)", icon: <Crown size={40} color="var(--rank-legend-bg)" strokeWidth={1.5} />, next: null };
-  if (sales >= 50) return { name: "Gold Seller", color: "var(--rank-master-bg)", icon: <Trophy size={40} color="var(--rank-master-bg)" strokeWidth={1.5} />, next: 100 };
-  if (sales >= 10) return { name: "Silver Seller", color: "var(--rank-expert-bg)", icon: <Medal size={40} color="var(--rank-expert-bg)" strokeWidth={1.5} />, next: 50 };
-  return { name: "Bronze Seller", color: "var(--rank-apprentice-bg)", icon: <Award size={40} color="var(--rank-apprentice-bg)" strokeWidth={1.5} />, next: 10 };
+  if (sales >= 100) return { name: "Platinum Seller", color: "var(--color-platinum)", icon: <Crown size={40} color="var(--color-platinum)" strokeWidth={1.5} />, next: null };
+  if (sales >= 50) return { name: "Gold Seller", color: "var(--color-gold)", icon: <Trophy size={40} color="var(--color-gold)" strokeWidth={1.5} />, next: 100 };
+  if (sales >= 10) return { name: "Silver Seller", color: "var(--color-silver)", icon: <Medal size={40} color="var(--color-silver)" strokeWidth={1.5} />, next: 50 };
+  return { name: "Bronze Seller", color: "var(--color-bronze)", icon: <Award size={40} color="var(--color-bronze)" strokeWidth={1.5} />, next: 10 };
 };
 
 const getRankInfo = (level) => {

@@ -49,6 +49,7 @@
   --color-gold: #EAB308;
   --color-silver: #94A3B8;
   --color-bronze: #CD7F32;
+  --color-platinum: #6EE7DE;
 
   /* Focus ring */
   --focus-ring: 0 0 0 3px rgba(0, 0, 0, 0.15);
@@ -178,6 +179,7 @@
   --color-gold: #FACC15;
   --color-silver: #CBD5E1;
   --color-bronze: #D4A76A;
+  --color-platinum: #7DEDE4;
 
   --focus-ring: 0 0 0 3px rgba(255, 255, 255, 0.25);
 
