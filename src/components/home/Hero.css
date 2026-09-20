@@ -22,18 +22,31 @@
   background-size: cover;
   background-position: center 60%;
   opacity: 0.32;
+  filter: blur(6px);
   pointer-events: none;
 }
 
 /* Light mode: invert the (pure grayscale) image so dark trails sit on a light wash */
 :root .hero-bg-visual,
 [data-theme="light"] .hero-bg-visual {
-  filter: invert(1);
+  filter: invert(1) blur(6px);
   opacity: 0.22;
 }
 
 .dark .hero-bg-visual {
   opacity: 0.35;
+}
+
+/* Much softer/more atmospheric on mobile — less visual noise behind the headline */
+@media (max-width: 768px) {
+  .hero-bg-visual {
+    filter: blur(18px);
+  }
+
+  :root .hero-bg-visual,
+  [data-theme="light"] .hero-bg-visual {
+    filter: invert(1) blur(18px);
+  }
 }
 
 /* Fade the visual into the page background at every edge, and dim it heavily

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Menu, X, Sun, Moon, ShoppingCart, Heart, Gift, Palette, MessageSquare } from 'lucide-react';
+import { Menu, X, Sun, Moon, ShoppingCart, Heart, Gift, Palette, MessageSquare, Tag, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useGamification } from '../../context/GamificationContext';
@@ -267,6 +267,29 @@ export default function Navbar() {
                 )}
               </div>
             )}
+
+            {/* Mobile-only compact actions (≤768px): simple theme toggle, Pricing, Search */}
+            <button
+              className="action-btn mobile-header-only"
+              onClick={() => toggleTheme()}
+              aria-label="Toggle theme"
+            >
+              {theme === 'light' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+
+            <Link to="/pricing" className="action-btn mobile-header-only" aria-label="Pricing" title="Pricing">
+              <Tag size={18} />
+            </Link>
+
+            <Link
+              to="/marketplace"
+              state={{ focusSearch: true }}
+              className="action-btn mobile-header-only"
+              aria-label="Search"
+              title="Search"
+            >
+              <Search size={18} />
+            </Link>
 
             {/* Mobile Menu Toggle */}
             <button 

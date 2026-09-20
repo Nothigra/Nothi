@@ -235,9 +235,9 @@ export default function Hero() {
             initial="visible"
             animate="visible"
           >
-            <TypewriterText text="Built by editors." />
+            <TypewriterText text="The N°1 Marketplace" />
             <br />
-            <TypewriterText text="For editors." className="headline-italic" />
+            <TypewriterText text="for Editors." className="headline-italic" />
           </motion.h1>
 
           {/* Subtitle */}

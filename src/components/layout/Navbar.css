@@ -244,11 +244,15 @@
   display: none;
 }
 
+.mobile-header-only {
+  display: none;
+}
+
 @media (max-width: 1024px) {
   .hidden-mobile {
     display: none !important;
   }
-  
+
   .hamburger-btn {
     display: flex;
   }
@@ -257,5 +261,19 @@
     display: flex;
     justify-content: space-between;
     padding: 0 var(--space-4);
+  }
+}
+
+/* Below 768px the floating bottom nav takes over primary navigation, so the
+   hamburger (and its Best Sellers/language/etc. links) steps aside in favor
+   of the new compact header actions (theme, pricing, search). Between
+   769-1024px (tablet) there's no bottom nav yet, so the hamburger stays. */
+@media (max-width: 768px) {
+  .hamburger-btn {
+    display: none;
+  }
+
+  .mobile-header-only {
+    display: flex;
   }
 }

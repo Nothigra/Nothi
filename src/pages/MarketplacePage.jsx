@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 import { Search, X, ChevronDown, SlidersHorizontal } from 'lucide-react';
@@ -32,6 +33,8 @@ export default function MarketplacePage() {
   const [searchTerm, setSearchTerm] = useState(savedFilters?.searchTerm || '');
   
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const searchInputRef = useRef(null);
   const rawCategory = searchParams.get('category');
   const isValidCategory = rawCategory === 'all' || categories.some(c => c.id === rawCategory);
   const selectedCategory = rawCategory && isValidCategory ? rawCategory : 'all';
@@ -62,6 +65,14 @@ export default function MarketplacePage() {
   
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [hasInitializedFilters, setHasInitializedFilters] = useState(!!savedFilters || !!profile?.software);
+
+  // Coming from the mobile header's search icon: jump straight into the search field
+  useEffect(() => {
+    if (location.state?.focusSearch) {
+      const t = setTimeout(() => searchInputRef.current?.focus(), 150);
+      return () => clearTimeout(t);
+    }
+  }, [location.state]);
 
   // Sync profile software and style filters when auth loads if no session storage exists
   useEffect(() => {
@@ -254,6 +265,7 @@ export default function MarketplacePage() {
 
           <div style={{ flex: 1, maxWidth: '500px', position: 'relative', zIndex: 100 }}>
             <Input 
+              ref={searchInputRef}
               iconLeft={Search}
               placeholder={t('marketplace.search')}
               value={searchTerm}

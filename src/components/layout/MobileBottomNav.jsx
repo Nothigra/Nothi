@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router';
 import { useState, useEffect, useRef } from 'react';
-import { Home, Search, Gift, Settings, User } from 'lucide-react';
+import { Home, Search, Gift, Settings, User, Trophy, ChevronUp } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import './MobileBottomNav.css';
 
@@ -8,8 +8,10 @@ export default function MobileBottomNav() {
   const location = useLocation();
   const { profile, isAuthenticated } = useAuth();
   const [isCompact, setIsCompact] = useState(false);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
   const scrollTimer = useRef(null);
   const lastScrollY = useRef(0);
+  const moreRef = useRef(null);
 
   useEffect(() => {
     lastScrollY.current = window.scrollY;
@@ -37,6 +39,22 @@ export default function MobileBottomNav() {
     };
   }, []);
 
+  // Close the Settings/Best Sellers popover on outside tap or route change
+  useEffect(() => {
+    if (!isMoreOpen) return;
+    const handleOutside = (e) => {
+      if (moreRef.current && !moreRef.current.contains(e.target)) {
+        setIsMoreOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handleOutside);
+    return () => document.removeEventListener('pointerdown', handleOutside);
+  }, [isMoreOpen]);
+
+  useEffect(() => {
+    setIsMoreOpen(false);
+  }, [location.pathname]);
+
   const isActive = (path, exact = false) => {
     if (exact) return location.pathname === path;
     return location.pathname === path || location.pathname.startsWith(path + '/');
@@ -44,6 +62,7 @@ export default function MobileBottomNav() {
 
   const profileTarget = isAuthenticated ? '/dashboard' : '/login';
   const settingsTarget = isAuthenticated ? '/dashboard/settings' : '/login';
+  const isMoreActive = isActive('/dashboard/settings') || isActive('/best-sellers');
 
   return (
     <nav className={`mobile-bottom-nav ${isCompact ? 'compact' : ''}`} aria-label="Primary">
@@ -89,14 +108,27 @@ export default function MobileBottomNav() {
         <span>Rewards</span>
       </Link>
 
-      <Link
-        to={settingsTarget}
-        className={`mbn-item ${isActive('/dashboard/settings') ? 'active' : ''}`}
-        aria-label="Settings"
-      >
-        <Settings size={21} strokeWidth={isActive('/dashboard/settings') ? 2.4 : 2} />
-        <span>Settings</span>
-      </Link>
+      <div className="mbn-more-wrapper" ref={moreRef}>
+        {isMoreOpen && (
+          <div className="mbn-popover">
+            <Link to={settingsTarget} className="mbn-popover-item" onClick={() => setIsMoreOpen(false)}>
+              <Settings size={17} /> Settings
+            </Link>
+            <Link to="/best-sellers" className="mbn-popover-item" onClick={() => setIsMoreOpen(false)}>
+              <Trophy size={17} /> Best Sellers
+            </Link>
+          </div>
+        )}
+        <button
+          type="button"
+          className={`mbn-item ${isMoreActive || isMoreOpen ? 'active' : ''}`}
+          aria-label="More"
+          onClick={() => setIsMoreOpen(v => !v)}
+        >
+          {isMoreOpen ? <ChevronUp size={21} strokeWidth={2.4} /> : <Settings size={21} strokeWidth={isMoreActive ? 2.4 : 2} />}
+          <span>More</span>
+        </button>
+      </div>
     </nav>
   );
 }
