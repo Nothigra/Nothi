@@ -9,7 +9,7 @@ import { SOFTWARE_LIST, CURRENCY_LIST, STYLE_LIST } from '../../lib/seed';
 import * as accountStore from '../../lib/accountStore';
 import Input from '../../components/ui/Input';
 import Textarea from '../../components/ui/Textarea';
-import { supabase, withTimeoutSafety } from '../../lib/supabase';
+import { supabase, isMockMode, withTimeoutSafety } from '../../lib/supabase';
 import './DashboardPages.css';
 
 export default function DashboardSettings() {
@@ -126,6 +126,13 @@ export default function DashboardSettings() {
 
       const uploadAvatar = async () => {
         try {
+          if (isMockMode) {
+            // No real upload target in mock mode — just preview the local file
+            await new Promise(r => setTimeout(r, 400));
+            setAvatarPreview(URL.createObjectURL(file));
+            return;
+          }
+
           const { data, error } = await withTimeoutSafety(() =>
             supabase.functions.invoke('generate-upload-url', {
               body: { 

@@ -100,7 +100,7 @@ export default function DashboardProducts() {
   };
 
   const handleBoost = async (productId, boostData) => {
-    if (profile?.isMockMode) {
+    if (isMockMode) {
       const updated = myProducts.map(p => p.id === productId ? { ...p, boost: boostData } : p);
       await updateProfile({ products: updated });
       return;
@@ -128,14 +128,14 @@ export default function DashboardProducts() {
   };
 
   const renderBoostBadge = (product) => {
-    const isBoosted = profile?.isMockMode 
+    const isBoosted = isMockMode 
       ? (product.boost && new Date(product.boost.endDate) > new Date())
       : (product.boosted_until && new Date(product.boosted_until) > new Date());
       
     if (!isBoosted) return null;
     
     const now = new Date();
-    const endDate = new Date(profile?.isMockMode ? product.boost.endDate : product.boosted_until);
+    const endDate = new Date(isMockMode ? product.boost.endDate : product.boosted_until);
     
     if (endDate > now) {
       const diffMs = endDate - now;
