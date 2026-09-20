@@ -96,3 +96,57 @@
 .text-success {
   color: var(--color-success);
 }
+
+/* Quick Links — mobile-only hub, since the sidebar is unreachable on mobile
+   and primary nav there is the 5-icon bottom bar instead. */
+.dashboard-quick-links {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-quick-links {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-quick-links {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+}
+
+.quick-link-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 4px;
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  text-align: center;
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.quick-link-card:active {
+  transform: scale(0.96);
+  background: var(--color-bg-tertiary);
+}
+
+.quick-link-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+}

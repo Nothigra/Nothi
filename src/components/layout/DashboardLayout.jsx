@@ -12,6 +12,7 @@ import { getUserMessages, groupMessagesIntoConversations, subscribeToMessages } 
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useGamification } from '../../context/GamificationContext';
+import MobileBottomNav from './MobileBottomNav';
 import './DashboardLayout.css';
 
 export default function DashboardLayout() {
@@ -163,7 +164,7 @@ export default function DashboardLayout() {
                     fontWeight: 600
                   } : {}}
                 >
-                  <Icon size={20} className="link-icon" style={isPublish ? { color: 'white' } : {}} />
+                  <Icon size={20} className="link-icon" style={isPublish ? { color: 'var(--color-accent-text)' } : {}} />
                   {!isCollapsed && <span className="link-text">{link.name}</span>}
                   {link.name === 'My Badges' && hasNewBadges && (
                     <span className="w-2 h-2 bg-danger rounded-full ml-auto mr-sm"></span>
@@ -243,6 +244,7 @@ export default function DashboardLayout() {
           <Outlet />
         </div>
       </main>
+      <MobileBottomNav />
     </div>
   );
 }

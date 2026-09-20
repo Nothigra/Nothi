@@ -1415,3 +1415,10 @@ tr:hover td { background: var(--color-bg-secondary); }
   body { background: white; color: black; }
   .navbar, .footer, .toast-container { display: none; }
 }
+
+/* Room for the fixed 5-icon mobile bottom nav so page content never sits behind it */
+@media (max-width: 768px) {
+  .site-main {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  }
+}

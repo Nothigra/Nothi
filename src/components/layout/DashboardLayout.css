@@ -192,6 +192,7 @@
 @media (max-width: 768px) {
   .dashboard-content-area {
     padding: 16px;
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
   }
 }
 

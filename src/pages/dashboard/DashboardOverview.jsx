@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase';
 import { 
   DollarSign, TrendingUp, Package, ShoppingBag, Plus, ExternalLink, 
-  Activity, ArrowRight, Settings, BarChart3, CheckCircle2, Circle, Users, Globe, Eye
+  Activity, ArrowRight, Settings, BarChart3, CheckCircle2, Circle, Users, Globe, Eye,
+  MessageSquare, Heart
 } from 'lucide-react';
 import { Link } from 'react-router';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
@@ -93,6 +94,51 @@ export default function DashboardOverview() {
             <span className="text-2xl font-bold">{totalSales}</span>
           </div>
         </div>
+      </div>
+
+      {/* Quick Links — mobile only: sidebar isn't reachable on mobile, so this is
+          the primary way to get to the rest of the dashboard from a phone */}
+      <div className="dashboard-quick-links mb-2xl">
+        <Link to="/dashboard/upload" className="quick-link-card">
+          <span className="quick-link-icon"><Plus size={20} /></span>
+          <span>Publish</span>
+        </Link>
+        <Link to="/dashboard/products" className="quick-link-card">
+          <span className="quick-link-icon"><Package size={20} /></span>
+          <span>Products</span>
+        </Link>
+        <Link to="/dashboard/following" className="quick-link-card">
+          <span className="quick-link-icon"><Users size={20} /></span>
+          <span>Following</span>
+        </Link>
+        <Link to="/dashboard/messages" className="quick-link-card">
+          <span className="quick-link-icon"><MessageSquare size={20} /></span>
+          <span>Messages</span>
+        </Link>
+        <Link to="/dashboard/wishlist" className="quick-link-card">
+          <span className="quick-link-icon"><Heart size={20} /></span>
+          <span>Wishlist</span>
+        </Link>
+        <Link to="/dashboard/purchases" className="quick-link-card">
+          <span className="quick-link-icon"><ShoppingBag size={20} /></span>
+          <span>Purchases</span>
+        </Link>
+        <Link to="/dashboard/badges" className="quick-link-card">
+          <span className="quick-link-icon"><CheckCircle2 size={20} /></span>
+          <span>My Badges</span>
+        </Link>
+        <Link to="/dashboard/payouts" className="quick-link-card">
+          <span className="quick-link-icon"><DollarSign size={20} /></span>
+          <span>Withdrawals</span>
+        </Link>
+        <Link to={`/creator/${profile?.username || ''}`} className="quick-link-card">
+          <span className="quick-link-icon"><Globe size={20} /></span>
+          <span>My Shop</span>
+        </Link>
+        <Link to="/dashboard/settings" className="quick-link-card">
+          <span className="quick-link-icon"><Settings size={20} /></span>
+          <span>Settings</span>
+        </Link>
       </div>
 
       {/* Premium Stats Grid */}
