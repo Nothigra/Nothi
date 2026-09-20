@@ -37,15 +37,36 @@
   opacity: 0.35;
 }
 
-/* Much softer/more atmospheric on mobile — less visual noise behind the headline */
+/* On mobile, skip the photographic background entirely — replace it with a
+   soft, purely-CSS gradient mesh. Cheaper to render, and reads cleaner behind
+   the headline than the blurred photo did. */
 @media (max-width: 768px) {
-  .hero-bg-visual {
-    filter: blur(18px);
+  .hero-bg-visual,
+  .dark .hero-bg-visual {
+    background-image: none;
+    filter: none;
+    opacity: 1;
+    background:
+      radial-gradient(circle at 18% 15%, color-mix(in srgb, var(--color-text-primary) 16%, transparent), transparent 55%),
+      radial-gradient(circle at 85% 20%, color-mix(in srgb, var(--color-text-primary) 10%, transparent), transparent 50%),
+      radial-gradient(circle at 50% 85%, color-mix(in srgb, var(--color-text-primary) 12%, transparent), transparent 60%);
+    animation: heroMeshDrift 14s ease-in-out infinite alternate;
   }
 
   :root .hero-bg-visual,
   [data-theme="light"] .hero-bg-visual {
-    filter: invert(1) blur(18px);
+    filter: none;
+  }
+}
+
+@keyframes heroMeshDrift {
+  from { background-position: 0% 0%, 0% 0%, 0% 0%; }
+  to { background-position: 6% 4%, -4% 6%, 3% -5%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-bg-visual {
+    animation: none !important;
   }
 }
 
@@ -455,8 +476,7 @@
   }
 
   .hero-social-proof {
-    flex-direction: column;
-    align-items: center;
+    display: none;
   }
 
   .social-info {

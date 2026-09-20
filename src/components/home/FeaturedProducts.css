@@ -66,6 +66,10 @@
   .mobile-view-all {
     display: block;
   }
+
+  .featured-products .section-header p {
+    display: none;
+  }
 }
 
 @media (max-width: 480px) {
