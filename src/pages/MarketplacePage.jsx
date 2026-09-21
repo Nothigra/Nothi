@@ -318,7 +318,7 @@ export default function MarketplacePage() {
 
       <div className={`marketplace-layout ${isFiltersOpen ? 'filters-open' : 'filters-closed'}`}>
         {/* Sidebar Filters */}
-        <aside className={`marketplace-sidebar ${isFiltersOpen ? 'open' : 'hidden'}`}>
+        <aside className={`marketplace-sidebar ${isFiltersOpen ? 'open' : 'sidebar-closed'}`}>
           <div className="sidebar-header hidden-desktop">
             <h3>{t('marketplace.filters')}</h3>
             <button className="btn-icon" onClick={() => setIsFiltersOpen(false)}>
