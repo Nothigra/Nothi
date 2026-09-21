@@ -31,7 +31,7 @@
 /* Light mode: invert the (pure grayscale) image so dark trails sit on a light wash */
 :root .hero-bg-visual,
 [data-theme="light"] .hero-bg-visual {
-  filter: blur(6px);
+  filter: invert(1) blur(6px);
   opacity: 0.22;
 }
 
