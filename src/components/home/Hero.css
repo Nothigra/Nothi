@@ -40,6 +40,24 @@
   filter: blur(6px);
 }
 
+/* A continuously-playing video is more expensive to blur than a static
+   image (the blur must be recomputed every frame) — use a lighter blur on
+   mobile specifically to keep this cheap on weaker GPUs. */
+@media (max-width: 768px) {
+  .hero-bg-visual {
+    filter: blur(3px);
+  }
+
+  :root .hero-bg-visual,
+  [data-theme="light"] .hero-bg-visual {
+    filter: invert(1) blur(3px);
+  }
+
+  .dark .hero-bg-visual {
+    filter: blur(3px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-bg-visual {
     animation: none !important;
