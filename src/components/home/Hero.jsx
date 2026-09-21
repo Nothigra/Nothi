@@ -257,7 +257,7 @@ export default function Hero() {
             animate="visible"
             style={{ display: 'flex', justifyContent: 'center' }}
           >
-            <TypewriterText text="Buy and sell premium LUTs, presets, and transitions from the best in the craft." />
+            <TypewriterText text="Buy and sell premium editing assets from the best in the craft." />
           </motion.p>
 
           {/* Search */}
