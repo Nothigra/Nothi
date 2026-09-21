@@ -24,14 +24,14 @@
   height: 100%;
   object-fit: cover;
   opacity: 0.32;
-  filter: blur(6px);
+  filter: invert(1) blur(6px);
   pointer-events: none;
 }
 
 /* Light mode: invert the (pure grayscale) image so dark trails sit on a light wash */
 :root .hero-bg-visual,
 [data-theme="light"] .hero-bg-visual {
-  filter: invert(1) blur(6px);
+  filter: blur(6px);
   opacity: 0.22;
 }
 
