@@ -215,8 +215,8 @@ export default function DashboardOverview() {
           </div>
         </div>
 
-        {/* Per-Product Performance Table */}
-        <div className="settings-card m-0 lg:col-span-3 mb-2xl">
+        {/* Per-Product Performance — table on desktop/tablet */}
+        <div className="settings-card m-0 lg:col-span-3 mb-2xl product-performance-table-view">
           <div className="card-header border-b border-border pb-md mb-0">
             <h3 className="card-title text-base flex items-center gap-xs"><Package size={18} className="text-secondary" /> Per-Product Performance</h3>
           </div>
@@ -258,6 +258,49 @@ export default function DashboardOverview() {
             </div>
           </div>
         </div>
+
+        {/* Per-Product Performance — stacked cards on mobile (a 5-column
+            table doesn't fit a phone screen without cramping or scrolling) */}
+        <div className="settings-card m-0 lg:col-span-3 mb-2xl product-performance-card-view">
+          <div className="card-header border-b border-border pb-md mb-0">
+            <h3 className="card-title text-base flex items-center gap-xs"><Package size={18} className="text-secondary" /> Per-Product Performance</h3>
+          </div>
+          <div className="card-body p-0">
+            {products.length === 0 ? (
+              <p className="text-center py-xl text-secondary italic">No products yet.</p>
+            ) : (
+              products.sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0)).map(p => {
+                const views = p.views || 0;
+                const sales = p.sales_count || 0;
+                const revenue = p.revenue || 0;
+                const conv = views > 0 ? ((sales / views) * 100).toFixed(1) : '0.0';
+                return (
+                  <div key={p.id} className="perf-mobile-card">
+                    <div className="perf-mobile-card-title">{p.title}</div>
+                    <div className="perf-mobile-card-stats">
+                      <div className="perf-mobile-stat">
+                        <span className="perf-mobile-stat-value">{views}</span>
+                        <span className="perf-mobile-stat-label">Views</span>
+                      </div>
+                      <div className="perf-mobile-stat">
+                        <span className="perf-mobile-stat-value text-accent">{sales}</span>
+                        <span className="perf-mobile-stat-label">Sales</span>
+                      </div>
+                      <div className="perf-mobile-stat">
+                        <span className="perf-mobile-stat-value">{formatPrice(revenue)}</span>
+                        <span className="perf-mobile-stat-label">Revenue</span>
+                      </div>
+                      <div className="perf-mobile-stat">
+                        <span className="perf-mobile-stat-value" style={{ color: 'var(--color-success, #10b981)' }}>{conv}%</span>
+                        <span className="perf-mobile-stat-label">Conv.</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="dashboard-grid two-cols mb-2xl">
@@ -267,11 +310,11 @@ export default function DashboardOverview() {
             <h3 className="card-title text-lg">Recent Orders</h3>
           </div>
           <div className="card-body p-0 flex-1">
-            <table className="dashboard-table w-full">
+            <table className="dashboard-table w-full recent-orders-table">
               <thead>
                 <tr>
                   <th className="text-xs uppercase text-secondary font-semibold pl-xl">Product</th>
-                  <th className="text-xs uppercase text-secondary font-semibold">Date</th>
+                  <th className="text-xs uppercase text-secondary font-semibold col-date">Date</th>
                   <th className="text-xs uppercase text-secondary font-semibold pr-xl text-right">Amount</th>
                 </tr>
               </thead>
@@ -282,7 +325,7 @@ export default function DashboardOverview() {
                       <div className="font-medium text-sm text-primary">{o.product}</div>
                       <div className="text-xs text-secondary">{o.customer}</div>
                     </td>
-                    <td className="text-sm text-secondary py-md">{new Date(o.date).toLocaleDateString()}</td>
+                    <td className="text-sm text-secondary py-md col-date">{new Date(o.date).toLocaleDateString()}</td>
                     <td className="text-sm font-medium pr-xl text-right py-md">{formatPrice(o.amount)}</td>
                   </tr>
                 ))}
