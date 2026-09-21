@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, SlidersHorizontal, Star } from 'lucide-react';
-import SoftwareBanner from './SoftwareBanner';
+import TrustBar from './TestimonialsSection';
 import { useTranslation } from 'react-i18next';
 import { useUnifiedSearch } from '../../hooks/useUnifiedSearch';
 import SearchDropdown from '../common/SearchDropdown';
@@ -272,7 +272,7 @@ export default function Hero() {
       </div>
 
       <div className="hero-software-banner-wrapper">
-        <SoftwareBanner />
+        <TrustBar />
       </div>
     </section>
   );

@@ -9,7 +9,6 @@ export default function MobileBottomNav() {
   const { profile, isAuthenticated } = useAuth();
   const [isCompact, setIsCompact] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
-  const scrollTimer = useRef(null);
   const lastScrollY = useRef(0);
   const moreRef = useRef(null);
 
@@ -18,25 +17,26 @@ export default function MobileBottomNav() {
 
     const handleScroll = () => {
       const currentY = window.scrollY;
-      const delta = Math.abs(currentY - lastScrollY.current);
+      const delta = currentY - lastScrollY.current;
       lastScrollY.current = currentY;
 
-      // Ignore tiny/rubber-band jitters near the very top of the page
-      if (currentY > 40 && delta > 4) {
-        setIsCompact(true);
-      }
+      // Ignore tiny jitters (rubber-banding, sub-pixel scroll noise)
+      if (Math.abs(delta) < 4) return;
 
-      if (scrollTimer.current) clearTimeout(scrollTimer.current);
-      scrollTimer.current = setTimeout(() => {
+      if (currentY <= 40) {
+        // Always fully visible right at the top of the page
         setIsCompact(false);
-      }, 400);
+      } else if (delta > 0) {
+        // Scrolling down -> tuck the bar away
+        setIsCompact(true);
+      } else {
+        // Scrolling up -> bring it back
+        setIsCompact(false);
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (scrollTimer.current) clearTimeout(scrollTimer.current);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Close the Settings/Best Sellers popover on outside tap or route change
