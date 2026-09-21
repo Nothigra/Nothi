@@ -9,9 +9,7 @@ import { languages } from '../../config/i18n';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useAuth } from '../../context/AuthContext';
-import { messagingService as mockMessagingService } from '../../lib/MessagingService';
-import { seedFakeConversationsIfEmpty } from '../../lib/accountStore';
-import { getUserMessages, groupMessagesIntoConversations, subscribeToMessages } from '../../api/messageApi';
+import { useUnreadMessages } from '../../hooks/useUnreadMessages';
 import AvatarFrame from '../common/AvatarFrame';
 import MobileMenu from './MobileMenu';
 import './Navbar.css';
@@ -31,9 +29,9 @@ export default function Navbar() {
   const [isThemeOpen, setIsThemeOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [unreadMessages, setUnreadMessages] = useState(0);
 
   const { isAuthenticated, profile, isMockMode, logout } = useAuth();
+  const unreadMessages = useUnreadMessages();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -41,43 +39,6 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    if (!profile) {
-      setUnreadMessages(0);
-      return;
-    }
-    
-    if (isMockMode) {
-      seedFakeConversationsIfEmpty(profile.id);
-      const updateUnread = () => {
-        const convs = mockMessagingService.getUserConversations(profile.id);
-        const count = convs.reduce((acc, c) => {
-          const isBuyer = c.buyerId === profile.id;
-          return acc + (isBuyer ? (c.unreadCountBuyer || 0) : (c.unreadCountSeller || 0));
-        }, 0);
-        setUnreadMessages(count);
-      };
-      updateUnread();
-      return mockMessagingService.subscribe(updateUnread);
-    }
-
-    let isMounted = true;
-    const fetchUnread = async () => {
-      const msgs = await getUserMessages(profile.id);
-      if (isMounted) {
-        const convs = groupMessagesIntoConversations(msgs, profile.id);
-        const count = convs.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
-        setUnreadMessages(count);
-      }
-    };
-
-    fetchUnread();
-    const unsub = subscribeToMessages(profile.id, fetchUnread);
-    return () => {
-      isMounted = false;
-      unsub();
-    };
-  }, [profile, isMockMode]);
 
   const navLinks = [
     { path: '/', label: 'home' },

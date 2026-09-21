@@ -3,11 +3,16 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Search, Gift, Settings, User, Trophy, ChevronUp } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useGamification } from '../../context/GamificationContext';
+import { useUnreadMessages } from '../../hooks/useUnreadMessages';
 import './MobileBottomNav.css';
 
 export default function MobileBottomNav() {
   const location = useLocation();
   const { profile, isAuthenticated } = useAuth();
+  const { hasUnclaimedReward, gamificationState } = useGamification();
+  const hasNewXp = gamificationState && gamificationState.xp > (gamificationState.lastSeenXp || 0);
+  const unreadMessages = useUnreadMessages();
   const [isCompact, setIsCompact] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const lastScrollY = useRef(0);
@@ -96,6 +101,7 @@ export default function MobileBottomNav() {
           ) : (
             <User size={19} strokeWidth={2} />
           )}
+          {unreadMessages > 0 && <span className="mbn-badge-dot" />}
         </span>
         <span>Profile</span>
       </Link>
@@ -105,7 +111,10 @@ export default function MobileBottomNav() {
         className={`mbn-item ${isActive('/rewards') ? 'active' : ''}`}
         aria-label="Rewards"
       >
-        <Gift size={21} strokeWidth={isActive('/rewards') ? 2.4 : 2} />
+        <span className="mbn-icon-wrapper">
+          <Gift size={21} strokeWidth={isActive('/rewards') ? 2.4 : 2} />
+          {(hasUnclaimedReward || hasNewXp) && <span className="mbn-badge-dot" />}
+        </span>
         <span>Rewards</span>
       </Link>
 
