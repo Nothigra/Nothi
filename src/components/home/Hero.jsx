@@ -219,13 +219,14 @@ export default function Hero() {
       {/* Background motion visual */}
       <video 
         className="hero-bg-visual" 
-        src="/VideoSiteweb.mp4" 
         autoPlay 
         loop 
         muted 
         playsInline 
         aria-hidden="true" 
-      />
+      >
+        <source src="/VideoSiteweb.mp4" type="video/mp4" />
+      </video>
       <div className="hero-bg-fade" aria-hidden="true" />
 
       {/* Mouse-following light */}
