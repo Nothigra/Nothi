@@ -92,7 +92,8 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
         )}
         {isOwner && isBoosted && (
           <div 
-            className="absolute top-sm left-sm bg-accent text-white px-[8px] py-[2px] rounded-full text-[10px] font-bold uppercase tracking-wider shadow-md flex items-center gap-[4px] z-10"
+            className="absolute top-sm left-sm bg-accent px-[8px] py-[2px] rounded-full text-[10px] font-bold uppercase tracking-wider shadow-md flex items-center gap-[4px] z-10"
+            style={{ color: 'var(--color-accent-text)' }}
           >
             <Rocket size={10} /> Boosted
           </div>
