@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router';
 import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Search, Gift, Settings, User, Trophy, ChevronUp } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import './MobileBottomNav.css';
@@ -109,16 +110,24 @@ export default function MobileBottomNav() {
       </Link>
 
       <div className="mbn-more-wrapper" ref={moreRef}>
-        {isMoreOpen && (
-          <div className="mbn-popover">
-            <Link to={settingsTarget} className="mbn-popover-item" onClick={() => setIsMoreOpen(false)}>
-              <Settings size={17} /> Settings
-            </Link>
-            <Link to="/best-sellers" className="mbn-popover-item" onClick={() => setIsMoreOpen(false)}>
-              <Trophy size={17} /> Best Sellers
-            </Link>
-          </div>
-        )}
+        <AnimatePresence>
+          {isMoreOpen && (
+            <motion.div
+              className="mbn-popover"
+              initial={{ opacity: 0, y: 6, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 6, scale: 0.96 }}
+              transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <Link to={settingsTarget} className="mbn-popover-item" onClick={() => setIsMoreOpen(false)}>
+                <Settings size={17} /> Settings
+              </Link>
+              <Link to="/best-sellers" className="mbn-popover-item" onClick={() => setIsMoreOpen(false)}>
+                <Trophy size={17} /> Best Sellers
+              </Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <button
           type="button"
           className={`mbn-item ${isMoreActive || isMoreOpen ? 'active' : ''}`}

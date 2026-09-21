@@ -451,9 +451,18 @@ export default function MarketplacePage() {
       </div>
 
       {/* Mobile Overlay */}
-      {isFiltersOpen && (
-        <div className="mobile-overlay hidden-desktop" onClick={() => setIsFiltersOpen(false)}></div>
-      )}
+      <AnimatePresence>
+        {isFiltersOpen && (
+          <motion.div
+            className="mobile-overlay hidden-desktop"
+            onClick={() => setIsFiltersOpen(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

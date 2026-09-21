@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, forwardRef } from 'react';
 import { ChevronDown, Check, AlertCircle, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import './Select.css';
 
 const Select = forwardRef(({
@@ -196,8 +197,16 @@ const Select = forwardRef(({
         </div>
       </div>
 
-      {isOpen && (
-        <div className="digi-select-menu">
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="digi-select-menu"
+            initial={{ opacity: 0, scaleY: 0.95 }}
+            animate={{ opacity: 1, scaleY: 1 }}
+            exit={{ opacity: 0, scaleY: 0.95 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            style={{ transformOrigin: 'top' }}
+          >
           {searchable && (
             <div className="digi-select-search" onClick={e => e.stopPropagation()}>
               <input
@@ -243,8 +252,9 @@ const Select = forwardRef(({
               })
             )}
           </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {error && (
         <div className="digi-select-message error">

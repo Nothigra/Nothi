@@ -402,14 +402,8 @@
     inset: 0;
     background: rgba(0, 0, 0, 0.4);
     z-index: var(--z-overlay);
-    opacity: 0;
-    animation: marketplaceOverlayIn 0.3s ease forwards;
   }
 
-  @keyframes marketplaceOverlayIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
   
   .marketplace-layout.filters-closed .marketplace-sidebar {
     width: 280px;
