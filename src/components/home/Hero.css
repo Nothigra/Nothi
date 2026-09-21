@@ -24,7 +24,7 @@
   height: 100%;
   object-fit: cover;
   opacity: 0.32;
-  filter: invert(1) blur(6px);
+  filter: blur(6px);
   pointer-events: none;
 }
 
