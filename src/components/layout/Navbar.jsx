@@ -132,40 +132,13 @@ export default function Navbar() {
           {/* Right: Actions */}
           <div className="navbar-right">
             {/* Theme Toggle */}
-            <div className="lang-dropdown-wrapper hidden-mobile" style={{ position: 'relative' }}>
-              <button 
-                className="action-btn flex items-center gap-1"
-                onClick={() => setIsThemeOpen(!isThemeOpen)}
-                aria-label="Toggle theme"
-              >
-                {theme === 'light' ? <Sun size={18} /> : theme === 'custom' ? <Palette size={18} className="text-accent" /> : <Moon size={18} />}
-              </button>
-              
-              <AnimatePresence>
-                {isThemeOpen && (
-                  <motion.div 
-                    className="lang-dropdown"
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                    style={{ right: 0, minWidth: '140px', padding: '8px' }}
-                  >
-                    <button onClick={() => { toggleTheme('light'); setIsThemeOpen(false); }} className={`nav-link flex items-center gap-2 w-full text-left ${theme === 'light' ? 'text-primary font-bold' : ''}`} style={{ padding: '8px 12px' }}>
-                      <Sun size={16} /> Light
-                    </button>
-                    <button onClick={() => { toggleTheme('dark'); setIsThemeOpen(false); }} className={`nav-link flex items-center gap-2 w-full text-left ${theme === 'dark' ? 'text-primary font-bold' : ''}`} style={{ padding: '8px 12px' }}>
-                      <Moon size={16} /> Dark
-                    </button>
-                    {profile?.custom_theme && (
-                      <button onClick={() => { toggleTheme('custom'); setIsThemeOpen(false); }} className={`nav-link flex items-center gap-2 w-full text-left ${theme === 'custom' ? 'text-accent font-bold' : ''}`} style={{ padding: '8px 12px' }}>
-                        <Palette size={16} className={theme === 'custom' ? 'text-accent' : ''} /> Custom
-                      </button>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            <button 
+              className="action-btn hidden-mobile flex items-center gap-1"
+              onClick={() => toggleTheme()}
+              aria-label="Toggle theme"
+            >
+              {theme === 'light' ? <Sun size={18} /> : theme === 'custom' ? <Palette size={18} className="text-accent" /> : <Moon size={18} />}
+            </button>
 
             {/* Language Selector */}
             <div className="lang-dropdown-wrapper hidden-mobile">
