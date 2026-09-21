@@ -421,12 +421,14 @@
     right: 0;
     bottom: 0;
     width: 100%;
+    max-width: none;
     height: auto;
     max-height: 55vh;
     border-radius: 20px 20px 0 0;
     transform: translateY(100%);
     box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.25);
     padding-top: var(--space-3);
+    z-index: var(--z-modal-priority);
   }
 
   .marketplace-sidebar.open {
@@ -448,6 +450,10 @@
 
   .marketplace-layout.filters-closed .marketplace-sidebar {
     width: 100%;
+  }
+
+  .mobile-overlay {
+    z-index: var(--z-modal-priority);
   }
 }
 
