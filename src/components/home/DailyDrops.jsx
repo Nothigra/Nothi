@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Timer, ArrowRight } from 'lucide-react';
 import ProductCard from '../product/ProductCard';
-import { products } from '../../data';
+const products = [];
 import './DailyDrops.css';
 
 export default function DailyDrops() {
