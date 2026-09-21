@@ -24,18 +24,21 @@ export default function CommandPalette({ isOpen, setIsOpen }) {
   }, [setIsOpen]);
 
   const links = [
+    { name: 'Home', path: '/' },
+    { name: 'Marketplace', path: '/marketplace' },
+    { name: 'Best Sellers', path: '/best-sellers' },
+    { name: 'Pricing', path: '/pricing' },
+    { name: 'Rewards', path: '/rewards' },
     { name: 'Dashboard', path: '/dashboard' },
-    { name: 'Products', path: '/dashboard/products' },
-    { name: 'Orders', path: '/dashboard/orders' },
-    { name: 'Customers', path: '/dashboard/customers' },
-    { name: 'Analytics', path: '/dashboard/analytics' },
-    { name: 'Followers', path: '/dashboard/followers' },
+    { name: 'My Products', path: '/dashboard/products' },
+    { name: 'Publish a Product', path: '/dashboard/upload' },
+    { name: 'Following', path: '/dashboard/following' },
     { name: 'Messages', path: '/dashboard/messages' },
-    { name: 'Reviews', path: '/dashboard/reviews' },
-    { name: 'Rewards', path: '/dashboard/rewards' },
-    { name: 'Best Sellers', path: '/dashboard/best-sellers' },
-    { name: 'Withdrawals', path: '/dashboard/withdrawals' },
-    { name: 'Store', path: '/dashboard/store' },
+    { name: 'Wishlist', path: '/dashboard/wishlist' },
+    { name: 'Purchases', path: '/dashboard/purchases' },
+    { name: 'My Badges', path: '/dashboard/badges' },
+    { name: 'Withdrawals', path: '/dashboard/payouts' },
+    { name: 'Analytics', path: '/dashboard/analytics' },
     { name: 'Settings', path: '/dashboard/settings' },
   ];
 

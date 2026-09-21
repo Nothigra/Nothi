@@ -1,6 +1,6 @@
 import { createBrowserRouter, Outlet, useLocation, useNavigate } from 'react-router';
 import { AnimatePresence } from 'framer-motion';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 // Layouts
 import Layout from './components/layout/Layout';
@@ -27,6 +27,7 @@ import CheckoutCancel from './pages/CheckoutCancel';
 
 import CookieBanner from './components/common/CookieBanner';
 import XPGainPopup from './components/common/XPGainPopup';
+import CommandPalette from './components/ui/CommandPalette';
 
 // Auth Pages
 import LoginPage from './pages/LoginPage';
@@ -81,11 +82,13 @@ function AuthCallback() {
 
 // AppRoot renders the Outlet so that context providers in main.jsx can wrap everything.
 function AppRoot() {
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   return (
     <>
       <Outlet />
       <CookieBanner />
       <XPGainPopup />
+      <CommandPalette isOpen={isCommandPaletteOpen} setIsOpen={setIsCommandPaletteOpen} />
     </>
   );
 }

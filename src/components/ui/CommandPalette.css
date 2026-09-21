@@ -1,7 +1,7 @@
 .command-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: var(--z-modal-priority);
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(4px);
   display: flex;
@@ -13,12 +13,12 @@
 .command-modal {
   width: 100%;
   max-width: 600px;
-  background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-xl, 0 10px 40px rgba(0, 0, 0, 0.3));
   overflow: hidden;
-  color: var(--text-color, #111827);
+  color: var(--color-text-primary);
   display: flex;
   flex-direction: column;
 }
@@ -27,12 +27,12 @@
   display: flex;
   align-items: center;
   padding: 16px;
-  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  border-bottom: 1px solid var(--color-border);
   gap: 12px;
 }
 
 .command-search-icon {
-  color: var(--text-muted, #6b7280);
+  color: var(--color-text-tertiary);
 }
 
 .command-input {
@@ -41,7 +41,7 @@
   background: transparent;
   outline: none;
   font-size: 16px;
-  color: var(--text-color, #111827);
+  color: var(--color-text-primary);
 }
 
 .command-badge {
@@ -49,11 +49,11 @@
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
-  background: var(--bg-secondary, #f3f4f6);
-  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 12px;
-  color: var(--text-muted, #6b7280);
+  color: var(--color-text-tertiary);
 }
 
 .command-results {
@@ -71,51 +71,19 @@
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
-  color: var(--text-color, #111827);
-  transition: background 0.2s, color 0.2s;
+  color: var(--color-text-primary);
+  transition: background 0.15s ease;
 }
 
 .command-result-item:hover,
 .command-result-item:focus {
-  background: var(--bg-hover, #f3f4f6);
-  color: var(--primary-color, #2563eb);
+  background: var(--color-bg-tertiary);
   outline: none;
 }
 
 .command-no-results {
   padding: 32px;
   text-align: center;
-  color: var(--text-muted, #6b7280);
+  color: var(--color-text-tertiary);
   font-size: 14px;
-}
-
-/* Dark mode adjustments - assumes dark mode adds a 'dark' class to body or uses variables */
-:root[data-theme="dark"] .command-modal {
-  background: #1f2937;
-  border-color: #374151;
-  color: #f9fafb;
-}
-
-:root[data-theme="dark"] .command-input {
-  color: #f9fafb;
-}
-
-:root[data-theme="dark"] .command-input-container {
-  border-bottom-color: #374151;
-}
-
-:root[data-theme="dark"] .command-badge {
-  background: #374151;
-  border-color: #4b5563;
-  color: #d1d5db;
-}
-
-:root[data-theme="dark"] .command-result-item {
-  color: #e5e7eb;
-}
-
-:root[data-theme="dark"] .command-result-item:hover,
-:root[data-theme="dark"] .command-result-item:focus {
-  background: #374151;
-  color: #60a5fa;
 }
