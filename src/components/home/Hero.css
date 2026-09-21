@@ -10,7 +10,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding-top: 100px;
+  padding-top: 70px;
   overflow: hidden;
   background: var(--color-bg);
 }
@@ -48,10 +48,12 @@
     background-image: none;
     filter: none;
     opacity: 1;
+    inset: -30px;
     background:
       radial-gradient(circle at 18% 15%, color-mix(in srgb, var(--color-text-primary) 16%, transparent), transparent 55%),
       radial-gradient(circle at 85% 20%, color-mix(in srgb, var(--color-text-primary) 10%, transparent), transparent 50%),
       radial-gradient(circle at 50% 85%, color-mix(in srgb, var(--color-text-primary) 12%, transparent), transparent 60%);
+    will-change: transform;
     animation: heroMeshDrift 14s ease-in-out infinite alternate;
   }
 
@@ -62,8 +64,8 @@
 }
 
 @keyframes heroMeshDrift {
-  from { background-position: 0% 0%, 0% 0%, 0% 0%; }
-  to { background-position: 6% 4%, -4% 6%, 3% -5%; }
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-2.5%, 2%, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -501,5 +503,5 @@
   position: relative;
   width: 100%;
   z-index: 10;
-  margin-top: var(--space-4);
+  margin-top: var(--space-8);
 }

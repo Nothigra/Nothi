@@ -20,13 +20,17 @@
     box-shadow: 0 10px 34px rgba(0, 0, 0, 0.4), 0 2px 10px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.04);
     height: 62px;
     padding: 0 4px;
-    transition: height 0.35s cubic-bezier(0.34, 1.1, 0.64, 1), padding 0.35s ease;
+    transform: translateZ(0) scaleY(1);
+    transform-origin: bottom center;
+    will-change: transform;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Compact state while actively scrolling -- shrinks, then eases back
-     open 400ms after the user stops (see the JS scroll listener). */
+  /* Compact state while actively scrolling -- a cheap, GPU-only transform
+     scale instead of animating height, which would force layout on every
+     frame and was the real cause of the choppy mobile feel. */
   .mobile-bottom-nav.compact {
-    height: 46px;
+    transform: translateZ(0) scaleY(0.74);
   }
 }
 
@@ -53,22 +57,23 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
-  transition: opacity 0.2s ease, height 0.3s ease, margin 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .mbn-item svg {
-  transition: transform 0.35s cubic-bezier(0.34, 1.5, 0.64, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* While compact: hide labels, enlarge icons slightly to fill the shorter bar */
+/* While compact: hide labels and re-inflate icons, counteracting the parent's
+   scaleY so they stay visually crisp and undistorted instead of squashed. */
 .mobile-bottom-nav.compact .mbn-item span {
   opacity: 0;
-  height: 0;
-  margin: 0;
 }
 
 .mobile-bottom-nav.compact .mbn-item svg {
-  transform: scale(1.15);
+  /* Counteract the parent's non-uniform scaleY(0.74) so icons stay round and
+     crisp instead of looking vertically squashed. */
+  transform: scale(1.08, 1.46);
 }
 
 .mbn-item:active {
@@ -103,7 +108,7 @@
 .mobile-bottom-nav.compact .mbn-center-avatar {
   width: 30px;
   height: 30px;
-  transform: translateY(0);
+  transform: translateY(0) scaleY(1.35);
 }
 
 .mbn-center-avatar img {
