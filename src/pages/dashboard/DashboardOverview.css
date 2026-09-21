@@ -216,3 +216,26 @@
   letter-spacing: 0.03em;
   color: var(--color-text-tertiary);
 }
+
+/* Quick Links grouped by theme (Sell / Buy & Connect / Account) —
+   mobile/tablet only, matching .dashboard-quick-links' own breakpoint */
+.dashboard-quick-links-groups {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-quick-links-groups {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+}
+
+.quick-links-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-tertiary);
+  margin: 0 0 var(--space-sm) 2px;
+}

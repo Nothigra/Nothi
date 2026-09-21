@@ -97,48 +97,67 @@ export default function DashboardOverview() {
       </div>
 
       {/* Quick Links — mobile only: sidebar isn't reachable on mobile, so this is
-          the primary way to get to the rest of the dashboard from a phone */}
-      <div className="dashboard-quick-links mb-2xl">
-        <Link to="/dashboard/upload" className="quick-link-card">
-          <span className="quick-link-icon"><Plus size={20} /></span>
-          <span>Publish</span>
-        </Link>
-        <Link to="/dashboard/products" className="quick-link-card">
-          <span className="quick-link-icon"><Package size={20} /></span>
-          <span>Products</span>
-        </Link>
-        <Link to="/dashboard/following" className="quick-link-card">
-          <span className="quick-link-icon"><Users size={20} /></span>
-          <span>Following</span>
-        </Link>
-        <Link to="/dashboard/messages" className="quick-link-card">
-          <span className="quick-link-icon"><MessageSquare size={20} /></span>
-          <span>Messages</span>
-        </Link>
-        <Link to="/dashboard/wishlist" className="quick-link-card">
-          <span className="quick-link-icon"><Heart size={20} /></span>
-          <span>Wishlist</span>
-        </Link>
-        <Link to="/dashboard/purchases" className="quick-link-card">
-          <span className="quick-link-icon"><ShoppingBag size={20} /></span>
-          <span>Purchases</span>
-        </Link>
-        <Link to="/dashboard/badges" className="quick-link-card">
-          <span className="quick-link-icon"><CheckCircle2 size={20} /></span>
-          <span>My Badges</span>
-        </Link>
-        <Link to="/dashboard/payouts" className="quick-link-card">
-          <span className="quick-link-icon"><DollarSign size={20} /></span>
-          <span>Withdrawals</span>
-        </Link>
-        <Link to={`/creator/${profile?.username || ''}`} className="quick-link-card">
-          <span className="quick-link-icon"><Globe size={20} /></span>
-          <span>My Shop</span>
-        </Link>
-        <Link to="/dashboard/settings" className="quick-link-card">
-          <span className="quick-link-icon"><Settings size={20} /></span>
-          <span>Settings</span>
-        </Link>
+          the primary way to get to the rest of the dashboard from a phone.
+          Grouped by theme (rather than one flat list of 10) so it reads at
+          a glance instead of requiring the user to scan every icon. */}
+      <div className="dashboard-quick-links-groups mb-2xl">
+        <div className="quick-links-group">
+          <h4 className="quick-links-group-title">Sell</h4>
+          <div className="dashboard-quick-links">
+            <Link to="/dashboard/upload" className="quick-link-card">
+              <span className="quick-link-icon"><Plus size={20} /></span>
+              <span>Publish</span>
+            </Link>
+            <Link to="/dashboard/products" className="quick-link-card">
+              <span className="quick-link-icon"><Package size={20} /></span>
+              <span>Products</span>
+            </Link>
+            <Link to="/dashboard/payouts" className="quick-link-card">
+              <span className="quick-link-icon"><DollarSign size={20} /></span>
+              <span>Withdrawals</span>
+            </Link>
+            <Link to={`/creator/${profile?.username || ''}`} className="quick-link-card">
+              <span className="quick-link-icon"><Globe size={20} /></span>
+              <span>My Shop</span>
+            </Link>
+          </div>
+        </div>
+
+        <div className="quick-links-group">
+          <h4 className="quick-links-group-title">Buy & Connect</h4>
+          <div className="dashboard-quick-links">
+            <Link to="/dashboard/purchases" className="quick-link-card">
+              <span className="quick-link-icon"><ShoppingBag size={20} /></span>
+              <span>Purchases</span>
+            </Link>
+            <Link to="/dashboard/wishlist" className="quick-link-card">
+              <span className="quick-link-icon"><Heart size={20} /></span>
+              <span>Wishlist</span>
+            </Link>
+            <Link to="/dashboard/following" className="quick-link-card">
+              <span className="quick-link-icon"><Users size={20} /></span>
+              <span>Following</span>
+            </Link>
+            <Link to="/dashboard/messages" className="quick-link-card">
+              <span className="quick-link-icon"><MessageSquare size={20} /></span>
+              <span>Messages</span>
+            </Link>
+          </div>
+        </div>
+
+        <div className="quick-links-group">
+          <h4 className="quick-links-group-title">Account</h4>
+          <div className="dashboard-quick-links">
+            <Link to="/dashboard/badges" className="quick-link-card">
+              <span className="quick-link-icon"><CheckCircle2 size={20} /></span>
+              <span>My Badges</span>
+            </Link>
+            <Link to="/dashboard/settings" className="quick-link-card">
+              <span className="quick-link-icon"><Settings size={20} /></span>
+              <span>Settings</span>
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* Premium Stats Grid */}
