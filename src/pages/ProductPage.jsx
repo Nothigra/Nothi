@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, Link, useNavigate, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -248,6 +249,62 @@ export default function ProductPage() {
     openCart();
   };
 
+  const purchaseActionsRef = useRef(null);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+
+  useEffect(() => {
+    const el = purchaseActionsRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyBar(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [product]);
+
+  const renderMainActionButton = (compact = false) => {
+    const sizeProps = compact
+      ? { style: { height: '100%', padding: '0 20px', flex: 1 } }
+      : { style: { height: '100%', padding: '0 24px', flex: 1 } };
+
+    if (hasPurchased) {
+      return (
+        <button
+          className="btn btn-primary flex-center gap-sm text-lg font-bold"
+          style={sizeProps.style}
+          onClick={() => navigate('/dashboard/purchases')}
+        >
+          View in My Purchases
+        </button>
+      );
+    }
+    if (product.salePrice === 0 || product.price === 0) {
+      return (
+        <button
+          className="btn btn-primary flex-center gap-sm text-lg font-bold"
+          style={{ ...sizeProps.style, filter: isOwnProduct ? 'grayscale(100%)' : 'none', opacity: isOwnProduct ? 0.6 : 1, cursor: isOwnProduct ? 'not-allowed' : 'pointer' }}
+          onClick={isOwnProduct ? (e) => e.preventDefault() : handleFreeDownload}
+          disabled={isDownloading || isOwnProduct}
+        >
+          <Download size={20} />
+          {isDownloading ? '...' : (isOwnProduct ? 'Your Product' : 'Download for Free')}
+        </button>
+      );
+    }
+    return (
+      <button
+        className="btn btn-primary flex-center gap-sm text-lg font-bold"
+        style={{ ...sizeProps.style, filter: isOwnProduct ? 'grayscale(100%)' : 'none', opacity: isOwnProduct ? 0.6 : 1, cursor: isOwnProduct ? 'not-allowed' : 'pointer' }}
+        onClick={isOwnProduct ? (e) => e.preventDefault() : handleAddToCart}
+        disabled={isOwnProduct}
+      >
+        <ShoppingCart size={20} />
+        {isOwnProduct ? 'Your Product' : 'Add to Cart'}
+      </button>
+    );
+  };
+
   return (
     <div className="product-page" style={{ paddingTop: '120px' }}>
       <div className="container pb-xl">
@@ -321,37 +378,9 @@ export default function ProductPage() {
               )}
             </div>
 
-            <div className="purchase-actions flex flex-col gap-sm w-full">
+            <div className="purchase-actions flex flex-col gap-sm w-full" ref={purchaseActionsRef}>
               <div className="flex w-full gap-sm items-stretch" style={{ height: '56px' }}>
-                {hasPurchased ? (
-                  <button 
-                    className="btn btn-primary flex-center gap-sm text-lg font-bold" 
-                    style={{ height: '100%', padding: '0 24px', flex: 1 }} 
-                    onClick={() => navigate('/dashboard/purchases')}
-                  >
-                    View in My Purchases
-                  </button>
-                ) : (product.salePrice === 0 || product.price === 0) ? (
-                  <button 
-                    className="btn btn-primary flex-center gap-sm text-lg font-bold" 
-                    style={{ height: '100%', padding: '0 24px', flex: 1, filter: isOwnProduct ? 'grayscale(100%)' : 'none', opacity: isOwnProduct ? 0.6 : 1, cursor: isOwnProduct ? 'not-allowed' : 'pointer' }} 
-                    onClick={isOwnProduct ? (e) => e.preventDefault() : handleFreeDownload}
-                    disabled={isDownloading || isOwnProduct}
-                  >
-                    <Download size={20} />
-                    {isDownloading ? '...' : (isOwnProduct ? 'Your Product' : 'Download for Free')}
-                  </button>
-                ) : (
-                  <button 
-                    className="btn btn-primary flex-center gap-sm text-lg font-bold" 
-                    style={{ height: '100%', padding: '0 24px', flex: 1, filter: isOwnProduct ? 'grayscale(100%)' : 'none', opacity: isOwnProduct ? 0.6 : 1, cursor: isOwnProduct ? 'not-allowed' : 'pointer' }} 
-                    onClick={isOwnProduct ? (e) => e.preventDefault() : handleAddToCart} 
-                    disabled={isOwnProduct}
-                  >
-                    <ShoppingCart size={20} />
-                    {isOwnProduct ? 'Your Product' : 'Add to Cart'}
-                  </button>
-                )}
+                {renderMainActionButton()}
                 <button 
                   className={`btn flex-center ${isInWishlist(product.id) ? 'btn-secondary text-accent' : 'btn-outline text-secondary hover:text-primary'}`}
                   onClick={(e) => { e.preventDefault(); toggleWishlist(product); }}
@@ -658,6 +687,34 @@ export default function ProductPage() {
         type="product" 
         targetId={product.id} 
       />
+
+      {/* Sticky mobile buy bar — appears once the real purchase actions
+          scroll out of view, so buying never requires scrolling back up */}
+      <AnimatePresence>
+        {showStickyBar && (
+          <motion.div
+            className="sticky-buy-bar"
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="sticky-buy-bar-price">
+              {product.salePrice ? (
+                <>
+                  <span className="sticky-buy-bar-current">{formatPrice(product.salePrice)}</span>
+                  <span className="sticky-buy-bar-was">{formatPrice(product.price)}</span>
+                </>
+              ) : (
+                <span className="sticky-buy-bar-current">{formatPrice(product.price)}</span>
+              )}
+            </div>
+            <div className="sticky-buy-bar-action">
+              {renderMainActionButton(true)}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
