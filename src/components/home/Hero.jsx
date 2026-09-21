@@ -217,7 +217,15 @@ export default function Hero() {
     <section className="hero-section">
 
       {/* Background motion visual */}
-      <div className="hero-bg-visual" aria-hidden="true" />
+      <video 
+        className="hero-bg-visual" 
+        src="/VideoSiteweb.mp4" 
+        autoPlay 
+        loop 
+        muted 
+        playsInline 
+        aria-hidden="true" 
+      />
       <div className="hero-bg-fade" aria-hidden="true" />
 
       {/* Mouse-following light */}
