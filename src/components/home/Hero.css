@@ -37,6 +37,7 @@
 
 .dark .hero-bg-visual {
   opacity: 0.35;
+  filter: blur(6px);
 }
 
 @media (prefers-reduced-motion: reduce) {
