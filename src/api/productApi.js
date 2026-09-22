@@ -5,12 +5,12 @@ let publicProductsCache = null;
 let publicProductsCacheTime = 0;
 const CACHE_TTL = 300000; // 5 minutes
 
-export async function getPublicProducts(isMockMode) {
+export async function getPublicProducts(isMockMode, forceFresh = false) {
   if (isMockMode) {
     return MOCK_PRODUCTS;
   }
   
-  if (publicProductsCache && Date.now() - publicProductsCacheTime < CACHE_TTL) {
+  if (!forceFresh && publicProductsCache && Date.now() - publicProductsCacheTime < CACHE_TTL) {
     return publicProductsCache;
   }
   

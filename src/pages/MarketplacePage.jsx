@@ -120,7 +120,7 @@ export default function MarketplacePage() {
     async function loadProducts() {
       if (isAuthLoading) return;
       setLoading(true);
-      const data = await getPublicProducts(isMockMode);
+      const data = await getPublicProducts(isMockMode, true);
       if (isMounted) {
         setProducts(data);
         setLoading(false);
@@ -128,7 +128,7 @@ export default function MarketplacePage() {
     }
     loadProducts();
     return () => { isMounted = false; };
-  }, [isMockMode, isAuthLoading]);
+  }, [isMockMode, isAuthLoading, location.key]);
 
   const priceRanges = [
     { id: 'all', label: t('marketplace.priceRange') },
