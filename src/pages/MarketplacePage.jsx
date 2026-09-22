@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
-import { Search, X, ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { Search, X, ChevronDown, ChevronRight, ArrowLeft, SlidersHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProductCard from '../components/product/ProductCard';
 import { getLocalizedString } from '../utils/i18nHelpers';
@@ -74,12 +74,21 @@ export default function MarketplacePage() {
   const [selectedRating, setSelectedRating] = useState(savedFilters?.selectedRating || 'all');
   const [selectedSoftware, setSelectedSoftware] = useState(savedFilters?.selectedSoftware || profile?.software || []);
   const [selectedStyle, setSelectedStyle] = useState(savedFilters?.selectedStyle || profile?.style || []);
+  const [showPaid, setShowPaid] = useState(savedFilters?.showPaid !== undefined ? savedFilters.showPaid : true);
+  const [showFree, setShowFree] = useState(savedFilters?.showFree !== undefined ? savedFilters.showFree : false);
+  // Mobile filter sheet navigation: 'main' shows Paid/Free + the 3 category
+  // buttons; drilling into one shows its own checkbox list with a back arrow.
+  const [filterView, setFilterView] = useState('main');
   const [sortBy, setSortBy] = useState(savedFilters?.sortBy || 'newest');
   
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const { results: searchResults, debouncedQuery } = useUnifiedSearch(searchTerm, baseLang);
   
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isFiltersOpen) setFilterView('main');
+  }, [isFiltersOpen]);
   const [hasInitializedFilters, setHasInitializedFilters] = useState(!!savedFilters || !!profile?.software);
 
   // Coming from the mobile header's search icon: jump straight into the search field
@@ -102,9 +111,9 @@ export default function MarketplacePage() {
   // Persist filters to session storage
   useEffect(() => {
     sessionStorage.setItem('marketplaceFilters', JSON.stringify({
-      searchTerm, selectedPrice, selectedRating, selectedSoftware, selectedStyle, sortBy
+      searchTerm, selectedPrice, selectedRating, selectedSoftware, selectedStyle, showPaid, showFree, sortBy
     }));
-  }, [searchTerm, selectedPrice, selectedRating, selectedSoftware, selectedStyle, sortBy]);
+  }, [searchTerm, selectedPrice, selectedRating, selectedSoftware, selectedStyle, showPaid, showFree, sortBy]);
 
   useEffect(() => {
     let isMounted = true;
@@ -177,6 +186,14 @@ export default function MarketplacePage() {
       result = result.filter(p => p.category === selectedCategory);
     }
 
+    if (!(showPaid && showFree)) {
+      result = result.filter(p => {
+        const price = p.salePrice || p.sale_price || p.price || 0;
+        const isFree = price === 0;
+        return isFree ? showFree : showPaid;
+      });
+    }
+
     if (selectedPrice !== 'all') {
       const range = priceRanges.find(r => r.id === selectedPrice);
       if (range) {
@@ -241,7 +258,7 @@ export default function MarketplacePage() {
     });
 
     return result;
-  }, [products, searchTerm, selectedCategory, selectedPrice, selectedRating, selectedSoftware, selectedStyle, sortBy]);
+  }, [products, searchTerm, selectedCategory, selectedPrice, selectedRating, selectedSoftware, selectedStyle, showPaid, showFree, sortBy]);
 
   const toggleSoftware = (sw) => {
     setSelectedSoftware(prev => 
@@ -344,6 +361,20 @@ export default function MarketplacePage() {
           </div>
 
           <div className="filter-group">
+            <h4 className="filter-title">{t('marketplace.priceType', 'Price')}</h4>
+            <div className="filter-options">
+              <div style={{ marginBottom: '8px' }}>
+                <Checkbox label="Paid" checked={showPaid} onChange={() => setShowPaid(v => !v)} />
+              </div>
+              <div style={{ marginBottom: '8px' }}>
+                <Checkbox label="Free" checked={showFree} onChange={() => setShowFree(v => !v)} />
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop/tablet: every section visible at once (plenty of room) */}
+          <div className="filter-sections-flat">
+          <div className="filter-group">
             <h4 className="filter-title">{t('upload.category', 'Category')}</h4>
             <div className="filter-options">
               <button 
@@ -393,6 +424,105 @@ export default function MarketplacePage() {
                 </div>
               ))}
             </div>
+          </div>
+          </div>
+
+          {/* Mobile: Category/Software/Style tucked behind a 3-button menu,
+              drilling into one at a time instead of a long single scroll */}
+          <div className="filter-sections-drilldown">
+            {filterView === 'main' && (
+              <div className="filter-group">
+                <div className="filter-nav-list">
+                  <button className="filter-nav-btn" onClick={() => setFilterView('category')}>
+                    <span>Category</span>
+                    <span className="filter-nav-btn-right">
+                      {selectedCategory !== 'all' && <span className="filter-nav-count">1</span>}
+                      <ChevronRight size={18} />
+                    </span>
+                  </button>
+                  <button className="filter-nav-btn" onClick={() => setFilterView('software')}>
+                    <span>Software</span>
+                    <span className="filter-nav-btn-right">
+                      {selectedSoftware.length > 0 && <span className="filter-nav-count">{selectedSoftware.length}</span>}
+                      <ChevronRight size={18} />
+                    </span>
+                  </button>
+                  <button className="filter-nav-btn" onClick={() => setFilterView('style')}>
+                    <span>Style</span>
+                    <span className="filter-nav-btn-right">
+                      {selectedStyle.length > 0 && <span className="filter-nav-count">{selectedStyle.length}</span>}
+                      <ChevronRight size={18} />
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {filterView === 'category' && (
+              <div className="filter-group">
+                <button className="filter-back-btn" onClick={() => setFilterView('main')}>
+                  <ArrowLeft size={16} /> Category
+                </button>
+                <div className="filter-options">
+                  <button 
+                    className={`filter-btn ${selectedCategory === 'all' ? 'active' : ''}`}
+                    onClick={() => handleCategoryChange('all')}
+                  >
+                    {t('marketplace.allCategories', 'All Categories')}
+                  </button>
+                  {categories.map(cat => {
+                    const count = products.filter(p => p.category === cat.id).length;
+                    return (
+                      <button 
+                        key={cat.id}
+                        className={`filter-btn ${selectedCategory === cat.id ? 'active' : ''}`}
+                        onClick={() => handleCategoryChange(cat.id)}
+                      >
+                        {cat.name} <span className="text-muted">({count})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {filterView === 'software' && (
+              <div className="filter-group">
+                <button className="filter-back-btn" onClick={() => setFilterView('main')}>
+                  <ArrowLeft size={16} /> Software
+                </button>
+                <div className="filter-options">
+                  {softwareList.map(sw => (
+                    <div key={sw} style={{ marginBottom: '8px' }}>
+                      <Checkbox 
+                        label={sw}
+                        checked={selectedSoftware.includes(sw)}
+                        onChange={() => toggleSoftware(sw)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {filterView === 'style' && (
+              <div className="filter-group">
+                <button className="filter-back-btn" onClick={() => setFilterView('main')}>
+                  <ArrowLeft size={16} /> Style
+                </button>
+                <div className="filter-options">
+                  {styleList.map(st => (
+                    <div key={st} style={{ marginBottom: '8px' }}>
+                      <Checkbox 
+                        label={st}
+                        checked={selectedStyle.includes(st)}
+                        onChange={() => toggleStyle(st)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="filter-group">
