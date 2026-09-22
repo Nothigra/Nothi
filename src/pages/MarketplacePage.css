@@ -147,7 +147,7 @@
 
 .filter-pill.active {
   background: var(--color-accent);
-  color: white;
+  color: var(--color-accent-text);
   border-color: var(--color-accent);
 }
 
@@ -378,6 +378,7 @@
     overflow-y: auto;
     transform: translateX(-100%);
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   }
   
   .marketplace-sidebar.open {
@@ -402,9 +403,63 @@
     background: rgba(0, 0, 0, 0.4);
     z-index: var(--z-overlay);
   }
+
   
   .marketplace-layout.filters-closed .marketplace-sidebar {
     width: 280px;
+  }
+}
+
+/* Phones specifically: filters open as a bottom sheet instead of a
+   left-side drawer — far easier to reach one-handed than something
+   sliding in from the opposite edge of the screen. Tablets (769-992px)
+   above keep the side-drawer, which is fine there. */
+@media (max-width: 768px) {
+  .marketplace-sidebar {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: none;
+    height: auto;
+    max-height: 55vh;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    border-radius: 20px 20px 0 0;
+    transform: translateY(100%);
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.25);
+    padding-top: var(--space-3);
+    z-index: var(--z-modal-priority);
+  }
+
+  .marketplace-sidebar.open {
+    transform: translateY(0);
+  }
+
+  /* Small drag-handle affordance, purely visual — signals "this is a
+     sheet, swipe/tap to dismiss" the way native bottom sheets do. */
+  .marketplace-sidebar::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    border-radius: var(--radius-full);
+    background: var(--color-border-strong);
+    margin: 0 auto var(--space-4) auto;
+    flex-shrink: 0;
+  }
+
+  .marketplace-layout.filters-closed .marketplace-sidebar {
+    width: 100%;
+  }
+
+  .mobile-overlay {
+    z-index: var(--z-modal-priority);
+    bottom: 55vh;
+    top: 0;
   }
 }
 
@@ -413,4 +468,82 @@
   .marketplace-layout.filters-open .products-grid-view {
     grid-template-columns: 1fr;
   }
+}
+
+/* Category/Software/Style: flat list on desktop/tablet (room for everything
+   at once), drill-down 3-button menu on mobile (see the @media block). */
+.filter-sections-drilldown {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .filter-sections-flat {
+    display: none;
+  }
+  .filter-sections-drilldown {
+    display: block;
+  }
+}
+
+.filter-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.filter-nav-btn:active {
+  background: var(--color-bg-tertiary);
+}
+
+.filter-nav-btn-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-tertiary);
+}
+
+.filter-nav-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.filter-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  margin-bottom: var(--space-4);
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.filter-back-btn:active {
+  opacity: 0.6;
 }

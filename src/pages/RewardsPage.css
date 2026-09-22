@@ -2,19 +2,20 @@
 
 /* Global Tokens for Rewards Gamification */
 :root {
-  --rank-novice-bg: #94A3B8;
-  --rank-apprentice-bg: #10B981;
-  --rank-creator-bg: #06B6D4;
-  --rank-craftsman-bg: #3B82F6;
-  --rank-specialist-bg: #1D4ED8;
-  --rank-expert-bg: #8B5CF6;
-  --rank-professional-bg: #D946EF;
-  --rank-veteran-bg: #E11D48;
-  --rank-master-bg: #F59E0B;
-  --rank-legend-bg: linear-gradient(135deg, #FF4500, #FF8C00, #FFD700);
+  /* Rank colors: monochrome, differentiated by shade — brighter as you level up */
+  --rank-novice-bg: #6B6B68;
+  --rank-apprentice-bg: #85857F;
+  --rank-creator-bg: #9E9E97;
+  --rank-craftsman-bg: #B6B6AE;
+  --rank-specialist-bg: #CACAC3;
+  --rank-expert-bg: #DCDCD6;
+  --rank-professional-bg: #E9E9E4;
+  --rank-veteran-bg: #F2F2EF;
+  --rank-master-bg: #F8F8F6;
+  --rank-legend-bg: linear-gradient(135deg, #FFFFFF, #D9D9D4, #FFFFFF);
 
   --gradient-streak: linear-gradient(135deg, #F97316, #EF4444);
-  --gradient-xp-bar: linear-gradient(90deg, var(--color-accent), #A855F7);
+  --gradient-xp-bar: linear-gradient(90deg, var(--color-text-tertiary), var(--color-text-primary));
 }
 
 .rewards-page {
@@ -30,15 +31,15 @@
   transform: translateX(-50%);
   width: 600px;
   height: 400px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-accent) 15%, transparent) 0%, transparent 70%);
   pointer-events: none;
   z-index: -1;
 }
 
 /* Depth & Glow Effects */
 .card-glow-active {
-  box-shadow: var(--shadow-lg), 0 0 20px rgba(99, 102, 241, 0.2);
-  border: 1px solid rgba(99, 102, 241, 0.4);
+  box-shadow: var(--shadow-lg), 0 0 20px color-mix(in srgb, var(--color-accent) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
 }
 
 .card-elevated {
@@ -108,7 +109,7 @@
   background: var(--gradient-xp-bar);
   border-radius: var(--radius-full);
   transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-accent) 50%, transparent);
 }
 
 /* Layout Divider */
@@ -146,8 +147,8 @@
 
 /* Claim Button Animated Outline */
 .btn-claim-animated { position: relative; z-index: 1; overflow: hidden; }
-.btn-claim-animated::before { content: ''; position: absolute; inset: -4px; z-index: -1; background: conic-gradient(from 0deg, var(--color-accent), #A855F7, var(--color-accent), #06B6D4, var(--color-accent)); animation: spinBorder 4s linear infinite; opacity: 0.8; }
-.btn-claim-animated::after { content: ''; position: absolute; inset: 2px; background: var(--color-accent); z-index: -1; border-radius: calc(var(--radius-xl) - 2px); }
+.btn-claim-animated::before { content: ''; position: absolute; inset: -4px; z-index: -1; background: conic-gradient(from 0deg, var(--color-text-primary), var(--color-text-tertiary), var(--color-text-primary), var(--color-text-tertiary), var(--color-text-primary)); animation: spinBorder 4s linear infinite; opacity: 0.5; }
+.btn-claim-animated::after { content: ''; position: absolute; inset: 2px; background: var(--color-bg); z-index: -1; border-radius: calc(var(--radius-xl) - 2px); }
 @keyframes spinBorder { 100% { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .btn-claim-animated::before { animation: none !important; } }
 

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { User, Palette, DollarSign, Monitor, Layers, Check, CheckCircle2, Loader2, XCircle, Sun, Moon, Contrast, AlertTriangle, Camera } from 'lucide-react';
+import { User, Palette, DollarSign, Monitor, Layers, Check, CheckCircle2, Loader2, XCircle, Sun, Moon, AlertTriangle, Camera } from 'lucide-react';
 import { applyCustomTheme, clearCustomTheme, getLuminance, hexToRGB, getContrastRatio } from '../../utils/themeUtils';
 import CustomColorPicker from '../../components/common/CustomColorPicker';
 import { useAuth } from '../../context/AuthContext';
@@ -9,7 +9,7 @@ import { SOFTWARE_LIST, CURRENCY_LIST, STYLE_LIST } from '../../lib/seed';
 import * as accountStore from '../../lib/accountStore';
 import Input from '../../components/ui/Input';
 import Textarea from '../../components/ui/Textarea';
-import { supabase, withTimeoutSafety } from '../../lib/supabase';
+import { supabase, isMockMode, withTimeoutSafety } from '../../lib/supabase';
 import './DashboardPages.css';
 
 export default function DashboardSettings() {
@@ -126,6 +126,13 @@ export default function DashboardSettings() {
 
       const uploadAvatar = async () => {
         try {
+          if (isMockMode) {
+            // No real upload target in mock mode — just preview the local file
+            await new Promise(r => setTimeout(r, 400));
+            setAvatarPreview(URL.createObjectURL(file));
+            return;
+          }
+
           const { data, error } = await withTimeoutSafety(() =>
             supabase.functions.invoke('generate-upload-url', {
               body: { 
@@ -548,13 +555,6 @@ export default function DashboardSettings() {
                   >
                     <Sun size={32} />
                     <span className="font-semibold text-lg">Light</span>
-                  </button>
-                  <button
-                    className={`flex-1 flex flex-col items-center gap-md p-xl border-2 rounded-xl transition-all ${theme === 'dim' ? 'border-accent bg-accent-subtle text-accent shadow-md' : 'border-border bg-bg-card text-secondary hover:border-tertiary'}`}
-                    onClick={() => handleThemeChange('dim')}
-                  >
-                    <Contrast size={32} />
-                    <span className="font-semibold text-lg">Dim</span>
                   </button>
                   <button
                     className={`flex-1 flex flex-col items-center gap-md p-xl border-2 rounded-xl transition-all ${theme === 'dark' ? 'border-accent bg-accent-subtle text-accent shadow-md' : 'border-border bg-bg-card text-secondary hover:border-tertiary'}`}

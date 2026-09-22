@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useParams, Link, useNavigate, useBlocker } from 'react-router';
 import { Star, CheckCircle2, LayoutDashboard, Edit2, Camera, Upload, Check, X, GripVertical, Plus, Settings, Eye, EyeOff, Loader2, ArrowLeft, UserPlus, Flag, Palette } from 'lucide-react';
 import ProductCard from '../components/product/ProductCard';
+import PortalWhen from '../components/common/PortalWhen';
 import BackgroundCustomizer from '../components/common/BackgroundCustomizer';
 import ReportModal from '../components/common/ReportModal';
 import { useAuth } from '../context/AuthContext';
@@ -34,6 +35,18 @@ export default function CreatorProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoaderExiting, setIsLoaderExiting] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
+  // The edit-mode action panel becomes position:fixed at <=1200px (see CSS) —
+  // portal it on mobile/tablet so it can escape Layout's page-transition
+  // stacking context and correctly sit above the floating bottom nav.
+  const [isCompactEditPanel, setIsCompactEditPanel] = useState(
+    typeof window !== 'undefined' ? window.innerWidth <= 1200 : false
+  );
+  useEffect(() => {
+    const handleResize = () => setIsCompactEditPanel(window.innerWidth <= 1200);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -962,11 +975,12 @@ export default function CreatorProfilePage() {
         >
           
           {isEditing && (
+            <PortalWhen active={isCompactEditPanel}>
             <div className="edit-action-panel-wrapper">
               <div className="edit-action-panel-inner">
                 <button 
                   className="btn w-full flex-center justify-center gap-sm transition-transform hover:scale-105 rounded-lg py-sm px-md shadow-md mb-xs"
-                  style={{ background: 'linear-gradient(135deg, var(--color-accent), #8b5cf6)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.4)' }}
+                  style={{ background: 'var(--color-accent)', color: 'var(--color-accent-text)', border: '1px solid var(--color-border-strong)' }}
                   onClick={() => openEditSection('appearance')}
                 >
                   <Palette size={16} />
@@ -979,6 +993,7 @@ export default function CreatorProfilePage() {
                 </button>
               </div>
             </div>
+            </PortalWhen>
           )}
           
           {!isEditing && isOwner && (
@@ -1083,7 +1098,7 @@ export default function CreatorProfilePage() {
             </div>
             <div className="profile-stat">
               <div className="flex items-center gap-xs">
-                <Star size={18} className="relative top-[-1px]" style={{ color: '#F59E0B' }} fill="currentColor" />
+                <Star size={18} className="relative top-[-1px]" style={{ color: 'var(--color-gold, #B8972A)' }} fill="currentColor" />
                 <span className="stat-num">{creator.rating || '5.0'}</span>
               </div>
               <span className="stat-lbl">Rating</span>

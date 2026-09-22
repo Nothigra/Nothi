@@ -109,7 +109,7 @@
   top: -10px;
   right: 16px;
   background-color: var(--color-accent);
-  color: white;
+  color: var(--color-accent-text);
   font-size: 10px;
   font-weight: 700;
   padding: 2px 8px;

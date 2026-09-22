@@ -35,9 +35,15 @@ const devLocks = async (name, acquireTimeout, fn) => {
 
 if (!isMockMode) {
   const options = {
-    auth: {
-      lock: devLocks
-    }
+    // The custom devLocks workaround exists specifically for Vite's dev-server
+    // Hot Module Reload, which can leave two GoTrue client instances fighting
+    // over the same browser lock. That scenario is physically impossible in a
+    // production build (no HMR there) — and our custom lock has its own real
+    // bug: it never actually honors the acquireTimeout GoTrue passes it, so
+    // if anything ever holds it and doesn't release, every future auth call
+    // queues up behind it forever. Only use it in real dev mode; let
+    // production use Supabase's own default lock, which does respect timeouts.
+    auth: import.meta.env.DEV ? { lock: devLocks } : {}
   };
   
   supabase = createClient(supabaseUrl, supabaseAnonKey, options);

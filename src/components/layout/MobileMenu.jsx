@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Sun, Moon, Globe, User, LogIn, ChevronDown, DollarSign, Contrast, Palette } from 'lucide-react';
+import { Sun, Moon, Globe, User, LogIn, ChevronDown, DollarSign, Palette } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { languages } from '../../config/i18n';
@@ -54,7 +54,7 @@ export default function MobileMenu({ isOpen, onClose, navLinks }) {
                 className="mobile-nav-link"
                 onClick={onClose}
               >
-                {link.label}
+                {t(`nav.${link.label}`)}
               </Link>
             ))}
           </nav>
@@ -64,9 +64,9 @@ export default function MobileMenu({ isOpen, onClose, navLinks }) {
           <div className="mobile-menu-actions">
             <button onClick={toggleTheme} className="mobile-action-item">
               <div className="action-icon">
-                {theme === 'light' ? <Sun size={20} /> : theme === 'dim' ? <Contrast size={20} /> : theme === 'custom' ? <Palette size={20} className="text-accent" /> : <Moon size={20} />}
+                {theme === 'light' ? <Sun size={20} /> : theme === 'custom' ? <Palette size={20} className="text-accent" /> : <Moon size={20} />}
               </div>
-              <span>{theme === 'light' ? 'Light Mode' : theme === 'dim' ? 'Dim Mode' : theme === 'custom' ? 'Custom Theme' : 'Dark Mode'}</span>
+              <span>{theme === 'light' ? 'Light Mode' : theme === 'custom' ? 'Custom Theme' : 'Dark Mode'}</span>
             </button>
 
             {/* Language Selector */}

@@ -1,0 +1,202 @@
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    z-index: var(--z-navbar);
+    background: color-mix(in srgb, var(--color-bg-secondary) 92%, transparent);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    border: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, var(--color-border-strong));
+    border-radius: 26px;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45), 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    height: 62px;
+    padding: 6px 6px;
+    transform: translateZ(0) scaleY(1);
+    transform-origin: bottom center;
+    will-change: transform;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Compact state while actively scrolling -- a cheap, GPU-only transform
+     scale instead of animating height, which would force layout on every
+     frame and was the real cause of the choppy mobile feel. */
+  .mobile-bottom-nav.compact {
+    transform: translateZ(0) scaleY(0.74);
+  }
+}
+
+.mbn-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--color-text-tertiary);
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  min-width: 0;
+  padding: 6px 2px;
+  margin: 0 1px;
+  border-radius: 16px;
+  transition: color 0.15s ease, background 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mbn-item span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  transition: opacity 0.2s ease;
+}
+
+.mbn-item svg {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* While compact: hide labels and re-inflate icons, counteracting the parent's
+   scaleY so they stay visually crisp and undistorted instead of squashed. */
+.mobile-bottom-nav.compact .mbn-item span {
+  opacity: 0;
+}
+
+.mobile-bottom-nav.compact .mbn-item svg {
+  /* Counteract the parent's non-uniform scaleY(0.74) so icons stay round and
+     crisp instead of looking vertically squashed. */
+  transform: scale(1.08, 1.46);
+}
+
+.mbn-item:active {
+  opacity: 0.6;
+}
+
+.mbn-item.active {
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+}
+
+/* Center "Profile" item -- raised, circular, always visually prominent */
+.mbn-center {
+  position: relative;
+}
+
+.mbn-center-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-card);
+  border: 2px solid color-mix(in srgb, var(--color-text-primary) 18%, var(--color-border-strong));
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  transform: translateY(-3px);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-bg-secondary) 92%, transparent);
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, width 0.35s ease, height 0.35s ease, transform 0.35s ease;
+}
+
+.mobile-bottom-nav.compact .mbn-center-avatar {
+  width: 30px;
+  height: 30px;
+  transform: translateY(0) scaleY(1.35);
+}
+
+.mbn-center-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mbn-center-avatar.active {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  border-color: var(--color-accent);
+}
+
+.mbn-center span:last-child {
+  transform: translateY(-4px);
+}
+
+.mobile-bottom-nav.compact .mbn-center span:last-child {
+  transform: translateY(0);
+}
+
+/* "More" wrapper (Settings / Best Sellers) */
+.mbn-more-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+
+.mbn-more-wrapper .mbn-item {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+  width: 100%;
+}
+
+.mbn-popover {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: -4px;
+  min-width: 168px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.35);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mbn-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.15s ease;
+}
+
+.mbn-popover-item:active {
+  background: var(--color-bg-tertiary);
+}
+
+.mbn-icon-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.mbn-badge-dot {
+  position: absolute;
+  top: -2px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-danger, #F87171);
+  border: 1.5px solid var(--color-bg-secondary);
+}
+
+.mbn-center-avatar {
+  position: relative;
+}

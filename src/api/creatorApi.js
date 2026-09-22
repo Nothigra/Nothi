@@ -87,7 +87,7 @@ export async function getCreatorProfile(username, isMockMode) {
     tier: tier,
     products: creator.products,
     software: creator.software || [],
-    displayed_badges: creator.shop_settings?.displayed_badges || ['first_purchase', 'prolific_creator'],
+    displayed_badges: creator.shop_settings?.displayed_badges || [],
   };
 
   return safeProfile;

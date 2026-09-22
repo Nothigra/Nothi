@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Star, Users, Package } from 'lucide-react';
-import { creators } from '../../data';
+const creators = [];
 import { formatNumber } from '../../utils/helpers';
 import './FeaturedCreators.css';
 

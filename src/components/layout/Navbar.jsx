@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Menu, X, Sun, Moon, Contrast, ShoppingCart, Heart, Gift, Palette, MessageSquare } from 'lucide-react';
+import { Menu, X, Sun, Moon, ShoppingCart, Heart, Gift, Palette, MessageSquare, Tag, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useGamification } from '../../context/GamificationContext';
@@ -9,9 +9,7 @@ import { languages } from '../../config/i18n';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useAuth } from '../../context/AuthContext';
-import { messagingService as mockMessagingService } from '../../lib/MessagingService';
-import { seedFakeConversationsIfEmpty } from '../../lib/accountStore';
-import { getUserMessages, groupMessagesIntoConversations, subscribeToMessages } from '../../api/messageApi';
+import { useUnreadMessages } from '../../hooks/useUnreadMessages';
 import AvatarFrame from '../common/AvatarFrame';
 import MobileMenu from './MobileMenu';
 import './Navbar.css';
@@ -31,9 +29,9 @@ export default function Navbar() {
   const [isThemeOpen, setIsThemeOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [unreadMessages, setUnreadMessages] = useState(0);
 
   const { isAuthenticated, profile, isMockMode, logout } = useAuth();
+  const unreadMessages = useUnreadMessages();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -41,43 +39,6 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    if (!profile) {
-      setUnreadMessages(0);
-      return;
-    }
-    
-    if (isMockMode) {
-      seedFakeConversationsIfEmpty(profile.id);
-      const updateUnread = () => {
-        const convs = mockMessagingService.getUserConversations(profile.id);
-        const count = convs.reduce((acc, c) => {
-          const isBuyer = c.buyerId === profile.id;
-          return acc + (isBuyer ? (c.unreadCountBuyer || 0) : (c.unreadCountSeller || 0));
-        }, 0);
-        setUnreadMessages(count);
-      };
-      updateUnread();
-      return mockMessagingService.subscribe(updateUnread);
-    }
-
-    let isMounted = true;
-    const fetchUnread = async () => {
-      const msgs = await getUserMessages(profile.id);
-      if (isMounted) {
-        const convs = groupMessagesIntoConversations(msgs, profile.id);
-        const count = convs.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
-        setUnreadMessages(count);
-      }
-    };
-
-    fetchUnread();
-    const unsub = subscribeToMessages(profile.id, fetchUnread);
-    return () => {
-      isMounted = false;
-      unsub();
-    };
-  }, [profile, isMockMode]);
 
   const navLinks = [
     { path: '/', label: 'home' },
@@ -132,43 +93,13 @@ export default function Navbar() {
           {/* Right: Actions */}
           <div className="navbar-right">
             {/* Theme Toggle */}
-            <div className="lang-dropdown-wrapper hidden-mobile" style={{ position: 'relative' }}>
-              <button 
-                className="action-btn flex items-center gap-1"
-                onClick={() => setIsThemeOpen(!isThemeOpen)}
-                aria-label="Toggle theme"
-              >
-                {theme === 'light' ? <Sun size={18} /> : theme === 'dim' ? <Contrast size={18} /> : theme === 'custom' ? <Palette size={18} className="text-accent" /> : <Moon size={18} />}
-              </button>
-              
-              <AnimatePresence>
-                {isThemeOpen && (
-                  <motion.div 
-                    className="lang-dropdown"
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                    style={{ right: 0, minWidth: '140px', padding: '8px' }}
-                  >
-                    <button onClick={() => { toggleTheme('light'); setIsThemeOpen(false); }} className={`nav-link flex items-center gap-2 w-full text-left ${theme === 'light' ? 'text-primary font-bold' : ''}`} style={{ padding: '8px 12px' }}>
-                      <Sun size={16} /> Light
-                    </button>
-                    <button onClick={() => { toggleTheme('dim'); setIsThemeOpen(false); }} className={`nav-link flex items-center gap-2 w-full text-left ${theme === 'dim' ? 'text-primary font-bold' : ''}`} style={{ padding: '8px 12px' }}>
-                      <Contrast size={16} /> Dim
-                    </button>
-                    <button onClick={() => { toggleTheme('dark'); setIsThemeOpen(false); }} className={`nav-link flex items-center gap-2 w-full text-left ${theme === 'dark' ? 'text-primary font-bold' : ''}`} style={{ padding: '8px 12px' }}>
-                      <Moon size={16} /> Dark
-                    </button>
-                    {profile?.custom_theme && (
-                      <button onClick={() => { toggleTheme('custom'); setIsThemeOpen(false); }} className={`nav-link flex items-center gap-2 w-full text-left ${theme === 'custom' ? 'text-accent font-bold' : ''}`} style={{ padding: '8px 12px' }}>
-                        <Palette size={16} className={theme === 'custom' ? 'text-accent' : ''} /> Custom
-                      </button>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            <button 
+              className="action-btn hidden-mobile flex items-center gap-1"
+              onClick={() => toggleTheme()}
+              aria-label="Toggle theme"
+            >
+              {theme === 'light' ? <Sun size={18} /> : theme === 'custom' ? <Palette size={18} className="text-accent" /> : <Moon size={18} />}
+            </button>
 
             {/* Language Selector */}
             <div className="lang-dropdown-wrapper hidden-mobile">
@@ -211,7 +142,7 @@ export default function Navbar() {
             </div>
 
             {/* Rewards */}
-            <Link to="/rewards" className="action-btn relative" title="Rewards">
+            <Link to="/rewards" className="action-btn relative hidden-mobile" title="Rewards">
               <Gift size={16} />
               {(hasUnclaimedReward || hasNewXp) && (
                 <span className={`absolute top-1 right-1 w-2 h-2 rounded-full border-2 border-bg-card ${hasUnclaimedReward ? 'bg-danger' : 'bg-accent'}`}></span>
@@ -271,6 +202,29 @@ export default function Navbar() {
               </div>
             )}
 
+            {/* Mobile-only compact actions (≤768px): simple theme toggle, Pricing, Search */}
+            <button
+              className="action-btn mobile-header-only"
+              onClick={() => toggleTheme()}
+              aria-label="Toggle theme"
+            >
+              {theme === 'light' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+
+            <Link to="/pricing" className="action-btn mobile-header-only" aria-label="Pricing" title="Pricing">
+              <Tag size={18} />
+            </Link>
+
+            <Link
+              to="/marketplace"
+              state={{ focusSearch: true }}
+              className="action-btn mobile-header-only"
+              aria-label="Search"
+              title="Search"
+            >
+              <Search size={18} />
+            </Link>
+
             {/* Mobile Menu Toggle */}
             <button 
               className="action-btn hamburger-btn"
@@ -286,7 +240,7 @@ export default function Navbar() {
       <MobileMenu 
         isOpen={isMobileMenuOpen} 
         onClose={() => setIsMobileMenuOpen(false)} 
-        navLinks={navLinks}
+        navLinks={navLinks.filter(l => l.path !== '/' && l.path !== '/marketplace')}
       />
     </>
   );

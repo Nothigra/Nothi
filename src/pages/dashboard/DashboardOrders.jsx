@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Filter, Download } from 'lucide-react';
-import { orders as mockOrders } from '../../data';
+const mockOrders = [];
 import { formatDate } from '../../utils/helpers';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';

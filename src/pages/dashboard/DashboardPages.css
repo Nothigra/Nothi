@@ -298,7 +298,7 @@
 
 .settings-nav-item.active {
   background: var(--color-accent);
-  color: white;
+  color: var(--color-accent-text);
 }
 
 .settings-content {
@@ -442,7 +442,7 @@
 
 .settings-tab.active {
   background: var(--color-accent);
-  color: white;
+  color: var(--color-accent-text);
 }
 
 @media (max-width: 1024px) {
@@ -492,6 +492,15 @@
   gap: var(--space-xs);
 }
 
+@media (max-width: 640px) {
+  /* The stats grid right below already repeats Revenue/Sales with more
+     detail (plus Views and Conversion) — showing them twice wastes space
+     on a small screen, so the hero keeps just the welcome message. */
+  .hero-stats-row {
+    display: none;
+  }
+}
+
 .premium-stat-card {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
@@ -500,6 +509,16 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   position: relative;
   overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .premium-stat-card {
+    padding: var(--space-md);
+  }
+
+  .premium-stat-card h3 {
+    font-size: 20px;
+  }
 }
 
 .premium-stat-card:hover {
@@ -553,7 +572,7 @@
 
 .quick-action-card:hover .quick-action-icon {
   background: var(--color-accent);
-  color: white;
+  color: var(--color-accent-text);
 }
 
 .quick-action-content {

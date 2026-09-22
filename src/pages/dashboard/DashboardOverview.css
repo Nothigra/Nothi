@@ -8,6 +8,13 @@
   gap: 24px;
 }
 
+@media (max-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
 .stat-card {
   background-color: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
@@ -24,7 +31,7 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
 }
 
-.dark .stat-card:hover, .dim .stat-card:hover {
+.dark .stat-card:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
@@ -95,4 +102,140 @@
 
 .text-success {
   color: var(--color-success);
+}
+
+/* Quick Links — mobile-only hub, since the sidebar is unreachable on mobile
+   and primary nav there is the 5-icon bottom bar instead. */
+.dashboard-quick-links {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-quick-links {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-quick-links {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+}
+
+.quick-link-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 4px;
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  text-align: center;
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.quick-link-card:active {
+  transform: scale(0.96);
+  background: var(--color-bg-tertiary);
+}
+
+.quick-link-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+}
+
+/* Per-Product Performance: table on desktop/tablet, stacked cards on mobile */
+.product-performance-card-view {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .product-performance-table-view {
+    display: none;
+  }
+  .product-performance-card-view {
+    display: block;
+  }
+
+  /* Recent Orders: drop the Date column, keep Product + Amount (the two
+     things that actually matter at a glance on a small screen) */
+  .recent-orders-table .col-date {
+    display: none;
+  }
+}
+
+.perf-mobile-card {
+  padding: var(--space-lg) var(--space-xl);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.perf-mobile-card:last-child {
+  border-bottom: none;
+}
+
+.perf-mobile-card-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: var(--space-md);
+}
+
+.perf-mobile-card-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-sm);
+}
+
+.perf-mobile-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.perf-mobile-stat-value {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.perf-mobile-stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-tertiary);
+}
+
+/* Quick Links grouped by theme (Sell / Buy & Connect / Account) —
+   mobile/tablet only, matching .dashboard-quick-links' own breakpoint */
+.dashboard-quick-links-groups {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-quick-links-groups {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+}
+
+.quick-links-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-tertiary);
+  margin: 0 0 var(--space-sm) 2px;
 }

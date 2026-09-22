@@ -305,7 +305,6 @@ export default function OnboardingPage() {
         return (
           <div className="onboarding-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
             <ThemeCard themeKey="light" isSelected={theme === 'light'} onSelect={setTheme} />
-            <ThemeCard themeKey="dim" isSelected={theme === 'dim'} onSelect={setTheme} />
             <ThemeCard themeKey="dark" isSelected={theme === 'dark'} onSelect={setTheme} />
           </div>
         );

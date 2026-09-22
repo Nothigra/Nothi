@@ -34,17 +34,8 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
-.dim .navbar {
-  border-color: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
 .dark .navbar.is-scrolled {
   background: rgba(18, 18, 18, 0.85);
-}
-
-.dim .navbar.is-scrolled {
-  background: rgba(32, 34, 38, 0.85);
 }
 
 .navbar-container {
@@ -82,8 +73,8 @@
   transition: filter var(--transition-base), transform var(--transition-base);
 }
 
-.dark .navbar-logo-img, .dim .navbar-logo-img, .dark-custom-logo .navbar-logo-img {
-  filter: brightness(0) invert(1); /* White in dark/dim mode or dark custom themes */
+.dark .navbar-logo-img, .dark-custom-logo .navbar-logo-img {
+  filter: brightness(0) invert(1); /* White in dark mode or dark custom themes */
 }
 
 .navbar-logo {
@@ -92,6 +83,24 @@
   letter-spacing: -0.02em;
   color: var(--color-text-primary);
   line-height: 1;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0;
+    border: none;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  .navbar-logo {
+    display: none;
+  }
 }
 
 .navbar-center {
@@ -253,11 +262,15 @@
   display: none;
 }
 
+.mobile-header-only {
+  display: none;
+}
+
 @media (max-width: 1024px) {
   .hidden-mobile {
     display: none !important;
   }
-  
+
   .hamburger-btn {
     display: flex;
   }
@@ -266,5 +279,19 @@
     display: flex;
     justify-content: space-between;
     padding: 0 var(--space-4);
+  }
+}
+
+/* Below 768px the floating bottom nav takes over primary navigation, so the
+   hamburger (and its Best Sellers/language/etc. links) steps aside in favor
+   of the new compact header actions (theme, pricing, search). Between
+   769-1024px (tablet) there's no bottom nav yet, so the hamburger stays. */
+@media (max-width: 768px) {
+  .hamburger-btn {
+    display: none;
+  }
+
+  .mobile-header-only {
+    display: flex;
   }
 }

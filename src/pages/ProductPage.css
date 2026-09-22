@@ -526,3 +526,51 @@
     gap: var(--space-8);
   }
 }
+
+/* Sticky mobile buy bar */
+.sticky-buy-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sticky-buy-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+    z-index: var(--z-navbar);
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.35);
+    padding: 12px 14px;
+  }
+}
+
+.sticky-buy-bar-price {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.sticky-buy-bar-current {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.sticky-buy-bar-was {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  text-decoration: line-through;
+}
+
+.sticky-buy-bar-action {
+  flex: 1;
+  display: flex;
+  height: 44px;
+}

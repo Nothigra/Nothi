@@ -19,7 +19,7 @@
   flex-direction: column;
 }
 
-.dark .onboarding-container, .dim .onboarding-container {
+.dark .onboarding-container {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
@@ -193,7 +193,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--color-accent-text);
 }
 
 .onboarding-card.selected .card-checkbox {

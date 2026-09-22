@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useOutlet } from 'react-router';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import MobileBottomNav from './MobileBottomNav';
 import CartDrawer from '../cart/CartDrawer';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -30,7 +31,7 @@ export default function Layout() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Navbar />
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '80vh' }}>
+      <main className="site-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '80vh' }}>
         <AnimatePresence 
           mode="wait"
           onExitComplete={() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' })}
@@ -49,6 +50,7 @@ export default function Layout() {
       </main>
       <Footer />
       <CartDrawer />
+      <MobileBottomNav />
     </div>
   );
 }

@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
-import { Package, Sparkles, FolderArchive, Contrast, Music, MoveRight, LayoutTemplate, TerminalSquare, Layers } from 'lucide-react';
+import { Package, Sparkles, FolderArchive, Contrast, Music, MoveRight, LayoutTemplate, TerminalSquare, Layers, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import './Categories.css';
 
@@ -17,6 +18,8 @@ const categories = [
 
 export default function Categories() {
   const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <section className="categories-section section">
       <div className="container">
@@ -25,15 +28,15 @@ export default function Categories() {
           <p className="text-muted">{t('sections.browseCategoriesDesc', 'Find the perfect assets for your next video project.')}</p>
         </div>
         
-        <div className="categories-grid">
-          {categories.map((category) => {
+        <div className={`categories-grid ${expanded ? 'expanded' : ''}`}>
+          {categories.map((category, index) => {
             const Icon = category.icon;
             return (
               <Link 
                 key={category.id}
                 to={`/marketplace?category=${category.id}`} 
                 className="category-card"
-                style={{ '--cat-color': category.color }}
+                data-index={index}
               >
                 <div className="category-icon-wrapper">
                   <Icon size={20} className="cat-icon" />
@@ -46,6 +49,16 @@ export default function Categories() {
             );
           })}
         </div>
+
+        {!expanded && (
+          <button
+            type="button"
+            className="categories-show-more"
+            onClick={() => setExpanded(true)}
+          >
+            Show more categories <ChevronDown size={16} />
+          </button>
+        )}
       </div>
     </section>
   );

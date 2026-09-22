@@ -3,7 +3,8 @@ import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import ProductCard from '../product/ProductCard';
-import { supabase } from '../../lib/supabase';
+import { supabase, isMockMode } from '../../lib/supabase';
+import { MOCK_PRODUCTS } from '../../lib/seed';
 import './FeaturedProducts.css';
 
 const containerVariants = {
@@ -24,6 +25,12 @@ export default function FeaturedProducts() {
   const [popularProducts, setPopularProducts] = useState([]);
   
   useEffect(() => {
+    if (isMockMode) {
+      // Mirror real popular_rank ordering using mock sales_count, top 4
+      const sorted = [...MOCK_PRODUCTS].sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0)).slice(0, 4);
+      setPopularProducts(sorted);
+      return;
+    }
     supabase.from('public_products')
       .select('*')
       .order('popular_rank', { ascending: true }) // Rank 1 is best

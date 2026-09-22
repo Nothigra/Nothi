@@ -36,17 +36,6 @@ const CAT_STYLES = {
   'templates': { var: '--cat-templates', Icon: LayoutTemplate }
 };
 
-const SW_STYLES = {
-  'After Effects': '--sw-after-effects',
-  'Premiere Pro': '--sw-premiere-pro',
-  'DaVinci Resolve': '--sw-davinci-resolve',
-  'Blender': '--sw-blender',
-  'Final Cut Pro': '--sw-final-cut-pro',
-  'Lightroom': '--sw-lightroom',
-  'CapCut': '--sw-capcut',
-  'Photoshop': '--sw-photoshop'
-};
-
 export default function ProductCard({ product, cardStyle = {}, onRemove }) {
   const { t, i18n } = useTranslation();
   const { formatPrice } = useCurrency();
@@ -103,7 +92,8 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
         )}
         {isOwner && isBoosted && (
           <div 
-            className="absolute top-sm left-sm bg-accent text-white px-[8px] py-[2px] rounded-full text-[10px] font-bold uppercase tracking-wider shadow-md flex items-center gap-[4px] z-10"
+            className="absolute top-sm left-sm bg-accent px-[8px] py-[2px] rounded-full text-[10px] font-bold uppercase tracking-wider shadow-md flex items-center gap-[4px] z-10"
+            style={{ color: 'var(--color-accent-text)' }}
           >
             <Rocket size={10} /> Boosted
           </div>
@@ -116,20 +106,11 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
             onError={() => setImgError(true)}
           />
         ) : (
-          <div 
-            className="thumbnail-fallback" 
-            style={{ backgroundColor: `color-mix(in srgb, var(${catStyle.var}) 8%, transparent)` }}
-          >
-            <CategoryIcon size={40} className="fallback-icon" style={{ color: `var(${catStyle.var})` }} />
+          <div className="thumbnail-fallback">
+            <CategoryIcon size={40} className="fallback-icon" />
           </div>
         )}
-        <div 
-          className="category-badge" 
-          style={{ 
-            backgroundColor: `color-mix(in srgb, var(${catStyle.var}) 10%, transparent)`, 
-            color: `var(${catStyle.var})` 
-          }}
-        >
+        <div className="category-badge">
           {t(`categories.${catKey}`, { defaultValue: product.category })}
         </div>
       </div>
@@ -158,21 +139,11 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
 
         
         <div className="product-software">
-          {product.software && product.software.slice(0, 3).map((soft, index) => {
-            const swVar = SW_STYLES[soft] || '--color-text-secondary';
-            return (
-              <span 
-                key={index} 
-                className="software-tag"
-                style={{
-                  backgroundColor: `color-mix(in srgb, var(${swVar}) 8%, transparent)`,
-                  color: `var(${swVar})`
-                }}
-              >
-                {soft}
-              </span>
-            );
-          })}
+          {product.software && product.software.slice(0, 3).map((soft, index) => (
+            <span key={index} className="software-tag">
+              {soft}
+            </span>
+          ))}
           {product.software && product.software.length > 3 && (
             <span className="software-tag fallback-tag">+{product.software.length - 3}</span>
           )}

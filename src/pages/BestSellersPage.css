@@ -248,7 +248,7 @@
 .tier-bronze { background: rgba(180, 117, 81, 0.1); color: #B47551; }
 .tier-silver { background: rgba(160, 165, 170, 0.1); color: #A0A5AA; }
 .tier-gold { background: rgba(245, 158, 11, 0.1); color: var(--color-warning); }
-.tier-platinum { background: rgba(99, 102, 241, 0.1); color: var(--color-accent); }
+.tier-platinum { background: color-mix(in srgb, var(--color-accent) 10%, transparent); color: var(--color-accent); }
 
 .col-followers {
   font-weight: 500;

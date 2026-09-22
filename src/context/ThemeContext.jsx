@@ -15,18 +15,21 @@ export function ThemeProvider({ children }) {
   const [theme, setThemeState] = useState(() => {
     if (profile?.custom_theme) return 'custom';
     if (profile?.theme) {
-      if (['light', 'dim', 'dark', 'custom'].includes(profile.theme)) {
+      if (['light', 'dark', 'custom'].includes(profile.theme)) {
         return profile.theme;
       }
+      // Migrate legacy 'dim' theme to 'dark'
+      if (profile.theme === 'dim') return 'dark';
     }
     if (isMockMode) {
       const sessionId = store.getSession();
       if (sessionId) {
         const account = store.getAccount(sessionId);
-        if (account?.theme) return account.theme;
+        if (account?.theme) return account.theme === 'dim' ? 'dark' : account.theme;
       }
     }
-    return localStorage.getItem('digilab-guest-theme') || 'dark';
+    const stored = localStorage.getItem('digilab-guest-theme');
+    return stored === 'dim' ? 'dark' : (stored || 'dark');
   });
 
   // Apply theme to DOM
@@ -36,10 +39,6 @@ export function ThemeProvider({ children }) {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
       document.documentElement.setAttribute('data-theme', 'dark');
-      clearCustomTheme();
-    } else if (theme === 'dim') {
-      document.documentElement.classList.add('dim');
-      document.documentElement.setAttribute('data-theme', 'dim');
       clearCustomTheme();
     } else if (theme === 'custom') {
       applyCustomTheme(profile?.custom_theme || { bg: '#14151F', accent: '#2563EB', heroGlow: { enabled: true, color1: '#2563EB', color2: '#F5A623' } });
@@ -101,9 +100,9 @@ export function ThemeProvider({ children }) {
       return;
     }
     if (profile?.custom_theme) {
-      setTheme(theme === 'light' ? 'dim' : theme === 'dim' ? 'dark' : theme === 'dark' ? 'custom' : 'light');
+      setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'custom' : 'light');
     } else {
-      setTheme(theme === 'light' ? 'dim' : theme === 'dim' ? 'dark' : 'light');
+      setTheme(theme === 'light' ? 'dark' : 'light');
     }
   }, [theme, setTheme, profile?.custom_theme]);
 

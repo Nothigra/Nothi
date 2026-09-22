@@ -247,7 +247,7 @@
   height: 14px;
   background: var(--color-accent);
   border-radius: 50%;
-  box-shadow: 0 0 12px rgba(124, 108, 255, 0.5);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent) 50%, transparent);
   transform: translateY(-50%);
 }
 
@@ -257,7 +257,7 @@
   bottom: 0;
   width: 2px;
   background: var(--color-accent);
-  box-shadow: 0 0 8px rgba(124, 108, 255, 0.3);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
 /* Tracks */

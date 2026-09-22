@@ -2,13 +2,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase';
 import { 
   DollarSign, TrendingUp, Package, ShoppingBag, Plus, ExternalLink, 
-  Activity, ArrowRight, Settings, BarChart3, CheckCircle2, Circle, Users, Globe, Eye
+  Activity, ArrowRight, Settings, BarChart3, CheckCircle2, Circle, Users, Globe, Eye,
+  MessageSquare, Heart
 } from 'lucide-react';
 import { Link } from 'react-router';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../context/CurrencyContext';
-import { orders } from '../../data';
+const orders = [];
 import './DashboardOverview.css';
 
 
@@ -95,6 +96,70 @@ export default function DashboardOverview() {
         </div>
       </div>
 
+      {/* Quick Links — mobile only: sidebar isn't reachable on mobile, so this is
+          the primary way to get to the rest of the dashboard from a phone.
+          Grouped by theme (rather than one flat list of 10) so it reads at
+          a glance instead of requiring the user to scan every icon. */}
+      <div className="dashboard-quick-links-groups mb-2xl">
+        <div className="quick-links-group">
+          <h4 className="quick-links-group-title">Sell</h4>
+          <div className="dashboard-quick-links">
+            <Link to="/dashboard/upload" className="quick-link-card">
+              <span className="quick-link-icon"><Plus size={20} /></span>
+              <span>Publish</span>
+            </Link>
+            <Link to="/dashboard/products" className="quick-link-card">
+              <span className="quick-link-icon"><Package size={20} /></span>
+              <span>Products</span>
+            </Link>
+            <Link to="/dashboard/payouts" className="quick-link-card">
+              <span className="quick-link-icon"><DollarSign size={20} /></span>
+              <span>Withdrawals</span>
+            </Link>
+            <Link to={`/creator/${profile?.username || ''}`} className="quick-link-card">
+              <span className="quick-link-icon"><Globe size={20} /></span>
+              <span>My Shop</span>
+            </Link>
+          </div>
+        </div>
+
+        <div className="quick-links-group">
+          <h4 className="quick-links-group-title">Buy & Connect</h4>
+          <div className="dashboard-quick-links">
+            <Link to="/dashboard/purchases" className="quick-link-card">
+              <span className="quick-link-icon"><ShoppingBag size={20} /></span>
+              <span>Purchases</span>
+            </Link>
+            <Link to="/dashboard/wishlist" className="quick-link-card">
+              <span className="quick-link-icon"><Heart size={20} /></span>
+              <span>Wishlist</span>
+            </Link>
+            <Link to="/dashboard/following" className="quick-link-card">
+              <span className="quick-link-icon"><Users size={20} /></span>
+              <span>Following</span>
+            </Link>
+            <Link to="/dashboard/messages" className="quick-link-card">
+              <span className="quick-link-icon"><MessageSquare size={20} /></span>
+              <span>Messages</span>
+            </Link>
+          </div>
+        </div>
+
+        <div className="quick-links-group">
+          <h4 className="quick-links-group-title">Account</h4>
+          <div className="dashboard-quick-links">
+            <Link to="/dashboard/badges" className="quick-link-card">
+              <span className="quick-link-icon"><CheckCircle2 size={20} /></span>
+              <span>My Badges</span>
+            </Link>
+            <Link to="/dashboard/settings" className="quick-link-card">
+              <span className="quick-link-icon"><Settings size={20} /></span>
+              <span>Settings</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Premium Stats Grid */}
       <div className="stats-grid mb-2xl">
         <div className="premium-stat-card">
@@ -109,7 +174,7 @@ export default function DashboardOverview() {
 
         <div className="premium-stat-card">
           <div className="flex justify-between items-start mb-md">
-            <div className="stat-icon-wrapper" style={{color: '#8b5cf6', backgroundColor: '#8b5cf620'}}>
+            <div className="stat-icon-wrapper text-accent bg-accent-subtle">
               <ShoppingBag size={20} />
             </div>
           </div>
@@ -119,7 +184,7 @@ export default function DashboardOverview() {
 
         <div className="premium-stat-card">
           <div className="flex justify-between items-start mb-md">
-            <div className="stat-icon-wrapper" style={{color: '#F59E0B', backgroundColor: 'rgba(245, 158, 11, 0.1)'}}>
+            <div className="stat-icon-wrapper text-accent bg-accent-subtle">
               <Eye size={20} />
             </div>
           </div>
@@ -129,7 +194,7 @@ export default function DashboardOverview() {
 
         <div className="premium-stat-card">
           <div className="flex justify-between items-start mb-md">
-            <div className="stat-icon-wrapper" style={{color: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.1)'}}>
+            <div className="stat-icon-wrapper text-accent bg-accent-subtle">
               <TrendingUp size={20} />
             </div>
           </div>
@@ -169,8 +234,8 @@ export default function DashboardOverview() {
           </div>
         </div>
 
-        {/* Per-Product Performance Table */}
-        <div className="settings-card m-0 lg:col-span-3 mb-2xl">
+        {/* Per-Product Performance — table on desktop/tablet */}
+        <div className="settings-card m-0 lg:col-span-3 mb-2xl product-performance-table-view">
           <div className="card-header border-b border-border pb-md mb-0">
             <h3 className="card-title text-base flex items-center gap-xs"><Package size={18} className="text-secondary" /> Per-Product Performance</h3>
           </div>
@@ -212,6 +277,49 @@ export default function DashboardOverview() {
             </div>
           </div>
         </div>
+
+        {/* Per-Product Performance — stacked cards on mobile (a 5-column
+            table doesn't fit a phone screen without cramping or scrolling) */}
+        <div className="settings-card m-0 lg:col-span-3 mb-2xl product-performance-card-view">
+          <div className="card-header border-b border-border pb-md mb-0">
+            <h3 className="card-title text-base flex items-center gap-xs"><Package size={18} className="text-secondary" /> Per-Product Performance</h3>
+          </div>
+          <div className="card-body p-0">
+            {products.length === 0 ? (
+              <p className="text-center py-xl text-secondary italic">No products yet.</p>
+            ) : (
+              products.sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0)).map(p => {
+                const views = p.views || 0;
+                const sales = p.sales_count || 0;
+                const revenue = p.revenue || 0;
+                const conv = views > 0 ? ((sales / views) * 100).toFixed(1) : '0.0';
+                return (
+                  <div key={p.id} className="perf-mobile-card">
+                    <div className="perf-mobile-card-title">{p.title}</div>
+                    <div className="perf-mobile-card-stats">
+                      <div className="perf-mobile-stat">
+                        <span className="perf-mobile-stat-value">{views}</span>
+                        <span className="perf-mobile-stat-label">Views</span>
+                      </div>
+                      <div className="perf-mobile-stat">
+                        <span className="perf-mobile-stat-value text-accent">{sales}</span>
+                        <span className="perf-mobile-stat-label">Sales</span>
+                      </div>
+                      <div className="perf-mobile-stat">
+                        <span className="perf-mobile-stat-value">{formatPrice(revenue)}</span>
+                        <span className="perf-mobile-stat-label">Revenue</span>
+                      </div>
+                      <div className="perf-mobile-stat">
+                        <span className="perf-mobile-stat-value" style={{ color: 'var(--color-success, #10b981)' }}>{conv}%</span>
+                        <span className="perf-mobile-stat-label">Conv.</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="dashboard-grid two-cols mb-2xl">
@@ -221,11 +329,11 @@ export default function DashboardOverview() {
             <h3 className="card-title text-lg">Recent Orders</h3>
           </div>
           <div className="card-body p-0 flex-1">
-            <table className="dashboard-table w-full">
+            <table className="dashboard-table w-full recent-orders-table">
               <thead>
                 <tr>
                   <th className="text-xs uppercase text-secondary font-semibold pl-xl">Product</th>
-                  <th className="text-xs uppercase text-secondary font-semibold">Date</th>
+                  <th className="text-xs uppercase text-secondary font-semibold col-date">Date</th>
                   <th className="text-xs uppercase text-secondary font-semibold pr-xl text-right">Amount</th>
                 </tr>
               </thead>
@@ -236,7 +344,7 @@ export default function DashboardOverview() {
                       <div className="font-medium text-sm text-primary">{o.product}</div>
                       <div className="text-xs text-secondary">{o.customer}</div>
                     </td>
-                    <td className="text-sm text-secondary py-md">{new Date(o.date).toLocaleDateString()}</td>
+                    <td className="text-sm text-secondary py-md col-date">{new Date(o.date).toLocaleDateString()}</td>
                     <td className="text-sm font-medium pr-xl text-right py-md">{formatPrice(o.amount)}</td>
                   </tr>
                 ))}

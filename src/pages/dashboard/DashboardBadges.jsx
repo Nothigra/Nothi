@@ -3,14 +3,13 @@ import { Shield, Search, Check, Plus, Minus, GripVertical } from 'lucide-react';
 import { BADGE_CATALOG } from '../../api/gamificationApi';
 import { useGamification } from '../../context/GamificationContext';
 import { useAuth } from '../../context/AuthContext';
-import { supabase } from '../../lib/supabase';
 import BadgeIcon from '../../components/common/BadgeIcon';
 import Input from '../../components/ui/Input';
 import './DashboardBadges.css';
 
 export default function DashboardBadges() {
   const { gamificationState, markBadgesSeen } = useGamification();
-  const { profile } = useAuth();
+  const { profile, updateProfile } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
 
@@ -105,8 +104,8 @@ export default function DashboardBadges() {
                             }
                             newDisplayed = [...currentDisplayed, badge.id];
                           }
-                          // Optimistic update (handled by realtime shortly anyway)
-                          await supabase.from('profiles').update({ displayed_badges: newDisplayed }).eq('id', profile.id);
+                          // Optimistic update handled centrally by updateProfile (works in both real and mock mode)
+                          await updateProfile({ displayed_badges: newDisplayed });
                         } catch(e) {
                           console.error(e);
                         }

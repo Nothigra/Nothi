@@ -280,9 +280,9 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
   color: var(--color-accent);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
 }
 
 /* Empty State */

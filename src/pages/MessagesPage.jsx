@@ -457,7 +457,7 @@ export default function MessagesPage() {
 
                 {/* Product Context Banner */}
                 <div className="chat-product-banner">
-                  <div className="product-thumbnail">
+                  <div className="msg-product-thumbnail">
                     {activeProduct.images?.[0] ? (
                       <img src={activeProduct.images[0]} alt="Product" />
                     ) : (
