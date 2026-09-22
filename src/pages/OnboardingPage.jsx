@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { SOFTWARE_LIST, CURRENCY_LIST, STYLE_LIST, COUNTRY_LIST } from '../lib/seed';
+import Select from '../components/ui/Select';
 import * as accountStore from '../lib/accountStore';
 import Input from '../components/ui/Input';
 import './OnboardingPage.css';
@@ -244,16 +245,13 @@ export default function OnboardingPage() {
       case 1:
         return (
           <div className="onboarding-input-group w-full max-w-sm mx-auto">
-            <select
-              className="input input-lg w-full bg-bg border border-border rounded-lg px-4 py-3 text-text-primary focus:border-accent outline-none"
+            <Select
               value={country}
-              onChange={(e) => setCountry(e.target.value)}
-            >
-              <option value="" disabled>Select your country</option>
-              {COUNTRY_LIST.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
+              onChange={setCountry}
+              options={COUNTRY_LIST.map((c) => ({ value: c, label: c }))}
+              placeholder="Select your country"
+              searchable
+            />
           </div>
         );
 
