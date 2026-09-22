@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
@@ -13,23 +12,11 @@ import { MOCK_CREATORS, CATEGORIES as categories, SOFTWARE_LIST as softwareList,
 import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import Checkbox from '../components/ui/Checkbox';
+import PortalWhen from '../components/common/PortalWhen';
 import { useUnifiedSearch } from '../hooks/useUnifiedSearch';
 import SearchDropdown from '../components/common/SearchDropdown';
 import BrandedLoader from '../components/common/BrandedLoader';
 import './MarketplacePage.css';
-
-// Renders its children in place normally, or portals them straight to
-// <body> when `active` is true. Used to let the mobile filter sheet (and
-// its overlay) escape Layout's animated page-transition wrapper, whose
-// transform/filter animation creates a stacking context nothing inside it
-// can visually rise above via z-index alone — including the floating
-// bottom nav, which lives outside that wrapper.
-function PortalWhen({ active, children }) {
-  if (active && typeof document !== 'undefined') {
-    return createPortal(children, document.body);
-  }
-  return children;
-}
 
 export default function MarketplacePage() {
   const { t, i18n } = useTranslation();

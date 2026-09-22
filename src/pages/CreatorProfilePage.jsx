@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useParams, Link, useNavigate, useBlocker } from 'react-router';
 import { Star, CheckCircle2, LayoutDashboard, Edit2, Camera, Upload, Check, X, GripVertical, Plus, Settings, Eye, EyeOff, Loader2, ArrowLeft, UserPlus, Flag, Palette } from 'lucide-react';
 import ProductCard from '../components/product/ProductCard';
+import PortalWhen from '../components/common/PortalWhen';
 import BackgroundCustomizer from '../components/common/BackgroundCustomizer';
 import ReportModal from '../components/common/ReportModal';
 import { useAuth } from '../context/AuthContext';
@@ -34,6 +35,18 @@ export default function CreatorProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoaderExiting, setIsLoaderExiting] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
+  // The edit-mode action panel becomes position:fixed at <=1200px (see CSS) —
+  // portal it on mobile/tablet so it can escape Layout's page-transition
+  // stacking context and correctly sit above the floating bottom nav.
+  const [isCompactEditPanel, setIsCompactEditPanel] = useState(
+    typeof window !== 'undefined' ? window.innerWidth <= 1200 : false
+  );
+  useEffect(() => {
+    const handleResize = () => setIsCompactEditPanel(window.innerWidth <= 1200);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -962,6 +975,7 @@ export default function CreatorProfilePage() {
         >
           
           {isEditing && (
+            <PortalWhen active={isCompactEditPanel}>
             <div className="edit-action-panel-wrapper">
               <div className="edit-action-panel-inner">
                 <button 
@@ -979,6 +993,7 @@ export default function CreatorProfilePage() {
                 </button>
               </div>
             </div>
+            </PortalWhen>
           )}
           
           {!isEditing && isOwner && (
