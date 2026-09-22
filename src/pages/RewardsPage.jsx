@@ -182,6 +182,21 @@ const RewardsPage = () => {
     );
   }
 
+  if (!isAuthenticated) {
+    return (
+      <div className="page-container flex-center flex-col min-h-[60vh] text-center gap-md px-lg">
+        <Gift size={48} className="text-tertiary mb-sm" />
+        <h1 className="text-2xl font-bold">Sign in to see your Rewards</h1>
+        <p className="text-secondary max-w-sm">
+          Track your XP, level up, and unlock badges once you're signed in.
+        </p>
+        <Link to="/login" className="btn btn-primary mt-md">
+          Sign In
+        </Link>
+      </div>
+    );
+  }
+
   if (!gamificationState) return null;
 
   const { level, nextLevelXP, unlockedBadges, lastClaimedDate } = gamificationState;
