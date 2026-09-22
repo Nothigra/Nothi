@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
@@ -16,6 +17,19 @@ import { useUnifiedSearch } from '../hooks/useUnifiedSearch';
 import SearchDropdown from '../components/common/SearchDropdown';
 import BrandedLoader from '../components/common/BrandedLoader';
 import './MarketplacePage.css';
+
+// Renders its children in place normally, or portals them straight to
+// <body> when `active` is true. Used to let the mobile filter sheet (and
+// its overlay) escape Layout's animated page-transition wrapper, whose
+// transform/filter animation creates a stacking context nothing inside it
+// can visually rise above via z-index alone — including the floating
+// bottom nav, which lives outside that wrapper.
+function PortalWhen({ active, children }) {
+  if (active && typeof document !== 'undefined') {
+    return createPortal(children, document.body);
+  }
+  return children;
+}
 
 export default function MarketplacePage() {
   const { t, i18n } = useTranslation();
@@ -35,6 +49,21 @@ export default function MarketplacePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const searchInputRef = useRef(null);
+
+  // The mobile filter sheet is portaled straight to <body> so it can
+  // visually stack above the floating bottom nav — normal in-place
+  // rendering is trapped inside Layout's page-transition wrapper (which
+  // animates transform/filter, creating a stacking context nothing inside
+  // it can escape via z-index alone). Desktop/tablet keep the sidebar as a
+  // normal flex child of the layout, unaffected.
+  const [isMobileFilterViewport, setIsMobileFilterViewport] = useState(
+    typeof window !== 'undefined' ? window.innerWidth <= 768 : false
+  );
+  useEffect(() => {
+    const handleResize = () => setIsMobileFilterViewport(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const rawCategory = searchParams.get('category');
   const isValidCategory = rawCategory === 'all' || categories.some(c => c.id === rawCategory);
   const selectedCategory = rawCategory && isValidCategory ? rawCategory : 'all';
@@ -318,6 +347,7 @@ export default function MarketplacePage() {
 
       <div className={`marketplace-layout ${isFiltersOpen ? 'filters-open' : 'filters-closed'}`}>
         {/* Sidebar Filters */}
+        <PortalWhen active={isMobileFilterViewport}>
         <aside className={`marketplace-sidebar ${isFiltersOpen ? 'open' : 'sidebar-closed'}`}>
           <div className="sidebar-header hidden-desktop">
             <h3>{t('marketplace.filters')}</h3>
@@ -412,6 +442,7 @@ export default function MarketplacePage() {
             {t('marketplace.clearFilters')}
           </button>
         </aside>
+        </PortalWhen>
 
         {/* Main Content */}
         <main className="marketplace-content" layout="true">
@@ -451,6 +482,7 @@ export default function MarketplacePage() {
       </div>
 
       {/* Mobile Overlay */}
+      <PortalWhen active={isMobileFilterViewport}>
       <AnimatePresence>
         {isFiltersOpen && (
           <motion.div
@@ -463,6 +495,7 @@ export default function MarketplacePage() {
           />
         )}
       </AnimatePresence>
+      </PortalWhen>
     </div>
   );
 }
