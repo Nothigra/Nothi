@@ -15,11 +15,11 @@
 :root {
   /* Backgrounds */
   --color-bg: #FFFFFF;
-  --color-bg-card: #FAFAF9;
-  --color-bg-secondary: #F5F5F4;
-  --color-bg-tertiary: #EBEBEA;
-  --color-border: rgba(0, 0, 0, 0.1);
-  --color-border-strong: rgba(0, 0, 0, 0.18);
+  --color-bg-card: #F3F3F1;
+  --color-bg-secondary: #EAEAE7;
+  --color-bg-tertiary: #DEDEDA;
+  --color-border: rgba(0, 0, 0, 0.14);
+  --color-border-strong: rgba(0, 0, 0, 0.26);
 
   /* Text */
   --color-text-primary: #0A0A0A;
