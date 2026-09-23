@@ -17,6 +17,7 @@ import { useGamification } from '../context/GamificationContext';
 import ReportModal from '../components/common/ReportModal';
 import { MOCK_PRODUCTS, MOCK_CREATORS } from '../lib/seed';
 import { getProductById, getPublicProducts, createPurchase, checkHasPurchased, getReviews, submitReview, getUserReviewForProduct } from '../api/productApi';
+import { detectTrafficSource, detectDeviceType } from '../utils/analyticsTracking';
 import { supabase, isMockMode as supabaseMockMode, invokeFunction, withTimeoutSafety } from '../lib/supabase';
 import ProductCard from '../components/product/ProductCard';
 import './ProductPage.css';
@@ -82,12 +83,15 @@ export default function ProductPage() {
       }
       setLoading(false);
       
-      // Phase 2: Increment view count tracking in real mode
+      // Phase 2: Log a real analytics event (view count + source/device) in real mode
       if (!isMockMode && !supabaseMockMode) {
-        supabase.rpc('increment_product_views', { product_id_param: id })
-          .then(({ error }) => {
-            if (error) console.error('Failed to increment views:', error);
-          });
+        supabase.rpc('log_product_view', {
+          product_id_param: id,
+          source_param: detectTrafficSource(),
+          device_type_param: detectDeviceType(),
+        }).then(({ error }) => {
+          if (error) console.error('Failed to log product view:', error);
+        });
       }
     }
     loadProduct();
