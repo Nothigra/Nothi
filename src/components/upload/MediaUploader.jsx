@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Upload, X, Video, Image as ImageIcon, Loader2, PlayCircle, ImagePlus, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
-import { supabase, withTimeoutSafety, isMockMode } from '../../lib/supabase';
+import { supabase, withTimeoutSafety, isMockMode, invokeFunction } from '../../lib/supabase';
 import './MediaUploader.css';
 
 export default function MediaUploader({ mediaItems, setMediaItems, maxImages = 10, maxVideos = 5 }) {
@@ -71,19 +71,12 @@ export default function MediaUploader({ mediaItems, setMediaItems, maxImages = 1
     }
 
     try {
-      const { data, error } = await withTimeoutSafety(() =>
-        supabase.functions.invoke('generate-upload-url', {
-          body: { 
-            folder, 
-            filename: file.name || 'upload', 
-            contentType: safeType,
-            fileSize: file.size
-          }
-        })
-      );
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      const data = await invokeFunction('generate-upload-url', {
+        folder, 
+        filename: file.name || 'upload', 
+        contentType: safeType,
+        fileSize: file.size
+      });
 
       const { uploadUrl, publicUrl } = data;
 

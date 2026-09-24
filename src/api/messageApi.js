@@ -1,4 +1,4 @@
-import { supabase, isMockMode, withTimeoutSafety } from '../lib/supabase';
+import { supabase, isMockMode, withTimeoutSafety, invokeFunction } from '../lib/supabase';
 
 export async function getUserMessages(userId) {
   if (isMockMode) return []; // Fallback handled in component
@@ -99,19 +99,20 @@ export async function uploadChatAttachment(file) {
   }
 
   // 1. Get presigned URL
-  const { data, error: fnError } = await withTimeoutSafety(() =>
-    supabase.functions.invoke('generate-upload-url', {
-      body: { 
-        folder: 'chat-attachments', 
-        filename: file.name || 'upload', 
-        contentType: file.type || 'application/octet-stream',
-        fileSize: file.size
-      }
-    })
-  );
-
-  if (fnError || !data?.uploadUrl) {
+  let data;
+  try {
+    data = await invokeFunction('generate-upload-url', {
+      folder: 'chat-attachments', 
+      filename: file.name || 'upload', 
+      contentType: file.type || 'application/octet-stream',
+      fileSize: file.size
+    });
+  } catch (fnError) {
     throw new Error(fnError?.message || 'Failed to get upload URL');
+  }
+
+  if (!data?.uploadUrl) {
+    throw new Error('Failed to get upload URL');
   }
 
   // 2. Upload file to R2

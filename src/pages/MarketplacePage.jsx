@@ -186,7 +186,10 @@ export default function MarketplacePage() {
       result = result.filter(p => p.category === selectedCategory);
     }
 
-    if (!(showPaid && showFree)) {
+    // Only filter when exactly one of Paid/Free is checked — if both are
+    // checked (show everything) or neither is checked (no filter applied,
+    // also show everything), skip filtering entirely.
+    if (showPaid !== showFree) {
       result = result.filter(p => {
         const price = p.salePrice || p.sale_price || p.price || 0;
         const isFree = price === 0;

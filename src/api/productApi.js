@@ -1,4 +1,4 @@
-import { supabase, withTimeoutSafety } from '../lib/supabase';
+import { supabase, withTimeoutSafety, invokeFunction } from '../lib/supabase';
 import { MOCK_PRODUCTS } from '../lib/seed';
 
 let publicProductsCache = null;
@@ -108,18 +108,13 @@ export async function updateProduct(id, updates) {
  * Automatically deletes the previous file from R2 if one already exists (server-side cleanup).
  */
 export async function requestProductFileUploadUrl({ productId, filename, contentType, fileSize }) {
-  const { data, error } = await withTimeoutSafety(() => 
-    supabase.functions.invoke('generate-product-file-upload-url', {
-      body: { productId, filename, contentType, fileSize }
-    })
-  );
-
-  if (error) {
+  try {
+    return await invokeFunction('generate-product-file-upload-url', { productId, filename, contentType, fileSize });
+  } catch (error) {
     const err = new Error(error.message || 'Failed to get upload URL');
     Object.assign(err, error);
     throw err;
   }
-  return data;
 }
 
 /**
@@ -127,27 +122,13 @@ export async function requestProductFileUploadUrl({ productId, filename, content
  * Returns { downloadUrl } on success, or throws with { error, message } on 403/404.
  */
 export async function requestDownloadUrl(productId) {
-  const { data, error } = await withTimeoutSafety(() =>
-    supabase.functions.invoke('generate-download-url', {
-      body: { productId }
-    })
-  );
-
-  if (error) {
+  try {
+    return await invokeFunction('generate-download-url', { productId });
+  } catch (error) {
     const err = new Error(error.message || 'Download failed');
     Object.assign(err, error);
-    // Explicitly copy custom error fields if they were mapped by Supabase (e.g., err.error = 'no_file')
-    if (error.context && error.context.json) {
-      try {
-        const json = await error.context.json();
-        Object.assign(err, json);
-      } catch (e) {
-        // ignore JSON parse errors here
-      }
-    }
     throw err;
   }
-  return data;
 }
 
 export async function getProductsByCreator(creatorId, isMockMode) {

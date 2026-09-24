@@ -14,7 +14,7 @@ import { getProductsByCreator } from '../api/productApi';
 import AvatarFrame from '../components/common/AvatarFrame';
 import BadgeIcon from '../components/common/BadgeIcon';
 import BrandedLoader from '../components/common/BrandedLoader';
-import { supabase, withTimeoutSafety } from '../lib/supabase';
+import { supabase, withTimeoutSafety, invokeFunction } from '../lib/supabase';
 import { BADGE_CATALOG, fetchGamificationState } from '../api/gamificationApi';
 import Input from '../components/ui/Input';
 import Textarea from '../components/ui/Textarea';
@@ -294,21 +294,12 @@ export default function CreatorProfilePage() {
           if (!['image/jpeg', 'image/png', 'image/webp'].includes(safeType)) {
             safeType = 'image/jpeg';
           }
-          const { data, error } = await withTimeoutSafety(() =>
-            supabase.functions.invoke('generate-upload-url', {
-              body: { 
-                folder, 
-                filename: file.name || 'upload.jpg', 
-                contentType: safeType,
-                fileSize: file.size
-              }
-            })
-          );
-          if (error) {
-            console.error("Invoke Error:", error);
-            throw error;
-          }
-          if (data?.error) throw new Error(data.error);
+          const data = await invokeFunction('generate-upload-url', {
+            folder, 
+            filename: file.name || 'upload.jpg', 
+            contentType: safeType,
+            fileSize: file.size
+          });
 
           const { uploadUrl, publicUrl } = data;
           

@@ -9,7 +9,7 @@ import { SOFTWARE_LIST, CURRENCY_LIST, STYLE_LIST } from '../../lib/seed';
 import * as accountStore from '../../lib/accountStore';
 import Input from '../../components/ui/Input';
 import Textarea from '../../components/ui/Textarea';
-import { supabase, isMockMode, withTimeoutSafety } from '../../lib/supabase';
+import { supabase, isMockMode, withTimeoutSafety, invokeFunction } from '../../lib/supabase';
 import './DashboardPages.css';
 
 export default function DashboardSettings() {
@@ -133,18 +133,12 @@ export default function DashboardSettings() {
             return;
           }
 
-          const { data, error } = await withTimeoutSafety(() =>
-            supabase.functions.invoke('generate-upload-url', {
-              body: { 
-                folder: 'avatars', 
-                filename: file.name || 'avatar.jpg', 
-                contentType: safeType,
-                fileSize: file.size
-              }
-            })
-          );
-          if (error) throw error;
-          if (data?.error) throw new Error(data.error);
+          const data = await invokeFunction('generate-upload-url', {
+            folder: 'avatars', 
+            filename: file.name || 'avatar.jpg', 
+            contentType: safeType,
+            fileSize: file.size
+          });
 
           const { uploadUrl, publicUrl } = data;
           
