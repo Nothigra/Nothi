@@ -57,12 +57,14 @@ export function AuthProvider({ children }) {
   // OAuth login (Google or Discord)
   const loginWithOAuth = useCallback(async (provider) => {
     if (!isMockMode) {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
-      });
+      const { error } = await withTimeoutSafety(() =>
+        supabase.auth.signInWithOAuth({
+          provider,
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`
+          }
+        })
+      );
       if (error) throw error;
       return;
     }
@@ -78,7 +80,9 @@ export function AuthProvider({ children }) {
   // Email/Password Login
   const loginWithEmail = useCallback(async (email, password) => {
     if (!isMockMode) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await withTimeoutSafety(() =>
+        supabase.auth.signInWithPassword({ email, password })
+      );
       return { data, error };
     }
 
@@ -94,16 +98,18 @@ export function AuthProvider({ children }) {
   // Email/Password Signup
   const signUpWithEmail = useCallback(async (email, password, firstName, lastName) => {
     if (!isMockMode) {
-      const { data, error } = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName
+      const { data, error } = await withTimeoutSafety(() =>
+        supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              first_name: firstName,
+              last_name: lastName
+            }
           }
-        }
-      });
+        })
+      );
       return { data, error };
     }
 
@@ -120,7 +126,7 @@ export function AuthProvider({ children }) {
 
   const verifyOtp = useCallback(async (email, token, type = 'signup') => {
     if (!isMockMode) {
-      return await supabase.auth.verifyOtp({ email, token, type });
+      return await withTimeoutSafety(() => supabase.auth.verifyOtp({ email, token, type }));
     }
     // Mock mode implementation: the OTP step verifies email ownership only —
     // the account was already created (and its real password stored) during
@@ -137,16 +143,18 @@ export function AuthProvider({ children }) {
 
   const resendOtp = useCallback(async (email, type = 'signup') => {
     if (!isMockMode) {
-      return await supabase.auth.resend({ type, email });
+      return await withTimeoutSafety(() => supabase.auth.resend({ type, email }));
     }
     return { data: {}, error: null };
   }, []);
 
   const resetPasswordForEmail = useCallback(async (email) => {
     if (!isMockMode) {
-      return await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
-      });
+      return await withTimeoutSafety(() =>
+        supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth/reset-password`,
+        })
+      );
     }
     return { data: {}, error: null };
   }, []);
@@ -158,7 +166,7 @@ export function AuthProvider({ children }) {
     setProfile(null);
     if (!isMockMode) {
       try {
-        await supabase.auth.signOut();
+        await withTimeoutSafety(() => supabase.auth.signOut());
       } catch (err) {
         console.error("Supabase signOut error:", err);
       }
@@ -204,8 +212,8 @@ export function AuthProvider({ children }) {
         setUser(session.user);
         
         const [profileRes, followsRes] = await Promise.all([
-          supabase.from('profiles').select('*').eq('id', session.user.id).single(),
-          supabase.from('follows').select('creator_id, last_viewed_at').eq('follower_id', session.user.id)
+          withTimeoutSafety(() => supabase.from('profiles').select('*').eq('id', session.user.id).single()),
+          withTimeoutSafety(() => supabase.from('follows').select('creator_id, last_viewed_at').eq('follower_id', session.user.id))
         ]);
 
         if (profileRes.data) {
@@ -238,8 +246,8 @@ export function AuthProvider({ children }) {
             setUser(session.user);
             
             const [profileRes, followsRes] = await Promise.all([
-              supabase.from('profiles').select('*').eq('id', session.user.id).single(),
-              supabase.from('follows').select('creator_id, last_viewed_at').eq('follower_id', session.user.id)
+              withTimeoutSafety(() => supabase.from('profiles').select('*').eq('id', session.user.id).single()),
+              withTimeoutSafety(() => supabase.from('follows').select('creator_id, last_viewed_at').eq('follower_id', session.user.id))
             ]);
 
             if (profileRes.data) {

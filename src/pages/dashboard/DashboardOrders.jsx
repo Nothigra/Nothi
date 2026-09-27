@@ -5,7 +5,7 @@ const mockOrders = [];
 import { formatDate } from '../../utils/helpers';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
-import { supabase, isMockMode } from '../../lib/supabase';
+import { supabase, isMockMode, withTimeoutSafety } from '../../lib/supabase';
 import './DashboardPages.css';
 
 export default function DashboardOrders() {
@@ -23,10 +23,15 @@ export default function DashboardOrders() {
         return;
       }
       
-      const { data } = await supabase.from('purchases')
-        .select('id, purchased_at, price_paid, status, product:products(title), buyer:public_profiles!buyer_id(username, avatar_url)')
-        .eq('seller_id', profile.id)
-        .order('purchased_at', { ascending: false });
+      const { data } = await withTimeoutSafety(() =>
+        supabase.from('purchases')
+          .select('id, purchased_at, price_paid, status, product:products(title), buyer:public_profiles!buyer_id(username, avatar_url)')
+          .eq('seller_id', profile.id)
+          .order('purchased_at', { ascending: false })
+      ).catch((err) => {
+        console.error('Error fetching orders:', err);
+        return { data: null };
+      });
 
       if (data) {
         setRealOrders(data);

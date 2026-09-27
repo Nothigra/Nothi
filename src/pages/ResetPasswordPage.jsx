@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { motion } from 'framer-motion';
 import { Lock, Eye, EyeOff } from 'lucide-react';
-import { supabase, isMockMode } from '../lib/supabase';
+import { supabase, isMockMode, withTimeoutSafety } from '../lib/supabase';
 import Input from '../components/ui/Input';
 import './AuthPages.css';
 
@@ -58,14 +58,14 @@ export default function ResetPasswordPage() {
 
     try {
       if (!isMockMode) {
-        const { error } = await supabase.auth.updateUser({ password });
+        const { error } = await withTimeoutSafety(() => supabase.auth.updateUser({ password }));
         if (error) throw error;
       }
 
       setSuccess(true);
       // Sign out so they log back in cleanly with the new password
       setTimeout(async () => {
-        if (!isMockMode) await supabase.auth.signOut();
+        if (!isMockMode) await withTimeoutSafety(() => supabase.auth.signOut()).catch(() => {});
         navigate('/login');
       }, 3000);
 

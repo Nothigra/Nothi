@@ -33,11 +33,13 @@ export const GamificationProvider = ({ children }) => {
         setHasUnclaimedReward(checkHasUnclaimedReward(state.lastClaimedDate));
       } else if (profile) {
         // Fetch fresh profile data directly from DB to avoid staleness from AuthContext
-        const { data: freshProfile, error } = await supabase
-          .from('profiles')
-          .select('xp, level, next_level_xp, streak, last_claimed_date, unlocked_badges, displayed_badges, selected_frame, last_seen_badges_count, last_seen_xp')
-          .eq('id', profile.id)
-          .single();
+        const { data: freshProfile, error } = await withTimeoutSafety(() =>
+          supabase
+            .from('profiles')
+            .select('xp, level, next_level_xp, streak, last_claimed_date, unlocked_badges, displayed_badges, selected_frame, last_seen_badges_count, last_seen_xp')
+            .eq('id', profile.id)
+            .single()
+        );
 
         if (error) throw error;
         
@@ -78,7 +80,9 @@ export const GamificationProvider = ({ children }) => {
     if (gamificationState.lastSeenBadgesCount >= currentCount) return;
     
     setGamificationState(prev => ({ ...prev, lastSeenBadgesCount: currentCount }));
-    await supabase.from('profiles').update({ last_seen_badges_count: currentCount }).eq('id', profile.id);
+    await withTimeoutSafety(() =>
+      supabase.from('profiles').update({ last_seen_badges_count: currentCount }).eq('id', profile.id)
+    ).catch(err => console.error('markBadgesSeen failed:', err));
   }, [profile, gamificationState, isMockMode]);
 
   const markXpSeen = useCallback(async () => {
@@ -87,7 +91,9 @@ export const GamificationProvider = ({ children }) => {
     if (gamificationState.lastSeenXp >= currentXp) return;
     
     setGamificationState(prev => ({ ...prev, lastSeenXp: currentXp }));
-    await supabase.from('profiles').update({ last_seen_xp: currentXp }).eq('id', profile.id);
+    await withTimeoutSafety(() =>
+      supabase.from('profiles').update({ last_seen_xp: currentXp }).eq('id', profile.id)
+    ).catch(err => console.error('markXpSeen failed:', err));
   }, [profile, gamificationState, isMockMode]);
 
   // Realtime subscription to profiles table

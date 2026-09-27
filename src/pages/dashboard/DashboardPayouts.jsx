@@ -35,13 +35,18 @@ export default function DashboardPayouts() {
         setLoadingTransfers(false);
         return;
       }
-      const { data } = await supabase
-        .from('purchases')
-        .select('id, purchased_at, seller_amount_cents, stripe_transfer_id, product:products(title)')
-        .eq('seller_id', profile.id)
-        .not('stripe_transfer_id', 'is', null)
-        .order('purchased_at', { ascending: false });
-        
+      const { data } = await withTimeoutSafety(() =>
+        supabase
+          .from('purchases')
+          .select('id, purchased_at, seller_amount_cents, stripe_transfer_id, product:products(title)')
+          .eq('seller_id', profile.id)
+          .not('stripe_transfer_id', 'is', null)
+          .order('purchased_at', { ascending: false })
+      ).catch((err) => {
+        console.error('Error fetching transfers:', err);
+        return { data: null };
+      });
+
       if (data) setTransfers(data);
       setLoadingTransfers(false);
     };

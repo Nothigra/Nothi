@@ -3,7 +3,7 @@
  * with MOCK_CREATORS fallback for offline/mock mode.
  */
 
-import { supabase } from '../lib/supabase';
+import { supabase, withTimeoutSafety } from '../lib/supabase';
 import { MOCK_CREATORS } from '../lib/seed';
 import { getAllAccounts } from '../lib/accountStore';
 
@@ -30,11 +30,13 @@ export async function getCreatorProfile(username, isMockMode) {
 
   // ── Real Supabase path ──
   if (!isMockMode) {
-    const { data, error } = await supabase
-      .from('public_profiles')
-      .select('*')
-      .ilike('username', usernameLower)
-      .single();
+    const { data, error } = await withTimeoutSafety(() =>
+      supabase
+        .from('public_profiles')
+        .select('*')
+        .ilike('username', usernameLower)
+        .single()
+    );
 
     if (error || !data) {
       console.error('Creator not found in public_profiles:', error?.message || username);

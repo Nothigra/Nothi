@@ -4,7 +4,7 @@ import { CheckCircle2, Download, ArrowRight, Package, Check } from 'lucide-react
 import { motion } from 'framer-motion';
 import { useGamification } from '../context/GamificationContext';
 import { useAuth } from '../context/AuthContext';
-import { supabase } from '../lib/supabase';
+import { supabase, withTimeoutSafety } from '../lib/supabase';
 
 export default function CheckoutSuccess() {
   const [searchParams] = useSearchParams();
@@ -32,11 +32,13 @@ export default function CheckoutSuccess() {
       if (!profile || !isMounted) return;
       
       try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('xp')
-          .eq('id', profile.id)
-          .single();
+        const { data } = await withTimeoutSafety(() =>
+          supabase
+            .from('profiles')
+            .select('xp')
+            .eq('id', profile.id)
+            .single()
+        );
 
         if (data) {
           // If XP has increased from what we knew before checkout, the webhook has processed the purchase!

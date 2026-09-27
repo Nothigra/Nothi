@@ -4,13 +4,15 @@ export async function getUserMessages(userId) {
   if (isMockMode) return []; // Fallback handled in component
 
   // Fetch all messages where user is sender or receiver
-  const { data, error } = await supabase
-    .from('messages')
-    .select(
-      '*, sender:public_profiles!sender_id(username, avatar_url), receiver:public_profiles!receiver_id(username, avatar_url), product:public_products!product_id(title, seller_id)'
-    )
-    .or('sender_id.eq.' + userId + ',receiver_id.eq.' + userId)
-    .order('created_at', { ascending: true });
+  const { data, error } = await withTimeoutSafety(() =>
+    supabase
+      .from('messages')
+      .select(
+        '*, sender:public_profiles!sender_id(username, avatar_url), receiver:public_profiles!receiver_id(username, avatar_url), product:public_products!product_id(title, seller_id)'
+      )
+      .or('sender_id.eq.' + userId + ',receiver_id.eq.' + userId)
+      .order('created_at', { ascending: true })
+  );
 
   if (error) {
     console.error('Error fetching messages:', error);

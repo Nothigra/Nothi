@@ -8,7 +8,7 @@
 import { MOCK_CREATORS } from '../lib/seed';
 import { getAllAccounts } from '../lib/accountStore';
 
-import { supabase } from '../lib/supabase';
+import { supabase, withTimeoutSafety } from '../lib/supabase';
 
 // Simple in-memory cache to simulate API caching (5 min TTL)
 let cachedLeaderboard = null;
@@ -30,11 +30,13 @@ export async function getTopSellers(forceRefresh = false, isMockMode = true) {
   }
 
   if (!isMockMode) {
-    const { data, error } = await supabase
-      .from('public_leaderboard')
-      .select('*')
-      .order('rank', { ascending: true });
-      
+    const { data, error } = await withTimeoutSafety(() =>
+      supabase
+        .from('public_leaderboard')
+        .select('*')
+        .order('rank', { ascending: true })
+    );
+
     if (error) {
       console.error("Error fetching public leaderboard:", error);
       return [];
