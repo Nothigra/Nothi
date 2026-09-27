@@ -8,24 +8,58 @@ export const isMockMode = !supabaseUrl || !supabaseAnonKey;
 
 let supabase = null;
 
-// Custom lock implementation to prevent Vite HMR deadlocks with Supabase GoTrue
-// Implements a proper queue per lock name to ensure sequential execution
+// Custom lock implementation used in BOTH dev and production.
+//
+// We previously assumed Supabase's own default lock (the browser's
+// `navigator.locks` Web Locks API) was safe to use in production because it
+// "respects timeouts". In practice it does NOT save us here: GoTrue's
+// internal auth calls (getSession, refreshSession, signIn, signUp, ...) pass
+// an `acquireTimeout` of -1 ("wait forever for the lock") for most of these
+// calls. If the lock is ever left held — a tab that navigated away mid-request,
+// a crashed fetch, a stuck browser lock from a previous session — every
+// future auth call queues up behind it FOREVER, including the very
+// `refreshSession()` call withTimeoutSafety uses to try to break the
+// deadlock. That's exactly the loop seen in production: "hanging" ->
+// "forcing auth refresh" -> the refresh itself hangs on the same broken
+// lock -> repeat -> final timeout. A hard refresh "fixes" it only because
+// it destroys the JS context (and the OS-level Web Lock with it).
+//
+// The fix: a purely in-memory, per-tab queue (no navigator.locks, so a
+// crashed/reloaded tab can never leave a permanently stuck cross-context
+// lock) that ALSO enforces a real cap on how long we wait for our turn.
+// If whatever's ahead of us in the queue hasn't finished within that cap,
+// we stop waiting and run anyway instead of deadlocking every future call —
+// a slightly-risky read/write ordering is far better than the entire app
+// (including messaging, purchases, everything auth-gated) freezing up.
 const _lockQueues = new Map();
+const MAX_LOCK_WAIT_MS = 8000;
 
-const devLocks = async (name, acquireTimeout, fn) => {
+const resilientLock = async (name, acquireTimeout, fn) => {
   const callback = fn || acquireTimeout;
-  
+  // GoTrue often passes -1 (or a huge number) meaning "wait indefinitely" —
+  // never actually honor that; always cap the wait so a stuck holder can't
+  // freeze every future call.
+  const cappedWait = (typeof acquireTimeout === 'number' && acquireTimeout > 0 && acquireTimeout < MAX_LOCK_WAIT_MS)
+    ? acquireTimeout
+    : MAX_LOCK_WAIT_MS;
+
   if (!_lockQueues.has(name)) {
     _lockQueues.set(name, Promise.resolve());
   }
-  
+
   const currentLock = _lockQueues.get(name);
   let nextResolve;
   const nextLock = new Promise((res) => { nextResolve = res; });
   _lockQueues.set(name, nextLock);
-  
-  await currentLock;
-  
+
+  // Wait for our turn, but never longer than cappedWait — if whatever is
+  // ahead of us is stuck, give up waiting for it rather than joining the
+  // deadlock ourselves.
+  await Promise.race([
+    currentLock,
+    new Promise((resolve) => setTimeout(resolve, cappedWait)),
+  ]);
+
   try {
     return await callback();
   } finally {
@@ -35,17 +69,9 @@ const devLocks = async (name, acquireTimeout, fn) => {
 
 if (!isMockMode) {
   const options = {
-    // The custom devLocks workaround exists specifically for Vite's dev-server
-    // Hot Module Reload, which can leave two GoTrue client instances fighting
-    // over the same browser lock. That scenario is physically impossible in a
-    // production build (no HMR there) — and our custom lock has its own real
-    // bug: it never actually honors the acquireTimeout GoTrue passes it, so
-    // if anything ever holds it and doesn't release, every future auth call
-    // queues up behind it forever. Only use it in real dev mode; let
-    // production use Supabase's own default lock, which does respect timeouts.
-    auth: import.meta.env.DEV ? { lock: devLocks } : {}
+    auth: { lock: resilientLock },
   };
-  
+
   supabase = createClient(supabaseUrl, supabaseAnonKey, options);
 }
 
