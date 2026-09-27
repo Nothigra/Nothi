@@ -14,10 +14,12 @@ export async function getPublicProducts(isMockMode, forceFresh = false) {
     return publicProductsCache;
   }
   
-  const { data, error } = await supabase
-    .from('public_products')
-    .select('*');
-    
+  const { data, error } = await withTimeoutSafety(() =>
+    supabase
+      .from('public_products')
+      .select('*')
+  );
+
   if (error) {
     console.error('Error fetching public products:', error);
     return [];
@@ -38,12 +40,14 @@ export async function getProductById(id, isMockMode) {
     return MOCK_PRODUCTS.find(p => p.id === id);
   }
   
-  const { data, error } = await supabase
-    .from('public_products')
-    .select('*')
-    .eq('id', id)
-    .single();
-    
+  const { data, error } = await withTimeoutSafety(() =>
+    supabase
+      .from('public_products')
+      .select('*')
+      .eq('id', id)
+      .single()
+  );
+
   if (error) {
     console.error('Error fetching product:', error);
     return null;
@@ -136,11 +140,13 @@ export async function getProductsByCreator(creatorId, isMockMode) {
     return MOCK_PRODUCTS.filter(p => p.creator_id === creatorId);
   }
   
-  const { data, error } = await supabase
-    .from('public_products')
-    .select('*')
-    .eq('seller_id', creatorId);
-    
+  const { data, error } = await withTimeoutSafety(() =>
+    supabase
+      .from('public_products')
+      .select('*')
+      .eq('seller_id', creatorId)
+  );
+
   if (error) {
     console.error('Error fetching creator products:', error);
     return [];
@@ -184,11 +190,13 @@ export async function getUserPurchases(userId, isMockMode) {
   }
 
   // 1. Fetch ONLY the raw purchase records (RLS allows buyers to read their own purchases)
-  const { data: purchases, error: purchasesError } = await supabase
-    .from('purchases')
-    .select('*')
-    .eq('buyer_id', userId)
-    .order('purchased_at', { ascending: false });
+  const { data: purchases, error: purchasesError } = await withTimeoutSafety(() =>
+    supabase
+      .from('purchases')
+      .select('*')
+      .eq('buyer_id', userId)
+      .order('purchased_at', { ascending: false })
+  );
 
   if (purchasesError) {
     console.error('Error fetching purchases:', purchasesError);
@@ -199,22 +207,33 @@ export async function getUserPurchases(userId, isMockMode) {
     return [];
   }
 
-  const productIds = purchases.map(p => p.product_id);
+  const productIds = [...new Set(purchases.map(p => p.product_id).filter(Boolean))];
   const sellerIds = [...new Set(purchases.map(p => p.seller_id).filter(Boolean))];
 
-  // 2. Fetch the safe product data and seller profile data concurrently
+  // 2. Fetch the safe product data and seller profile data concurrently.
+  // Supabase/PostgREST returns HTTP 400 for `.in('id', [])` with an empty
+  // array (e.g. a free product with no seller_id set), so skip the query
+  // entirely when there's nothing to look up.
   const [
     { data: safeProducts, error: productsError },
     { data: safeSellers, error: sellersError }
   ] = await Promise.all([
-    supabase
-      .from('public_products')
-      .select('id, title, price, images, media, category')
-      .in('id', productIds),
-    supabase
-      .from('public_profiles')
-      .select('id, username, avatar_url')
-      .in('id', sellerIds)
+    productIds.length > 0
+      ? withTimeoutSafety(() =>
+          supabase
+            .from('public_products')
+            .select('id, title, price, images, media, category')
+            .in('id', productIds)
+        )
+      : Promise.resolve({ data: [], error: null }),
+    sellerIds.length > 0
+      ? withTimeoutSafety(() =>
+          supabase
+            .from('public_profiles')
+            .select('id, username, avatar_url')
+            .in('id', sellerIds)
+        )
+      : Promise.resolve({ data: [], error: null })
   ]);
 
   if (productsError) console.error('Error fetching products for purchases:', productsError);
@@ -236,13 +255,15 @@ export async function checkHasPurchased(buyerId, productId, isMockMode) {
   if (!buyerId || !productId) return false;
 
   try {
-    const { data, error } = await supabase
-      .from('purchases')
-      .select('id')
-      .eq('buyer_id', buyerId)
-      .eq('product_id', productId)
-      .eq('status', 'completed')
-      .maybeSingle();
+    const { data, error } = await withTimeoutSafety(() =>
+      supabase
+        .from('purchases')
+        .select('id')
+        .eq('buyer_id', buyerId)
+        .eq('product_id', productId)
+        .eq('status', 'completed')
+        .maybeSingle()
+    );
 
     if (error) {
       console.error('Error checking purchase status:', error);
@@ -263,11 +284,13 @@ export async function checkHasPurchased(buyerId, productId, isMockMode) {
  */
 export async function getReviews(productId) {
   if (!productId) return [];
-  const { data, error } = await supabase
-    .from('reviews')
-    .select('id, rating, comment, created_at, updated_at, buyer_id, buyer:public_profiles!buyer_id(username, avatar_url)')
-    .eq('product_id', productId)
-    .order('created_at', { ascending: false });
+  const { data, error } = await withTimeoutSafety(() =>
+    supabase
+      .from('reviews')
+      .select('id, rating, comment, created_at, updated_at, buyer_id, buyer:public_profiles!buyer_id(username, avatar_url)')
+      .eq('product_id', productId)
+      .order('created_at', { ascending: false })
+  );
 
   if (error) {
     console.error('Error fetching reviews:', error);
@@ -281,12 +304,14 @@ export async function getReviews(productId) {
  */
 export async function getUserReviewForProduct(productId, buyerId) {
   if (!productId || !buyerId) return null;
-  const { data, error } = await supabase
-    .from('reviews')
-    .select('id, rating, comment, created_at, updated_at')
-    .eq('product_id', productId)
-    .eq('buyer_id', buyerId)
-    .maybeSingle();
+  const { data, error } = await withTimeoutSafety(() =>
+    supabase
+      .from('reviews')
+      .select('id, rating, comment, created_at, updated_at')
+      .eq('product_id', productId)
+      .eq('buyer_id', buyerId)
+      .maybeSingle()
+  );
 
   if (error) {
     console.error('Error fetching own review:', error);

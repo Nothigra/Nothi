@@ -225,6 +225,25 @@ export default function ProductPage() {
     }
   };
 
+  // NOTE: these hooks must stay ABOVE the early `loading`/`!product` returns
+  // below — calling useRef/useEffect only on some renders (after an early
+  // return) violates the Rules of Hooks and corrupts React's internal hook
+  // list, which previously surfaced as cryptic DOM errors ("Node cannot be
+  // found in the current page") when navigating into a product page.
+  const purchaseActionsRef = useRef(null);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+
+  useEffect(() => {
+    const el = purchaseActionsRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyBar(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [product]);
+
   if (loading) {
     return (
       <div className="container py-2xl text-center flex items-center justify-center" style={{ minHeight: '70vh' }}>
@@ -243,7 +262,6 @@ export default function ProductPage() {
     );
   }
 
-
   const handleAddToCart = () => {
     if (!profile) {
       navigate('/login');
@@ -252,20 +270,6 @@ export default function ProductPage() {
     addItem(product);
     openCart();
   };
-
-  const purchaseActionsRef = useRef(null);
-  const [showStickyBar, setShowStickyBar] = useState(false);
-
-  useEffect(() => {
-    const el = purchaseActionsRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setShowStickyBar(!entry.isIntersecting),
-      { threshold: 0 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [product]);
 
   const renderMainActionButton = (compact = false) => {
     const sizeProps = compact
