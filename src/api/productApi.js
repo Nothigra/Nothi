@@ -333,12 +333,14 @@ export async function submitReview({ productId, buyerId, rating, comment }) {
  * Gets exact sales count for a given seller by querying purchases.
  */
 export async function getSellerSalesCount(sellerId) {
-  const { count, error } = await supabase
-    .from('purchases')
-    .select('*', { count: 'exact', head: true })
-    .eq('seller_id', sellerId)
-    .eq('status', 'completed');
-    
+  const { count, error } = await withTimeoutSafety(() =>
+    supabase
+      .from('purchases')
+      .select('*', { count: 'exact', head: true })
+      .eq('seller_id', sellerId)
+      .eq('status', 'completed')
+  );
+
   if (error) {
     console.error("Error fetching seller sales count:", error);
     return 0;
