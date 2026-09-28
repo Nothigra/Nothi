@@ -30,6 +30,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const ALLOWED_ORIGINS = [
+  'https://nothiapp.noahthirion67.workers.dev',
+  'https://redesign-nothiapp.noahthirion67.workers.dev',
+  'http://localhost:5173',
+];
+
+function getAppUrl(req: Request): string {
+  const origin = req.headers.get('origin') ?? '';
+  if (ALLOWED_ORIGINS.includes(origin)) return origin;
+  return Deno.env.get('APP_URL') ?? ALLOWED_ORIGINS[0];
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -94,7 +106,7 @@ serve(async (req) => {
       httpClient: Stripe.createFetchHttpClient(),
     });
 
-    const appUrl = Deno.env.get('APP_URL') ?? 'http://localhost:5173'; // !! PRODUCTION TODO: set APP_URL secret
+    const appUrl = getAppUrl(req);
 
     const totalCents = Math.round(product.price * 100);
 
