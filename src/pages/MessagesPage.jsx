@@ -13,6 +13,7 @@ import { getUserPurchases } from '../api/productApi';
 import { getUserMessages, groupMessagesIntoConversations, sendMessage as sendRealMessage, markMessagesAsRead as markRealRead, subscribeToMessages, uploadChatAttachment } from '../api/messageApi';
 import './MessagesPage.css';
 
+import ProBadge from '../components/common/ProBadge';
 export default function MessagesPage() {
   const { t, i18n } = useTranslation();
   const { user, profile, isMockMode } = useAuth();
@@ -437,7 +438,7 @@ export default function MessagesPage() {
                     <div>
                       <h3 className="font-medium text-lg leading-tight flex items-center gap-xs">
                         {activePartner.username}
-                        {activePartner.plan === 'pro' && <span className="pro-badge text-xs">PRO</span>}
+                        {activePartner.is_pro && <ProBadge size={16} />}
                       </h3>
                       <div className="text-xs text-muted flex items-center gap-xs mt-1">
                         <span className="status-text">Online</span>

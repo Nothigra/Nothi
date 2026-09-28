@@ -192,6 +192,12 @@ export default function DashboardPayouts() {
   };
 
   const handleWithdraw = async () => {
+    // Real mode: money only moves through Stripe (settle-pending-payouts).
+    // The balance-editing flow below is a mock-mode simulation only.
+    if (!isMockMode) {
+      await handleRequestPayout();
+      return;
+    }
     const amount = parseFloat(withdrawAmount);
     if (!amount || amount <= 0) {
       setMessage({ type: 'error', text: 'Please enter a valid amount.' });

@@ -219,3 +219,69 @@
 .footer-actions button {
   flex: 1;
 }
+
+/* ── Pro / paid tabs ─────────────────────────────────────────── */
+.boost-mode-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin: 0 var(--space-6, 24px) var(--space-4, 16px);
+  border-radius: 999px;
+  background: var(--color-bg-secondary);
+}
+.boost-mode-tabs button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.boost-mode-tabs button.active {
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.boost-plan-card.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.boost-quota-note {
+  margin: var(--space-2, 8px) 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  text-align: center;
+}
+
+.boost-error {
+  margin: var(--space-3, 12px) var(--space-6, 24px) 0;
+  color: var(--color-error, #ef4444);
+  font-size: 14px;
+  text-align: center;
+}
+
+.boost-pro-upsell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: var(--space-2, 8px);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+.boost-pro-upsell:hover { text-decoration: underline; }

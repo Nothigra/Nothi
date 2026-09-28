@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { getLocalizedString } from '../utils/i18nHelpers';
 import './CreatorProfilePage.css';
 
+import ProBadge from '../components/common/ProBadge';
 export default function CreatorProfilePage() {
   const { username } = useParams();
   const navigate = useNavigate();
@@ -997,6 +998,7 @@ export default function CreatorProfilePage() {
 
           <div className={`profile-avatar-large relative ${isEditing ? 'edit-mode-wrapper group' : ''}`} style={{ background: 'transparent' }}>
             <AvatarFrame tier={shopSettings.profile_frame?.enabled !== false ? creator.tier : 'none'} imageUrl={shopSettings.profile_image_url || creator.avatar_url} size="xl" />
+            {creator.is_pro && !isEditing && <ProBadge variant="avatar" size={26} />}
             {isEditing && (
               <>
                 <div 
@@ -1014,7 +1016,6 @@ export default function CreatorProfilePage() {
           <div className={`profile-info-main mt-md md:mt-0 relative rounded-lg p-xs -ml-xs border border-transparent transition-colors ${isEditing ? 'edit-mode-wrapper group hover:border-dashed hover:border-border' : ''}`}>
             <h1 className="profile-name flex items-center justify-center md:justify-start gap-xs">
               {shopSettings.name !== undefined ? shopSettings.name : (creator.name || creator.username)}
-              <CheckCircle2 size={24} className="text-accent relative top-[-1px]" />
             </h1>
             <p className={`profile-bio mt-xs mx-auto md:mx-0 ${!(shopSettings.bio !== undefined ? shopSettings.bio : creator.bio) ? 'text-secondary opacity-60 italic' : ''}`}>
               {(shopSettings.bio !== undefined ? shopSettings.bio : creator.bio) || 'Write your bio...'}

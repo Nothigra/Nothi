@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams, useLocation } from 'react-router';
 import { 
   Plus, Search, Edit, Trash2, CheckSquare, Square, 
   Download, Package, ChevronDown, Rocket, 
@@ -11,7 +11,8 @@ import { useTranslation } from 'react-i18next';
 import { getLocalizedString } from '../../utils/i18nHelpers';
 import Input from '../../components/ui/Input';
 import BoostModal from '../../components/dashboard/BoostModal';
-import { getProductsByCreator } from '../../api/productApi';
+import { PLAN_LIMITS, isPro } from '../../config/plans';
+import { getMyProducts } from '../../api/productApi';
 import { isMockMode } from '../../lib/supabase';
 import './DashboardProducts.css';
 
@@ -28,6 +29,29 @@ export default function DashboardProducts() {
   
   const [myProducts, setMyProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true); // Distinct local loading state
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const [boostNotice, setBoostNotice] = useState(
+    location.state?.boostError ? { type: 'info', text: `Product published, but the boost wasn't applied: ${location.state.boostError}` } : null
+  );
+  const [reloadKey, setReloadKey] = useState(0);
+
+  // Back from Stripe Checkout for a paid boost. The webhook applies the boost
+  // a moment after payment, so re-fetch a couple of times.
+  useEffect(() => {
+    const status = searchParams.get('boost');
+    if (!status) return;
+    setBoostNotice(status === 'success'
+      ? { type: 'success', text: 'Payment received — your boost is being activated.' }
+      : { type: 'info', text: 'Boost checkout cancelled. You have not been charged.' });
+    searchParams.delete('boost');
+    setSearchParams(searchParams, { replace: true });
+    if (status === 'success') {
+      const t1 = setTimeout(() => setReloadKey(k => k + 1), 2500);
+      const t2 = setTimeout(() => setReloadKey(k => k + 1), 7000);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     let isMounted = true;
@@ -38,7 +62,7 @@ export default function DashboardProducts() {
         if (isMockMode) {
           if (isMounted) setMyProducts(profile.products || []);
         } else {
-          const data = await getProductsByCreator(profile.id, false);
+          const data = await getMyProducts(profile.id);
           if (isMounted) {
             setMyProducts(data);
           }
@@ -48,7 +72,7 @@ export default function DashboardProducts() {
     }
     load();
     return () => { isMounted = false; };
-  }, [profile?.id, profile?.products, isAuthLoading]);
+  }, [profile?.id, profile?.products, isAuthLoading, reloadKey]);
   // Calculate quick stats
   const publishedCount = myProducts.filter(p => p.status === 'published' || !p.status).length;
   const draftCount = myProducts.filter(p => p.status === 'draft').length;
@@ -99,32 +123,17 @@ export default function DashboardProducts() {
     setSelectedIds(selectedIds.filter(id => id !== productId));
   };
 
+  // Mock mode only — real boosts are applied server-side (RPC / Stripe webhook).
   const handleBoost = async (productId, boostData) => {
-    if (isMockMode) {
-      const updated = myProducts.map(p => p.id === productId ? { ...p, boost: boostData } : p);
-      await updateProfile({ products: updated });
-      return;
-    }
+    if (!isMockMode) return;
+    const updated = myProducts.map(p => p.id === productId ? { ...p, boost: boostData } : p);
+    await updateProfile({ products: updated });
+  };
 
-    try {
-      const { supabase, withTimeoutSafety } = await import('../../lib/supabase');
-      const { error } = await withTimeoutSafety(() =>
-        supabase
-          .from('products')
-          .update({ boosted_until: boostData.endDate })
-          .eq('id', productId)
-      );
-        
-      if (error) {
-        console.error("Boost failed:", error);
-        alert("Failed to activate boost.");
-      } else {
-        // Optimistically update local state
-        setMyProducts(myProducts.map(p => p.id === productId ? { ...p, boosted_until: boostData.endDate } : p));
-      }
-    } catch (err) {
-      console.error(err);
-    }
+  // Real mode: the server already applied the boost; reflect it locally.
+  const handleBoosted = (productId, boostedUntil) => {
+    setMyProducts(prev => prev.map(p => p.id === productId ? { ...p, boosted_until: boostedUntil } : p));
+    setBoostNotice({ type: 'success', text: 'Boost activated.' });
   };
 
   const renderBoostBadge = (product) => {
@@ -162,6 +171,23 @@ export default function DashboardProducts() {
           </Link>
         </div>
       </div>
+
+      {boostNotice && (
+        <div className={`dp-notice dp-notice-${boostNotice.type}`} role="status">
+          <span>{boostNotice.text}</span>
+          <button onClick={() => setBoostNotice(null)} aria-label="Dismiss">×</button>
+        </div>
+      )}
+
+      {!isMockMode && !isPro(profile) && myProducts.length > 0 && (
+        <div className="dp-notice dp-notice-info">
+          <span>
+            {myProducts.length}/{PLAN_LIMITS.free.maxProducts} products on the Free plan.
+            {myProducts.length >= PLAN_LIMITS.free.maxProducts - 5 && ' '}
+            {myProducts.length >= PLAN_LIMITS.free.maxProducts - 5 && <Link to="/pricing">Go Pro for unlimited products.</Link>}
+          </span>
+        </div>
+      )}
 
       {/* Quick Stats Header */}
       {myProducts.length > 0 && (
@@ -333,6 +359,7 @@ export default function DashboardProducts() {
           onClose={() => setBoostModalProduct(null)} 
           product={boostModalProduct} 
           onBoost={handleBoost}
+          onBoosted={handleBoosted}
         />
       )}
     </div>

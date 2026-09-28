@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate, useLocation, Link } from 'react-router';
 import { 
   Upload, Plus, Info, Check, Image as ImageIcon, File, Video, 
   AlertCircle, X, Type, Tag, Globe, Settings, ExternalLink, CheckCircle2, Eye, ChevronDown, Rocket, Loader2
@@ -14,7 +14,9 @@ import Select from '../../components/ui/Select';
 import Checkbox from '../../components/ui/Checkbox';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createProduct, requestProductFileUploadUrl, updateProduct } from '../../api/productApi';
-import { supabase } from '../../lib/supabase';
+import { supabase, withTimeoutSafety } from '../../lib/supabase';
+import { PLAN_LIMITS, isPro, getPlanLimits, formatFileSize } from '../../config/plans';
+import { activateProBoost, startBoostCheckout, billingErrorMessage } from '../../api/billingApi';
 import MediaUploader from '../../components/upload/MediaUploader';
 
 import { useTranslation } from 'react-i18next';
@@ -22,6 +24,10 @@ import { languages } from '../../config/i18n';
 import { useGamification } from '../../context/GamificationContext';
 import './UploadProductPage.css';
 
+const formatEur = (amount) =>
+  new Intl.NumberFormat('fr-BE', { style: 'currency', currency: 'EUR' }).format(amount);
+
+// Prices must match BOOST_OPTIONS in src/config/plans.js (server: create-boost-checkout)
 const BOOST_PLANS = [
   { id: 'none', days: 0, title: 'No Boost', price: 0, desc: 'Standard marketplace visibility.' },
   { id: '24h', days: 1, title: '24 Hours', price: 2.99, desc: 'Perfect for launching a new product.' },
@@ -73,11 +79,24 @@ export default function UploadProductPage() {
   const [fileError, setFileError] = useState('');
   const [fileUploadProgress, setFileUploadProgress] = useState(0); // 0–100
 
-  // Plan-gated size limits — 'premium' gets 5 GB, free tier gets 500 MB.
-  // NOTE: 'pro' was a bug in the previous code — the schema stores 'premium'.
-  const IS_PREMIUM = profile?.plan === 'premium';
-  const MAX_FILE_SIZE_MB = IS_PREMIUM ? 5120 : 500;
+  // Plan-gated limits (display + early feedback). The server enforces the
+  // same limits: file size in generate-product-file-upload-url, product count
+  // in a DB trigger — see src/config/plans.js.
+  const IS_PRO = isPro(profile);
+  const { maxFileSizeMB: MAX_FILE_SIZE_MB, maxProducts: MAX_PRODUCTS } = getPlanLimits(profile);
   const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+  const [productCount, setProductCount] = useState(null);
+  const atProductLimit = !isEditing && !IS_PRO && productCount !== null && productCount >= MAX_PRODUCTS;
+
+  useEffect(() => {
+    if (isMockMode || isEditing || IS_PRO || !profile?.id) return;
+    let cancelled = false;
+    withTimeoutSafety(() =>
+      supabase.from('products').select('id', { count: 'exact', head: true }).eq('seller_id', profile.id)
+    ).then(({ count }) => { if (!cancelled) setProductCount(count ?? 0); })
+     .catch(() => {});
+    return () => { cancelled = true; };
+  }, [profile?.id, IS_PRO, isEditing]);
 
   useEffect(() => {
     if (isEditing && location.state?.product) {
@@ -170,7 +189,7 @@ export default function UploadProductPage() {
       }
       if (file.size > MAX_FILE_SIZE_BYTES) {
         const limitLabel = MAX_FILE_SIZE_MB >= 1024 ? `${MAX_FILE_SIZE_MB / 1024} GB` : `${MAX_FILE_SIZE_MB} MB`;
-        setFileError(`File is too large. Maximum size is ${limitLabel} for your ${IS_PREMIUM ? 'Premium' : 'Free'} plan.`);
+        setFileError(`File is too large. Maximum size is ${limitLabel} on the ${IS_PRO ? 'Pro' : 'Free'} plan.`);
         setProductFile(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;
@@ -281,6 +300,9 @@ export default function UploadProductPage() {
         
         const res = await createProduct(productPayload);
         if (!res) throw new Error('Failed to create product record.');
+        if (res.limitReached) {
+          throw new Error(`The Free plan allows ${PLAN_LIMITS.free.maxProducts} products. Go Pro for unlimited products.`);
+        }
         
         // Upload the required file
         setIsFileUploading(true);
@@ -308,6 +330,27 @@ export default function UploadProductPage() {
         
         // Refresh XP gamification state
         refreshState();
+
+        // Optional boost chosen at publish time. The product is already live;
+        // a boost problem must never make the publish itself look failed.
+        const boostPlan = BOOST_PLANS.find(p => p.id === selectedBoost);
+        if (!isMockMode && boostPlan && boostPlan.days > 0) {
+          if (IS_PRO) {
+            try {
+              await activateProBoost(res.id, boostPlan.days);
+            } catch (boostErr) {
+              navigate('/dashboard/products', { state: { boostError: billingErrorMessage(boostErr) } });
+              return;
+            }
+          } else {
+            try {
+              await startBoostCheckout(res.id, boostPlan.days); // redirects to Stripe
+            } catch (boostErr) {
+              navigate('/dashboard/products', { state: { boostError: billingErrorMessage(boostErr) } });
+            }
+            return;
+          }
+        }
       }
       
       navigate('/dashboard/products');
@@ -365,6 +408,14 @@ export default function UploadProductPage() {
           <span className="up-step-label">Publish</span>
         </div>
       </div>
+
+      {atProductLimit && (
+        <div className="max-w-3xl mx-auto mb-lg p-lg rounded-xl border border-border bg-bg-card flex flex-col gap-sm" role="alert">
+          <strong>You've reached the {MAX_PRODUCTS}-product limit of the Free plan.</strong>
+          <span className="text-secondary text-sm">Upgrade to Pro to publish unlimited products, upload files up to {formatFileSize(PLAN_LIMITS.pro.maxFileSizeMB)} and get monthly boosts.</span>
+          <Link to="/pricing" className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>See Pro</Link>
+        </div>
+      )}
 
       <form className="max-w-3xl mx-auto flex flex-col gap-xl" onSubmit={handleSubmit} noValidate>
         
@@ -541,12 +592,12 @@ export default function UploadProductPage() {
             
             <div className="flex justify-between items-center mt-sm">
               <span className="text-xs text-secondary font-medium">
-                Max {IS_PREMIUM ? '5 GB' : '500 MB'} &mdash; {IS_PREMIUM ? 'Premium' : 'Free'} plan
+                Max {formatFileSize(MAX_FILE_SIZE_MB)} &mdash; {IS_PRO ? 'Pro' : 'Free'} plan
               </span>
-              {!IS_PREMIUM && (
-                <span className="text-xs text-accent opacity-80 hover:opacity-100 transition-opacity cursor-pointer flex items-center gap-xs">
-                  <Globe size={12} /> Upgrade to Premium for 5 GB uploads
-                </span>
+              {!IS_PRO && (
+                <Link to="/pricing" className="text-xs text-accent opacity-80 hover:opacity-100 transition-opacity flex items-center gap-xs">
+                  <Globe size={12} /> Go Pro for {formatFileSize(PLAN_LIMITS.pro.maxFileSizeMB)} uploads
+                </Link>
               )}
             </div>
             {isFileUploading && fileUploadProgress > 0 && fileUploadProgress < 100 && (
@@ -612,7 +663,7 @@ export default function UploadProductPage() {
                             <p className="up-boost-desc">{plan.desc}</p>
                           </div>
                           <div className="up-boost-price">
-                            {plan.price === 0 ? 'Free' : formatPrice(plan.price)}
+                            {plan.price === 0 ? 'Free' : IS_PRO ? 'Pro pack' : formatEur(plan.price)}
                           </div>
                         </div>
                       );
@@ -636,7 +687,7 @@ export default function UploadProductPage() {
           <button 
             type="submit" 
             className="btn btn-primary btn-lg min-w-[200px]" 
-            disabled={isSubmitting || isFileUploading}
+            disabled={isSubmitting || isFileUploading || atProductLimit}
             style={!canPublish ? { filter: 'grayscale(100%)', opacity: 0.7, cursor: 'pointer' } : {}}
           >
             {isFileUploading
@@ -645,7 +696,9 @@ export default function UploadProductPage() {
               ? 'Publishing…'
               : selectedBoost === 'none'
               ? 'Publish Product'
-              : `Publish & Pay ${formatPrice(BOOST_PLANS.find(p => p.id === selectedBoost).price)}`
+              : IS_PRO
+              ? 'Publish & use 1 Pro boost'
+              : `Publish & Pay ${formatEur(BOOST_PLANS.find(p => p.id === selectedBoost).price)}`
             }
           </button>
         </div>

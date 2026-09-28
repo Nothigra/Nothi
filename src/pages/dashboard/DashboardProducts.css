@@ -342,3 +342,31 @@
     gap: 12px;
   }
 }
+
+/* Inline notices (boost confirmation, plan usage) */
+.dp-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: var(--space-4, 16px);
+  padding: 12px 16px;
+  border-radius: var(--radius-lg, 12px);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+.dp-notice a { color: var(--color-accent); font-weight: 600; }
+.dp-notice button {
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+.dp-notice-success {
+  border-color: color-mix(in srgb, var(--color-success, #10b981) 40%, transparent);
+  color: var(--color-text-primary);
+}

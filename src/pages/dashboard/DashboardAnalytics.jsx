@@ -4,9 +4,13 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { getSellerAnalytics } from '../../api/analyticsApi';
+import AdvancedAnalytics from '../../components/dashboard/AdvancedAnalytics';
+import { isPro } from '../../config/plans';
 import './DashboardProducts.css';
 
 const RANGES = ['Today', '7d', '30d', '90d', '12m', 'All'];
+// Advanced analytics works on a rolling window (max 365 days).
+const RANGE_DAYS = { Today: 1, '7d': 7, '30d': 30, '90d': 90, '12m': 365, All: 365 };
 
 const SOURCE_LABELS = {
   direct: 'Direct',
@@ -218,6 +222,8 @@ export default function DashboardAnalytics() {
           </div>
         )}
       </div>
+
+      {!isMockMode && <AdvancedAnalytics isPro={isPro(profile)} rangeDays={RANGE_DAYS[timeRange]} />}
     </div>
   );
 }

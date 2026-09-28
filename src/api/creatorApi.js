@@ -56,6 +56,7 @@ export async function getCreatorProfile(username, isMockMode) {
       displayed_badges: data.displayed_badges || [],
       unlocked_badges: data.unlocked_badges || [],
       selected_frame: data.selected_frame || null,
+      is_pro: !!data.is_pro,
     };
   }
 

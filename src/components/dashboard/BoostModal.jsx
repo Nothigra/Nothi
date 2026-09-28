@@ -1,91 +1,207 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Rocket, Check, TrendingUp, Sparkles } from 'lucide-react';
-import { useCurrency } from '../../context/CurrencyContext';
+import { X, Rocket, Check, TrendingUp, Sparkles, Crown, Lock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
+import { isMockMode } from '../../lib/supabase';
+import { BOOST_OPTIONS, PRO_BOOST_PACKS, isPro } from '../../config/plans';
+import {
+  startBoostCheckout, activateProBoost, getBoostQuota, billingErrorMessage,
+} from '../../api/billingApi';
 import './BoostModal.css';
 
-const BOOST_PLANS = [
-  { 
-    id: '24h', 
-    days: 1, 
-    title: '24 Hours', 
-    price: 2.99, 
-    desc: 'Perfect for launching a new product.' 
-  },
-  { 
-    id: '3d', 
-    days: 3, 
-    title: '3 Days', 
-    price: 4.99, 
-    desc: 'Great for increasing visibility.' 
-  },
-  { 
-    id: '7d', 
-    days: 7, 
-    title: '7 Days', 
-    price: 6.99, 
-    desc: 'Ideal for maximizing exposure.', 
-    recommended: true 
-  }
-];
+const formatEur = (amount, lang) =>
+  new Intl.NumberFormat(lang || 'fr-BE', { style: 'currency', currency: 'EUR' }).format(amount);
 
-export default function BoostModal({ isOpen, onClose, product, onBoost }) {
-  const [selectedPlanId, setSelectedPlanId] = useState('7d');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { formatPrice } = useCurrency();
+/**
+ * Real mode:
+ *   - Free sellers pay per boost through Stripe Checkout (applied by the webhook).
+ *   - Pro sellers spend their monthly pack (RPC), and can still buy extra boosts.
+ * Mock mode keeps the old local simulation via `onBoost`.
+ */
+export default function BoostModal({ isOpen, onClose, product, onBoost, onBoosted }) {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language || 'fr-BE';
   const { profile } = useAuth();
+  const userIsPro = isPro(profile);
+
+  const [mode, setMode] = useState(userIsPro ? 'pro' : 'paid');
+  const [selectedDays, setSelectedDays] = useState(3);
+  const [quota, setQuota] = useState(null);
+  const [quotaLoading, setQuotaLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!isOpen || isMockMode || !userIsPro) return;
+    let cancelled = false;
+    setQuotaLoading(true);
+    getBoostQuota()
+      .then((q) => {
+        if (cancelled) return;
+        setQuota(q);
+        // A pack is already chosen this month: preselect it.
+        if (q?.pack_days) setSelectedDays(q.pack_days);
+      })
+      .catch((err) => !cancelled && setError(billingErrorMessage(err)))
+      .finally(() => !cancelled && setQuotaLoading(false));
+    return () => { cancelled = true; };
+  }, [isOpen, userIsPro]);
 
   if (!isOpen || !product) return null;
 
-  const isBoosted = profile?.isMockMode 
-    ? (product.boost && new Date(product.boost.endDate) > new Date())
-    : (product.boosted_until && new Date(product.boosted_until) > new Date());
+  const title = typeof product.title === 'object'
+    ? (product.title?.[lang.split('-')[0]] || product.title?.en || Object.values(product.title)[0])
+    : product.title;
 
-  const endDate = isBoosted ? new Date(profile?.isMockMode ? product.boost.endDate : product.boosted_until) : null;
+  const boostEnd = isMockMode
+    ? (product.boost?.endDate ? new Date(product.boost.endDate) : null)
+    : (product.boosted_until ? new Date(product.boosted_until) : null);
+  const isBoosted = boostEnd && boostEnd > new Date();
+  const isPublished = isMockMode || (product.status || 'published') === 'published';
 
-  // Future-proof function for applying creator discounts
-  const getPrice = (plan) => {
-    return plan.price; 
-  };
+  const lockedPack = quota?.pack_days ?? null;
+  const proRemaining = lockedPack ? quota.remaining : null;
+  const proExhausted = lockedPack !== null && proRemaining <= 0;
+  const resetsAt = quota?.resets_at ? new Date(quota.resets_at) : null;
 
-  const handleActivate = async () => {
+  const handleMockActivate = async () => {
     setIsProcessing(true);
-    const plan = BOOST_PLANS.find(p => p.id === selectedPlanId);
-    
-    // Simulate payment/processing delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const startDate = new Date();
-    const endDate = new Date();
-    endDate.setDate(startDate.getDate() + plan.days);
-
-    const boostData = {
-      active: true,
-      type: "marketplace",
-      plan: plan.id,
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      priority: 1
-    };
-
-    onBoost(product.id, boostData);
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    const start = new Date();
+    const end = new Date();
+    end.setDate(start.getDate() + selectedDays);
+    onBoost?.(product.id, {
+      active: true, type: 'marketplace', plan: `${selectedDays}d`,
+      startDate: start.toISOString(), endDate: end.toISOString(), priority: 1,
+    });
     setIsProcessing(false);
     onClose();
   };
 
+  const handleConfirm = async () => {
+    if (isMockMode) return handleMockActivate();
+    setError(null);
+    setIsProcessing(true);
+    try {
+      if (mode === 'pro') {
+        const result = await activateProBoost(product.id, selectedDays);
+        onBoosted?.(product.id, result.boosted_until);
+        onClose();
+      } else {
+        await startBoostCheckout(product.id, selectedDays); // redirects to Stripe
+      }
+    } catch (err) {
+      setError(billingErrorMessage(err));
+      setIsProcessing(false);
+    }
+  };
+
+  const renderProPacks = () => (
+    <div className="boost-plans">
+      {quotaLoading && <p className="text-muted text-sm text-center">{t('billing.loading', 'Loading…')}</p>}
+      {!quotaLoading && PRO_BOOST_PACKS.map((pack) => {
+        const lockedOut = lockedPack !== null && lockedPack !== pack.days;
+        const isSelected = selectedDays === pack.days && !lockedOut;
+        const isCurrent = lockedPack === pack.days;
+        return (
+          <div
+            key={pack.days}
+            className={`boost-plan-card ${isSelected ? 'selected' : ''} ${lockedOut ? 'disabled' : ''}`}
+            onClick={() => !lockedOut && setSelectedDays(pack.days)}
+            aria-disabled={lockedOut}
+          >
+            <div className="plan-radio">
+              <div className="radio-circle">{isSelected && <div className="radio-dot" />}</div>
+            </div>
+            <div className="plan-content">
+              <div className="plan-title-row">
+                <span className="plan-title">{pack.label}</span>
+                <span className="plan-price">
+                  {isCurrent
+                    ? t('billing.packLeft', '{{n}} left', { n: proRemaining })
+                    : lockedOut ? <Lock size={14} /> : t('billing.included', 'Included')}
+                </span>
+              </div>
+              <p className="plan-desc">
+                {lockedOut
+                  ? t('billing.packLockedDesc', 'Available again next month')
+                  : t('billing.packDesc', 'Each boost lasts {{d}}. Choosing this pack locks it for the month.', { d: pack.days === 1 ? '24h' : t('billing.nDays', '{{n}} days', { n: pack.days }) })}
+              </p>
+            </div>
+          </div>
+        );
+      })}
+      {proExhausted && resetsAt && (
+        <p className="boost-quota-note">
+          {t('billing.quotaExhausted', 'Monthly boosts used. They reset on {{date}}. You can still buy an extra boost.', { date: resetsAt.toLocaleDateString(lang) })}
+        </p>
+      )}
+    </div>
+  );
+
+  const renderPaidOptions = () => (
+    <div className="boost-plans">
+      {BOOST_OPTIONS.map((opt) => {
+        const isSelected = selectedDays === opt.days;
+        return (
+          <div
+            key={opt.days}
+            className={`boost-plan-card ${isSelected ? 'selected' : ''} ${opt.recommended ? 'recommended' : ''}`}
+            onClick={() => setSelectedDays(opt.days)}
+          >
+            {opt.recommended && <div className="recommended-badge"><Sparkles size={12} /> {t('billing.bestValue', 'BEST VALUE')}</div>}
+            <div className="plan-radio">
+              <div className="radio-circle">{isSelected && <div className="radio-dot" />}</div>
+            </div>
+            <div className="plan-content">
+              <div className="plan-title-row">
+                <span className="plan-title">{opt.days === 1 ? '24h' : t('billing.nDays', '{{n}} days', { n: opt.days })}</span>
+                <span className="plan-price">{formatEur(opt.price, lang)}</span>
+              </div>
+              {isSelected && (
+                <motion.div className="plan-perks" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                  <div className="perk"><TrendingUp size={14} /> {t('billing.perkVisibility', 'Higher ranking in the Marketplace')}</div>
+                  <div className="perk"><Check size={14} /> {t('billing.perkFeatured', 'Boosted label on your product')}</div>
+                </motion.div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+      {!userIsPro && !isMockMode && (
+        <Link to="/pricing" className="boost-pro-upsell" onClick={onClose}>
+          <Crown size={14} /> {t('billing.boostUpsell', 'Pro includes up to 3 boosts every month — see Pro')}
+        </Link>
+      )}
+    </div>
+  );
+
+  const confirmDisabled = isProcessing || !isPublished ||
+    (mode === 'pro' && !isMockMode && (quotaLoading || proExhausted || (lockedPack !== null && lockedPack !== selectedDays)));
+
+  const selectedPaid = BOOST_OPTIONS.find((o) => o.days === selectedDays);
+  const confirmLabel = isProcessing
+    ? (mode === 'paid' && !isMockMode ? t('billing.redirecting', 'Redirecting to secure payment…') : t('billing.activating', 'Activating…'))
+    : mode === 'pro' || isMockMode
+      ? (isBoosted ? t('billing.extendWithPack', 'Extend with 1 Pro boost') : t('billing.useProBoost', 'Use 1 Pro boost'))
+      : t('billing.payBoost', 'Pay {{price}}', { price: formatEur(selectedPaid?.price ?? 0, lang) });
+
   return (
     <AnimatePresence>
       <div className="modal-overlay" onClick={onClose}>
-        <motion.div 
+        <motion.div
           className="boost-modal"
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          onClick={e => e.stopPropagation()}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
         >
-          <button className="modal-close" onClick={onClose} aria-label="Close">
+          <button className="modal-close" onClick={onClose} aria-label={t('billing.close', 'Close')}>
             <X size={20} />
           </button>
 
@@ -93,80 +209,48 @@ export default function BoostModal({ isOpen, onClose, product, onBoost }) {
             <div className="boost-icon-wrapper">
               <Rocket size={24} className="text-accent" />
             </div>
-            <h2>{isBoosted ? 'Product Currently Boosted' : 'Boost Product Visibility'}</h2>
+            <h2>{isBoosted ? t('billing.extendBoostTitle', 'Extend the boost') : t('billing.boostTitle', 'Boost product visibility')}</h2>
             <p className="text-muted">
-              {isBoosted 
-                ? `"${product.title?.en || product.title || 'This product'}" is already receiving increased visibility in the Marketplace.`
-                : `Select a duration to temporarily elevate "${product.title?.en || product.title || 'this product'}" in the Marketplace and Featured sections.`
-              }
+              {isBoosted
+                ? t('billing.boostActiveUntil', '"{{title}}" is boosted until {{date}}. A new boost adds time on top.', { title, date: boostEnd.toLocaleString(lang, { dateStyle: 'medium', timeStyle: 'short' }) })
+                : t('billing.boostDesc', 'Temporarily push "{{title}}" higher in the Marketplace.', { title })}
             </p>
           </div>
 
-          {isBoosted ? (
-            <div className="p-xl text-center flex flex-col items-center">
-              <div className="bg-success-subtle text-success p-md rounded-full mb-md">
-                <Check size={32} />
-              </div>
-              <h3 className="font-bold text-lg mb-xs">Boost Active</h3>
-              <p className="text-secondary mb-xl">
-                Boost expires on {endDate.toLocaleDateString()} at {endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.
-              </p>
-              <button className="btn btn-outline w-full" onClick={onClose}>Close</button>
+          {userIsPro && !isMockMode && (
+            <div className="boost-mode-tabs" role="tablist">
+              <button role="tab" aria-selected={mode === 'pro'} className={mode === 'pro' ? 'active' : ''}
+                onClick={() => { setMode('pro'); setError(null); if (lockedPack) setSelectedDays(lockedPack); }}>
+                <Crown size={14} /> {t('billing.tabPro', 'Pro boosts')}
+              </button>
+              <button role="tab" aria-selected={mode === 'paid'} className={mode === 'paid' ? 'active' : ''}
+                onClick={() => { setMode('paid'); setError(null); }}>
+                {t('billing.tabBuy', 'Buy a boost')}
+              </button>
             </div>
-          ) : (
-            <>
-              <div className="boost-plans">
-            {BOOST_PLANS.map(plan => {
-              const price = getPrice(plan);
-              const isSelected = selectedPlanId === plan.id;
-              
-              return (
-                <div 
-                  key={plan.id}
-                  className={`boost-plan-card ${isSelected ? 'selected' : ''} ${plan.recommended ? 'recommended' : ''}`}
-                  onClick={() => setSelectedPlanId(plan.id)}
-                >
-                  {plan.recommended && <div className="recommended-badge"><Sparkles size={12} /> BEST VALUE</div>}
-                  <div className="plan-radio">
-                    <div className="radio-circle">
-                      {isSelected && <div className="radio-dot" />}
-                    </div>
-                  </div>
-                  <div className="plan-content">
-                    <div className="plan-title-row">
-                      <span className="plan-title">{plan.title}</span>
-                      <span className="plan-price">{formatPrice(price)}</span>
-                    </div>
-                    <p className="plan-desc">{plan.desc}</p>
-                    {isSelected && (
-                      <motion.div 
-                        className="plan-perks"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                      >
-                        <div className="perk"><TrendingUp size={14} /> Increased Marketplace visibility</div>
-                        <div className="perk"><Check size={14} /> Higher Featured probability</div>
-                      </motion.div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          )}
+
+          {!isPublished && (
+            <p className="boost-quota-note">{t('billing.publishFirst', 'Publish this product first to boost it.')}</p>
+          )}
+
+          {mode === 'pro' && !isMockMode ? renderProPacks() : renderPaidOptions()}
+
+          {error && <p className="boost-error" role="alert">{error}</p>}
 
           <div className="boost-modal-footer">
             <p className="boost-disclaimer">
-              Boosted products receive higher visibility in Marketplace listings and Featured sections during the selected period.
+              {mode === 'paid' && !isMockMode
+                ? t('billing.boostPaidDisclaimer', 'One-time payment by Stripe. The boost starts as soon as payment is confirmed.')
+                : t('billing.boostDisclaimer', 'Boosted products rank higher in Marketplace listings during the selected period.')}
             </p>
             <div className="footer-actions">
-              <button className="btn btn-outline" onClick={onClose} disabled={isProcessing}>Cancel</button>
-              <button className="btn btn-primary flex-center gap-sm" onClick={handleActivate} disabled={isProcessing}>
-                {isProcessing ? 'Activating...' : 'Activate Boost'} <Rocket size={16} />
+              <button className="btn btn-outline" onClick={onClose} disabled={isProcessing}>{t('billing.cancel', 'Cancel')}</button>
+              <button className="btn btn-primary flex-center gap-sm" onClick={handleConfirm} disabled={confirmDisabled}>
+                {confirmLabel} <Rocket size={16} />
               </button>
             </div>
           </div>
-        </>
-          )}
         </motion.div>
       </div>
     </AnimatePresence>

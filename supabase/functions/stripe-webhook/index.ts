@@ -24,7 +24,9 @@
 // !! SETUP REQUIRED !!
 // Webhook endpoint registered at:
 //   https://wmnueemuldnhwzukckyi.supabase.co/functions/v1/stripe-webhook
-// Listening for: checkout.session.completed
+// Listening for: checkout.session.completed, checkout.session.async_payment_succeeded,
+//                customer.subscription.created, customer.subscription.updated,
+//                customer.subscription.deleted
 // Signing secret set via: npx supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
@@ -83,9 +85,32 @@ serve(async (req) => {
   }
 
   // ── Route events ──────────────────────────────────────────────────────────
+  // checkout.session.completed is routed on metadata.type:
+  //   'boost'        -> paid product boost (create-boost-checkout)
+  //   'subscription' -> Nothi Pro subscription (create-subscription-checkout)
+  //   (none)         -> product purchase (create-checkout-session, legacy shape)
   try {
-    if (event.type === 'checkout.session.completed') {
-      await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session, stripe);
+    if (event.type === 'checkout.session.async_payment_succeeded') {
+      // Delayed payment methods (e.g. SEPA): completed arrives 'unpaid', the
+      // money lands later with this event.
+      const session = event.data.object as Stripe.Checkout.Session;
+      if (session.metadata?.type === 'boost') await handleBoostPaid(session);
+    } else if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const type = session.metadata?.type;
+      if (type === 'boost') {
+        await handleBoostPaid(session);
+      } else if (type === 'subscription') {
+        await handleSubscriptionCheckout(session, stripe);
+      } else {
+        await handleCheckoutSessionCompleted(session, stripe);
+      }
+    } else if (
+      event.type === 'customer.subscription.created' ||
+      event.type === 'customer.subscription.updated' ||
+      event.type === 'customer.subscription.deleted'
+    ) {
+      await syncSubscription(event.data.object as Stripe.Subscription, stripe);
     }
     // Other event types are acknowledged but not processed
   } catch (err) {
@@ -225,4 +250,121 @@ async function handleCheckoutSessionCompleted(
     `Purchase created: product=${product_id} buyer=${buyer_id} pi=${paymentIntentId} ` +
     `platform_fee=${platformFeeCents}¢ seller_amount=${sellerAmountCents}¢`
   );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Paid boosts
+// ─────────────────────────────────────────────────────────────────────────────
+async function handleBoostPaid(session: Stripe.Checkout.Session) {
+  if (session.payment_status !== 'paid') {
+    console.log(`Boost session ${session.id} not paid (${session.payment_status}) — skipping`);
+    return;
+  }
+  const { seller_id, product_id, days } = session.metadata ?? {};
+  if (!seller_id || !product_id || !days) {
+    console.error('Boost session missing metadata:', session.metadata);
+    return; // bad metadata: don't make Stripe retry forever
+  }
+
+  const supabaseAdmin = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+
+  // grant_paid_boost is idempotent on the checkout session id (Stripe retries).
+  const { data, error } = await supabaseAdmin.rpc('grant_paid_boost', {
+    p_seller_id: seller_id,
+    p_product_id: product_id,
+    p_days: parseInt(days, 10),
+    p_session_id: session.id,
+    p_amount_cents: session.amount_total ?? null,
+  });
+
+  if (error) {
+    if (error.message?.includes('PRODUCT_NOT_FOUND')) {
+      // Product deleted between payment and webhook — nothing to boost.
+      // The payment should be refunded manually from the Stripe dashboard.
+      console.error(`Paid boost for missing product ${product_id} (session ${session.id}) — needs manual refund`);
+      return;
+    }
+    throw new Error(`grant_paid_boost failed: ${error.message}`);
+  }
+  console.log(`Boost applied: product=${product_id} days=${days} session=${session.id}`, data);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pro subscription
+// ─────────────────────────────────────────────────────────────────────────────
+// Statuses that keep Pro active. past_due = Stripe is still retrying the card,
+// so we keep the member's benefits during that grace period.
+const PRO_STATUSES = ['active', 'trialing', 'past_due'];
+
+async function handleSubscriptionCheckout(session: Stripe.Checkout.Session, stripe: Stripe) {
+  const subscriptionId = typeof session.subscription === 'string'
+    ? session.subscription
+    : session.subscription?.id;
+  if (!subscriptionId) {
+    console.error(`Subscription checkout ${session.id} has no subscription id`);
+    return;
+  }
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  await syncSubscription(subscription, stripe, session.metadata?.user_id ?? session.client_reference_id ?? undefined);
+}
+
+// Order-independent: Stripe does not deliver events in order, and a retried
+// event carries a STALE copy of the subscription. So we never trust the event
+// payload for the decision — we ask Stripe for ALL of this customer's
+// subscriptions right now and derive the plan from the best one. Replaying any
+// event, in any order, always converges to the same (correct) state.
+async function syncSubscription(eventSub: Stripe.Subscription, stripe: Stripe, userIdHint?: string) {
+  const supabaseAdmin = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+
+  const customerId = typeof eventSub.customer === 'string'
+    ? eventSub.customer
+    : eventSub.customer.id;
+
+  // Resolve the profile: metadata first, then the saved Stripe customer id.
+  let userId = eventSub.metadata?.user_id ?? userIdHint ?? null;
+  if (!userId) {
+    const { data: byCustomer } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('stripe_customer_id', customerId)
+      .maybeSingle();
+    userId = byCustomer?.id ?? null;
+  }
+  if (!userId) {
+    console.error(`No profile found for subscription ${eventSub.id} (customer ${customerId})`);
+    return;
+  }
+
+  const { data: all } = await stripe.subscriptions.list({ customer: customerId, status: 'all', limit: 20 });
+  const subs = all ?? [];
+  const rank = (s: Stripe.Subscription) =>
+    s.status === 'active' || s.status === 'trialing' ? 2 : s.status === 'past_due' ? 1 : 0;
+  // Best = a Pro-granting one if any (active > past_due), newest first.
+  const best = [...subs].sort((a, b) => rank(b) - rank(a) || b.created - a.created)[0] ?? eventSub;
+  const isActive = PRO_STATUSES.includes(best.status);
+
+  const item = best.items?.data?.[0];
+  const periodEnd = (best as any).current_period_end ?? (item as any)?.current_period_end ?? null;
+
+  const { error } = await supabaseAdmin
+    .from('profiles')
+    .update({
+      plan: isActive ? 'pro' : 'free',
+      stripe_customer_id: customerId,
+      subscription_id: best.id,
+      subscription_status: best.status,
+      subscription_interval: item?.price?.recurring?.interval ?? null,
+      subscription_current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+      subscription_cancel_at_period_end: best.cancel_at_period_end ?? false,
+    })
+    .eq('id', userId);
+
+  if (error) throw new Error(`Failed to sync subscription: ${error.message}`);
+  console.log(`Subscription synced: user=${userId} best=${best.id} status=${best.status} plan=${isActive ? 'pro' : 'free'} (event sub ${eventSub.id})`);
 }

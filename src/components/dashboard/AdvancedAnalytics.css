@@ -1,0 +1,180 @@
+.aa-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl, 24px);
+  margin-top: var(--space-2xl, 40px);
+}
+.aa-section-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.aa-section-title h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--font-display);
+}
+
+/* ── Period comparison tiles ─────────────────────────────── */
+.aa-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-lg, 16px);
+}
+.aa-compare-value {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.aa-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+}
+/* Direction is carried by the arrow icon + sign, not color alone */
+.aa-delta-up   { color: var(--color-success, #10b981); }
+.aa-delta-down { color: var(--color-error, #ef4444); }
+
+/* ── Product table ───────────────────────────────────────── */
+.aa-table th button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.aa-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.aa-product-name { font-weight: 500; }
+.aa-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+/* ── Heatmap (sequential, single hue = accent) ───────────── */
+.aa-heatmap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.aa-heat-row {
+  display: grid;
+  grid-template-columns: 36px repeat(24, minmax(12px, 1fr));
+  gap: 3px;
+  min-width: 380px;
+}
+.aa-heat-day {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  align-self: center;
+}
+.aa-heat-hour {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+}
+.aa-heat-cell {
+  display: block;
+  aspect-ratio: 1;
+  border-radius: 3px;
+  min-width: 10px;
+}
+.aa-level-0 { background: var(--color-bg-tertiary); }
+.aa-level-1 { background: color-mix(in srgb, var(--color-accent) 25%, var(--color-bg-tertiary)); }
+.aa-level-2 { background: color-mix(in srgb, var(--color-accent) 50%, var(--color-bg-tertiary)); }
+.aa-level-3 { background: color-mix(in srgb, var(--color-accent) 75%, var(--color-bg-tertiary)); }
+.aa-level-4 { background: var(--color-accent); }
+.aa-heatmap .aa-heat-cell:hover { outline: 2px solid var(--color-text-primary); outline-offset: 1px; }
+
+.aa-heat-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+.aa-heat-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.aa-heat-legend .aa-heat-cell { width: 12px; height: 12px; min-width: 12px; }
+
+/* ── Boost impact rows ───────────────────────────────────── */
+.aa-boost-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: var(--space-md, 12px) var(--space-lg, 16px);
+  border-bottom: 1px solid var(--color-border);
+}
+.aa-boost-row:last-child { border-bottom: none; }
+
+/* ── Locked teaser (Free plan) ───────────────────────────── */
+.aa-locked {
+  position: relative;
+  overflow: hidden;
+  min-height: 280px;
+  margin-top: var(--space-2xl, 40px) !important;
+}
+.aa-locked-preview {
+  padding: var(--space-xl, 24px);
+  filter: blur(3px);
+  opacity: 0.6;
+}
+.aa-fake-row {
+  height: 14px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  background: var(--color-bg-tertiary);
+}
+.aa-fake-row:nth-child(2) { width: 80%; }
+.aa-fake-row:nth-child(3) { width: 60%; }
+.aa-fake-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 4px;
+  margin-top: 20px;
+}
+.aa-fake-grid span {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--color-accent);
+}
+.aa-locked-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: var(--space-xl, 24px);
+  text-align: center;
+  background: color-mix(in srgb, var(--color-bg-card) 70%, transparent);
+}
+.aa-locked-overlay h3 { font-size: 18px; font-weight: 700; }
+.aa-locked-overlay p { max-width: 460px; font-size: 14px; color: var(--color-text-secondary); }

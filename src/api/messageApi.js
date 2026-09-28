@@ -8,7 +8,7 @@ export async function getUserMessages(userId) {
     supabase
       .from('messages')
       .select(
-        '*, sender:public_profiles!sender_id(username, avatar_url), receiver:public_profiles!receiver_id(username, avatar_url), product:public_products!product_id(title, seller_id)'
+        '*, sender:public_profiles!sender_id(username, avatar_url, is_pro), receiver:public_profiles!receiver_id(username, avatar_url, is_pro), product:public_products!product_id(title, seller_id)'
       )
       .or('sender_id.eq.' + userId + ',receiver_id.eq.' + userId)
       .order('created_at', { ascending: true })
@@ -82,7 +82,7 @@ export async function sendMessage({ senderId, receiverId, productId, content, at
       attachment_url: attachmentUrl || null,
       attachment_type: attachmentType || null
     }])
-    .select('*, sender:public_profiles!sender_id(username, avatar_url), receiver:public_profiles!receiver_id(username, avatar_url), product:public_products!product_id(title, seller_id)')
+    .select('*, sender:public_profiles!sender_id(username, avatar_url, is_pro), receiver:public_profiles!receiver_id(username, avatar_url, is_pro), product:public_products!product_id(title, seller_id)')
     .single()
   );
 

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, Package, ShoppingBag, BarChart3, 
   CreditCard, Settings, LogOut, Menu, X, Plus, Users, 
-  Store, Search, Bell, Moon, Sun, Heart, Download, Shield, Palette, MessageSquare
+  Store, Search, Bell, Moon, Sun, Heart, Download, Shield, Palette, MessageSquare, Crown
 } from 'lucide-react';
 import { messagingService as mockMessagingService } from '../../lib/MessagingService';
 import { getUserMessages, groupMessagesIntoConversations, subscribeToMessages } from '../../api/messageApi';
@@ -101,12 +101,14 @@ export default function DashboardLayout() {
     { name: 'Publish', path: '/dashboard/upload', icon: Plus },
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Products', path: '/dashboard/products', icon: Package },
+    { name: 'Analytics', path: '/dashboard/analytics', icon: BarChart3 },
     { name: 'Following', path: '/dashboard/following', icon: Users },
     { name: 'Messages', path: '/dashboard/messages', icon: MessageSquare, badge: unreadMessages > 0 ? unreadMessages : null },
     { name: 'Wishlist', path: '/dashboard/wishlist', icon: Heart },
     { name: 'Purchases', path: '/dashboard/purchases', icon: Download },
     { name: 'My Badges', path: '/dashboard/badges', icon: Shield },
     { name: 'Withdrawals', path: '/dashboard/payouts', icon: CreditCard },
+    { name: profile?.plan === 'pro' ? 'Nothi Pro' : 'Go Pro', path: '/dashboard/subscription', icon: Crown },
   ];
 
   const bottomLinks = [

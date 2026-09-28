@@ -69,6 +69,8 @@ export async function createProduct(productData) {
       
     if (error) {
       console.error('Error creating product:', error);
+      // Raised by the DB trigger when a Free seller already has 30 products.
+      if (error.message?.includes('PRODUCT_LIMIT_REACHED')) return { limitReached: true };
       return null;
     }
     
@@ -152,6 +154,27 @@ export async function getProductsByCreator(creatorId, isMockMode) {
     return [];
   }
   return data;
+}
+
+/**
+ * The seller's OWN products for the dashboard: all statuses (drafts too) and
+ * seller-only fields (boosted_until, sales_count, revenue) that the public
+ * view deliberately hides. RLS only lets a seller read their own rows here.
+ */
+export async function getMyProducts(sellerId) {
+  if (!sellerId) return [];
+  const { data, error } = await withTimeoutSafety(() =>
+    supabase
+      .from('products')
+      .select('*')
+      .eq('seller_id', sellerId)
+      .order('created_at', { ascending: false })
+  );
+  if (error) {
+    console.error('Error fetching my products:', error);
+    return [];
+  }
+  return data || [];
 }
 
 export async function createPurchase(purchaseData, isMockMode) {

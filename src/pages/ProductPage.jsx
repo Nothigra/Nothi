@@ -20,6 +20,7 @@ import { getProductById, getPublicProducts, createPurchase, checkHasPurchased, g
 import { detectTrafficSource, detectDeviceType } from '../utils/analyticsTracking';
 import { supabase, isMockMode as supabaseMockMode, invokeFunction, withTimeoutSafety } from '../lib/supabase';
 import ProductCard from '../components/product/ProductCard';
+import ProBadge from '../components/common/ProBadge';
 import './ProductPage.css';
 
 export default function ProductPage() {
@@ -594,7 +595,7 @@ export default function ProductPage() {
             <div className="creator-card glass-card p-xl flex flex-col items-center text-center">
               <img src={`https://ui-avatars.com/api/?name=${product.creatorName}&background=random`} alt={product.creatorName} className="w-24 h-24 rounded-full border-4 border-bg mb-md shadow-md" />
               <h3 className="font-bold text-xl flex items-center justify-center gap-xs mb-xs">
-                {product.creatorName} <ShieldCheck size={18} className="text-accent" />
+                {product.creatorName} {product.creator_is_pro && <ProBadge />}
               </h3>
               <p className="text-sm text-muted mb-lg">Top Rated Seller • Joined 2024</p>
               

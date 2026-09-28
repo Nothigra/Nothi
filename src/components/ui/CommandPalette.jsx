@@ -39,6 +39,7 @@ export default function CommandPalette({ isOpen, setIsOpen }) {
     { name: 'My Badges', path: '/dashboard/badges' },
     { name: 'Withdrawals', path: '/dashboard/payouts' },
     { name: 'Analytics', path: '/dashboard/analytics' },
+    { name: 'Nothi Pro', path: '/dashboard/subscription' },
     { name: 'Settings', path: '/dashboard/settings' },
   ];
 

@@ -24,6 +24,7 @@ import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
 import './ProductCard.css';
 
+import ProBadge from '../common/ProBadge';
 const CAT_STYLES = {
   'presets': { var: '--cat-presets', Icon: Sliders },
   'transitions': { var: '--cat-transitions', Icon: MoveRight },
@@ -124,6 +125,7 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
             fallbackLetter={creatorName.charAt(0).toUpperCase()} 
           />
           <span className="creator-name">{creatorName}</span>
+          {product.creator_is_pro && <ProBadge size={14} />}
         </Link>
         
         <h3 className="product-title" title={localizedTitle}>

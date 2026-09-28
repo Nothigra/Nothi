@@ -45,6 +45,7 @@ import DashboardSettings from './pages/dashboard/DashboardSettings';
 import DashboardPurchases from './pages/dashboard/DashboardPurchases';
 import UploadProductPage from './pages/dashboard/UploadProductPage';
 import DashboardBadges from './pages/dashboard/DashboardBadges';
+import DashboardSubscription from './pages/dashboard/DashboardSubscription';
 
 // Community Pages
 import MessagesPage from './pages/MessagesPage';
@@ -138,6 +139,7 @@ export const router = createBrowserRouter([
           { path: "upload", element: <UploadProductPage /> },
           { path: "wishlist", element: <WishlistPage /> },
           { path: "badges", element: <DashboardBadges /> },
+          { path: "subscription", element: <DashboardSubscription /> },
           { path: "messages", element: <MessagesPage /> },
         ]
       }

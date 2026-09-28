@@ -1,0 +1,91 @@
+.sub-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: var(--space-lg, 16px);
+  padding: 12px 16px;
+  border-radius: var(--radius-lg, 12px);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+.sub-banner-success { border-color: color-mix(in srgb, var(--color-success, #10b981) 45%, transparent); color: var(--color-text-primary); }
+.sub-banner-warning { border-color: color-mix(in srgb, var(--color-warning, #f59e0b) 55%, transparent); color: var(--color-text-primary); }
+.sub-banner-error   { border-color: color-mix(in srgb, var(--color-error, #ef4444) 45%, transparent); color: var(--color-error, #ef4444); }
+
+.sub-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-accent);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.sub-plan-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg, 16px);
+  padding: var(--space-xl, 24px);
+  border-bottom: 1px solid var(--color-border);
+}
+.sub-plan-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-tertiary);
+}
+.sub-plan-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: 28px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--color-text-primary);
+}
+.sub-plan-meta {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.sub-plan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm, 8px);
+}
+
+.sub-usage-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.sub-usage {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: var(--space-lg, 16px) var(--space-xl, 24px);
+  color: var(--color-text-secondary);
+}
+.sub-usage + .sub-usage { border-left: 1px solid var(--color-border); }
+.sub-usage-value { font-weight: 700; color: var(--color-text-primary); }
+.sub-usage-label { font-size: 13px; }
+.sub-usage-label a { color: var(--color-accent); }
+
+.sub-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg, 16px);
+}
+
+@media (max-width: 640px) {
+  .sub-plan-actions, .sub-plan-actions .btn { width: 100%; }
+  .sub-usage-grid { grid-template-columns: 1fr; }
+  .sub-usage + .sub-usage { border-left: none; border-top: 1px solid var(--color-border); }
+}

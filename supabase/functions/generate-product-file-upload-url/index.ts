@@ -7,7 +7,7 @@
 //   - Caller must be authenticated (JWT verified).
 //   - Caller must be the seller_id of the given productId (ownership check).
 //   - File extension must be in the explicit allowlist.
-//   - File size must be within the plan limit (free: 500MB, premium: 5GB).
+//   - File size must be within the plan limit (Free: 300 MB, Pro: 1 GB).
 //   - If the product already has an existing file_path, the old R2 object is
 //     DELETED before generating the new presigned URL (orphan cleanup).
 //   - Returned filePath (object key) must be saved to products.file_path by
@@ -45,8 +45,9 @@ const ALLOWED_EXTENSIONS = new Set([
   '.ffx',          // After Effects preset
 ]);
 
-const FREE_MAX_BYTES    =  500 * 1024 * 1024;        //   500 MB
-const PREMIUM_MAX_BYTES =    5 * 1024 * 1024 * 1024; //     5 GB
+// Keep in sync with src/config/plans.js (PLAN_LIMITS)
+const FREE_MAX_BYTES = 300 * 1024 * 1024;  // 300 MB
+const PRO_MAX_BYTES  = 1024 * 1024 * 1024; //   1 GB
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -106,7 +107,7 @@ serve(async (req) => {
 
     if (profileError || !profile) throw new Error('Could not retrieve seller profile');
 
-    const maxBytes = profile.plan === 'premium' ? PREMIUM_MAX_BYTES : FREE_MAX_BYTES;
+    const maxBytes = profile.plan === 'pro' ? PRO_MAX_BYTES : FREE_MAX_BYTES;
     if (fileSize > maxBytes) {
       const maxMB = maxBytes / (1024 * 1024);
       const maxLabel = maxMB >= 1024 ? `${maxMB / 1024} GB` : `${maxMB} MB`;
@@ -162,7 +163,7 @@ serve(async (req) => {
     const filePath = `product-files/${user.id}/${productId}/${sanitizedFilename}`;
 
     // Generate the presigned PUT URL
-    // 1-hour expiry — large files (up to 5 GB for premium) may take several minutes
+    // 1-hour expiry — large files (up to 1 GB for Pro) may take several minutes
     const uploadUrl = await getSignedUrl(s3, new PutObjectCommand({
       Bucket: bucketName,
       Key: filePath,

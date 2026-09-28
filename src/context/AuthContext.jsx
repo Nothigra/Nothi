@@ -336,6 +336,23 @@ export function AuthProvider({ children }) {
     }
   }, [profile, updateProfile]);
 
+  // Re-read the profile row from the DB (e.g. after Stripe confirms a
+  // subscription via the webhook) without touching auth/session state.
+  const refreshProfile = useCallback(async () => {
+    if (isMockMode || !user?.id) return null;
+    try {
+      const { data, error } = await withTimeoutSafety(() =>
+        supabase.from('profiles').select('*').eq('id', user.id).single()
+      );
+      if (error || !data) return null;
+      setProfile(prev => ({ ...(prev || {}), ...data, following: prev?.following || [] }));
+      return data;
+    } catch (err) {
+      console.error('refreshProfile failed:', err);
+      return null;
+    }
+  }, [user?.id]);
+
   const markCreatorViewed = useCallback(async (creatorId) => {
     if (!profile) return;
     const previousFollowing = [...(profile.following || [])];
@@ -370,6 +387,7 @@ export function AuthProvider({ children }) {
     resetPasswordForEmail,
     logout,
     updateProfile,
+    refreshProfile,
     followCreator,
     unfollowCreator,
     markCreatorViewed,

@@ -66,8 +66,8 @@ export const termsContent = {
         <h3>4.3 Technical Limits</h3>
         <ul>
           <li>Maximum preview image file size: 15 MB</li>
-          <li>Maximum preview video size: 100 MB (free account), 500 MB (Premium account)</li>
-          <li>Maximum size of the final downloadable product file: [TO BE DEFINED — 500 MB free / 5 GB Premium, planned]</li>
+          <li>Maximum preview video size: 100 MB</li>
+          <li>Maximum size of the final downloadable product file: 300 MB (Free plan), 1 GB (Pro plan)</li>
           <li>Accepted formats: images (JPEG, PNG, WebP), videos (MP4, WebM)</li>
         </ul>
 
@@ -194,8 +194,8 @@ export const termsContent = {
         <h3>4.3 Limites techniques</h3>
         <ul>
           <li>Taille maximale des fichiers de preview (images) : 15 Mo</li>
-          <li>Taille maximale des vidéos de preview : 100 Mo (compte gratuit), 500 Mo (compte Premium)</li>
-          <li>Taille maximale du fichier produit final téléchargeable : [À DÉFINIR — 500 Mo gratuit / 5 Go Premium, prévu]</li>
+          <li>Taille maximale des vidéos de preview : 100 Mo</li>
+          <li>Taille maximale du fichier produit final téléchargeable : 300 Mo (plan Gratuit), 1 Go (plan Pro)</li>
           <li>Formats acceptés : images (JPEG, PNG, WebP), vidéos (MP4, WebM)</li>
         </ul>
 
@@ -322,8 +322,8 @@ export const termsContent = {
         <h3>4.3 Límites Técnicos</h3>
         <ul>
           <li>Tamaño máximo de archivo de imagen de vista previa: 15 MB</li>
-          <li>Tamaño máximo de video de vista previa: 100 MB (cuenta gratuita), 500 MB (cuenta Premium)</li>
-          <li>Tamaño máximo del archivo de producto final descargable: [POR DEFINIR — 500 MB gratis / 5 GB Premium, previsto]</li>
+          <li>Tamaño máximo de video de vista previa: 100 MB</li>
+          <li>Tamaño máximo del archivo de producto final descargable: 300 MB (plan Gratis), 1 GB (plan Pro)</li>
           <li>Formatos aceptados: imágenes (JPEG, PNG, WebP), videos (MP4, WebM)</li>
         </ul>
 
