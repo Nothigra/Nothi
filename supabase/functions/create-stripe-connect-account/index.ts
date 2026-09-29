@@ -8,12 +8,8 @@
 //   - Uses the seller's verified user ID from the JWT — never trusts client-supplied IDs.
 //   - If the seller already has a stripe_account_id, skips creation and generates
 //     a fresh Account Link (lets them re-enter onboarding if incomplete).
-//
-// !! PRODUCTION TODO !!
-// Set the APP_URL secret before going live:
-//   npx supabase secrets set APP_URL=https://yourdomain.com
-// Without this, Stripe's return/refresh redirects will send real users to
-// localhost:5173 instead of the production site.
+//   - Return/refresh URLs follow the caller's origin (prod, redesign preview
+//     or localhost) from an allow-list, falling back to the APP_URL secret.
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -23,6 +19,18 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const ALLOWED_ORIGINS = [
+  'https://nothiapp.noahthirion67.workers.dev',
+  'https://redesign-nothiapp.noahthirion67.workers.dev',
+  'http://localhost:5173',
+];
+
+function getAppUrl(req: Request): string {
+  const origin = req.headers.get('origin') ?? '';
+  if (ALLOWED_ORIGINS.includes(origin)) return origin;
+  return Deno.env.get('APP_URL') ?? ALLOWED_ORIGINS[0];
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -66,6 +74,21 @@ serve(async (req) => {
     // ── Create or reuse Stripe Express account ───────────────────────────────
     let stripeAccountId = profile.stripe_account_id;
 
+    // An account id saved in Stripe test mode doesn't exist in live mode (and
+    // vice versa): start a fresh account instead of failing forever.
+    if (stripeAccountId) {
+      try {
+        await stripe.accounts.retrieve(stripeAccountId);
+      } catch (err) {
+        if ((err as { code?: string })?.code === 'resource_missing' ||
+            (err as { statusCode?: number })?.statusCode === 404) {
+          stripeAccountId = null;
+        } else {
+          throw err;
+        }
+      }
+    }
+
     if (!stripeAccountId) {
       // First time: create a new Express connected account
       const account = await stripe.accounts.create({
@@ -94,10 +117,9 @@ serve(async (req) => {
     }
 
     // ── Generate hosted onboarding Account Link ──────────────────────────────
-    // !! PRODUCTION TODO: Set APP_URL secret before deploying to production.
     // refresh_url: called if the link expires mid-flow
     // return_url:  called after seller completes (or exits) onboarding
-    const appUrl = Deno.env.get('APP_URL') ?? 'http://localhost:5173';
+    const appUrl = getAppUrl(req);
 
     const accountLink = await stripe.accountLinks.create({
       account: stripeAccountId,

@@ -6,17 +6,24 @@
 // Flow:
 //   1. Verify caller's JWT (seller must be authenticated — we use their own user ID)
 //   2. Fetch their stripe_account_id from profile (service role)
-//   3. Live-check charges_enabled from Stripe (account may not be ready yet
-//      if called immediately after stripe_return redirect — handle gracefully)
+//   3. Live-check the `transfers` capability from Stripe (account may not be
+//      ready yet right after the stripe_return redirect — handled gracefully).
+//      Only `transfers` matters here: the seller receives transfers, they
+//      never charge cards themselves, so charges_enabled is irrelevant.
 //   4. Find all purchases WHERE seller_id = caller AND stripe_transfer_id IS NULL
 //      AND seller_amount_cents > 0
 //   5. For each, call stripe.transfers.create() then UPDATE the purchase row
-//      with the resulting transfer ID
+//      with the resulting transfer ID. Each transfer is tied to the buyer's
+//      original charge (`source_transaction`): without it, Stripe draws from
+//      the platform's AVAILABLE balance and fails with "insufficient funds"
+//      for any sale still inside Stripe's ~7-day settlement window. With it,
+//      the transfer is accepted immediately and the money reaches the seller
+//      as soon as that charge settles.
 //   6. Return a summary: { settled: N, total_cents: X, not_ready: bool }
 //
 // Security model:
 //   - Seller ID comes from the verified JWT — never from the request body.
-//   - charges_enabled checked live before every call — catches suspended accounts.
+//   - transfers capability checked live before every call — catches suspended accounts.
 //   - Each transfer is followed immediately by setting stripe_transfer_id, making
 //     the operation idempotent: a retry will skip already-transferred rows.
 //   - Uses service role for DB reads/writes (purchases table is RLS-restricted).
@@ -76,7 +83,7 @@ serve(async (req) => {
       );
     }
 
-    // ── Live charges_enabled check ────────────────────────────────────────────
+    // ── Live transfers-capability check ───────────────────────────────────────
     // Stripe may still be processing verification immediately after stripe_return.
     // If not ready, return gracefully — the seller can retry via "Request Payout".
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
@@ -85,13 +92,6 @@ serve(async (req) => {
     });
 
     const stripeAccount = await stripe.accounts.retrieve(profile.stripe_account_id);
-
-    if (!stripeAccount.charges_enabled) {
-      return new Response(
-        JSON.stringify({ settled: 0, total_cents: 0, not_ready: true, reason: 'charges_not_enabled' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-      );
-    }
 
     const transfersActive = stripeAccount.capabilities?.transfers === 'active';
     if (!transfersActive) {
@@ -107,7 +107,7 @@ serve(async (req) => {
     // this function never recalculates splits; that is stripe-webhook's job.
     const { data: pendingPurchases, error: fetchError } = await supabaseAdmin
       .from('purchases')
-      .select('id, seller_amount_cents, currency')
+      .select('id, seller_amount_cents, currency, stripe_payment_intent_id')
       .eq('seller_id', user.id)
       .is('stripe_transfer_id', null)
       .gt('seller_amount_cents', 0);
@@ -132,13 +132,31 @@ serve(async (req) => {
       const sellerCents = purchase.seller_amount_cents;
 
       try {
+        // Tie the transfer to the buyer's charge (see header comment).
+        // Only possible when that charge was in EUR; otherwise fall back to
+        // the platform's available balance (older test purchases).
+        let sourceCharge: string | undefined;
+        if (purchase.stripe_payment_intent_id) {
+          const pi = await stripe.paymentIntents.retrieve(purchase.stripe_payment_intent_id, {
+            expand: ['latest_charge'],
+          });
+          const charge = pi.latest_charge as Stripe.Charge | null;
+          if (charge && typeof charge !== 'string' && charge.status === 'succeeded'
+              && charge.currency === 'eur' && charge.amount >= sellerCents) {
+            sourceCharge = charge.id;
+          }
+        }
+
         const transfer = await stripe.transfers.create({
           amount:      sellerCents,
-          // Platform and Connected account are both EUR, so transfer is strictly EUR.
           currency:    'eur',
           destination: profile.stripe_account_id,
+          ...(sourceCharge ? { source_transaction: sourceCharge } : {}),
           metadata: { purchase_id: purchase.id },
         }, {
+          // Stable per purchase, on purpose: if an earlier attempt succeeded at
+          // Stripe but the DB update below failed, retrying returns that SAME
+          // transfer instead of paying the seller twice.
           idempotencyKey: `settle-${purchase.id}-eur-${sellerCents}`,
         });
 

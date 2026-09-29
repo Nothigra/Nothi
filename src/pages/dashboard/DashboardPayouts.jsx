@@ -61,9 +61,12 @@ export default function DashboardPayouts() {
 
   // Derived charge-readiness signals — based on LIVE Stripe data, not just ID presence.
   const hasStripeAccount  = !!profile?.stripe_account_id;
-  const isChargeReady     = stripeStatus?.charges_enabled === true;
+  // Onboarding form finished (Stripe may still be reviewing it)
+  const isDetailsSubmitted = stripeStatus?.details_submitted === true;
   const isTransfersActive = stripeStatus?.transfers_active === true;
-  const isFullyConnected  = isChargeReady && isTransfersActive;
+  // Sellers only RECEIVE transfers from Nothi; they never charge cards
+  // themselves, so the `transfers` capability is what makes them payable.
+  const isFullyConnected  = isTransfersActive;
   const isPendingVerify   = hasStripeAccount && !isFullyConnected;
 
   // Fetch live Stripe account status on mount
@@ -159,10 +162,20 @@ export default function DashboardPayouts() {
     setStripeMessage(null);
     try {
       const data = await withTimeoutSafety(() => invokeFunction('settle-pending-payouts'));
+      if (data?.error) throw new Error(data.error);
+      const failed = data?.errors?.length || 0;
       if (data?.not_ready) {
         setStripeMessage({ type: 'warning', text: 'Your Stripe account isn\'t fully verified yet. Please check back in a few minutes.' });
       } else if (data?.settled > 0) {
-        setStripeMessage({ type: 'success', text: `${formatEur(data.total_cents / 100)} transferred to your Stripe account successfully.` });
+        setStripeMessage({
+          type: failed ? 'warning' : 'success',
+          text: `${formatEur(data.total_cents / 100)} sent to your Stripe account. Money from recent sales becomes available once Stripe settles the payment (up to ~7 days).`
+            + (failed ? ` ${failed} sale${failed === 1 ? '' : 's'} could not be transferred — please try again later.` : ''),
+        });
+        setEarningsReload((n) => n + 1);
+      } else if (failed) {
+        console.error('settle-pending-payouts errors:', data.errors);
+        setStripeMessage({ type: 'error', text: `The transfer failed for ${failed} sale${failed === 1 ? '' : 's'}. Please try again later or contact support.` });
         setEarningsReload((n) => n + 1);
       } else {
         setStripeMessage({ type: 'success', text: 'No pending earnings to transfer right now.' });
@@ -481,8 +494,8 @@ export default function DashboardPayouts() {
                     <div>
                       <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>Verification in progress</p>
                       <p className="text-xs text-secondary mt-xs">
-                        {isChargeReady 
-                          ? "You can receive sales, but Stripe payouts aren't enabled yet. Stripe may need more information from you."
+                        {isDetailsSubmitted
+                          ? "Stripe is reviewing your details, or needs more information before it can send you transfers."
                           : "Your Stripe account was created but onboarding isn't complete yet. Complete verification to receive your pending earnings."}
                       </p>
                     </div>
@@ -491,13 +504,13 @@ export default function DashboardPayouts() {
 
                 <button
                   className="btn btn-primary w-full mt-lg flex-center gap-sm"
-                  onClick={isChargeReady ? handleManageStripe : handleConnectStripe}
+                  onClick={isDetailsSubmitted ? handleManageStripe : handleConnectStripe}
                   disabled={stripeConnecting || isManagingStripe}
                 >
                   {stripeConnecting || isManagingStripe ? (
                     <><div className="loader spin" style={{ width: '16px', height: '16px', borderWidth: '2px' }} /> Redirecting...</>
                   ) : (
-                    <><ExternalLink size={16} /> {isChargeReady ? "Check Requirements in Stripe" : "Complete Stripe Onboarding"}</>
+                    <><ExternalLink size={16} /> {isDetailsSubmitted ? "Check Requirements in Stripe" : "Complete Stripe Onboarding"}</>
                   )}
                 </button>
               </>
