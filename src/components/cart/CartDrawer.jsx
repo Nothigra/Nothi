@@ -34,16 +34,22 @@ export default function CartDrawer() {
     setCheckoutError(null);
     
     try {
-      // Separate free vs paid items
-      // Free = regular price 0 (a promotion can never make a product free).
-      const freeItems  = items.filter(item => Number(item.price ?? 0) === 0);
-      const paidItems  = items.filter(item => Number(item.price ?? 0) >  0);
-
-      // ── Free items: direct insert (bypasses Stripe, unaffected by RLS change) ──
-      for (const item of freeItems) {
-        const freshProduct = await getProductById(item.id, isMockMode);
+      // Re-read every product: the cart is a snapshot and the price may have
+      // changed since it was added. Free = CURRENT regular price 0 (a promotion
+      // can never make a product free).
+      const freshItems = [];
+      for (const item of items) {
+        // (mock mode: locally created demo products aren't in the seed list)
+        const freshProduct = (await getProductById(item.id, isMockMode)) || (isMockMode ? item : null);
         if (!freshProduct) throw new Error(t('cart.productUnavailable', 'A product in your cart is no longer available.'));
-        await createPurchase({
+        freshItems.push(freshProduct);
+      }
+      const freeItems  = freshItems.filter(p => Number(p.price ?? 0) === 0);
+      const paidItems  = freshItems.filter(p => Number(p.price ?? 0) >  0);
+
+      // ── Free items: direct insert (the DB re-checks that the product is free) ──
+      for (const freshProduct of freeItems) {
+        const claim = await createPurchase({
           buyer_id:   profile.id,
           seller_id:  freshProduct.seller_id || freshProduct.creator_id,
           product_id: freshProduct.id,
@@ -52,6 +58,9 @@ export default function CartDrawer() {
           is_free:    true,
           status:     'completed'
         }, isMockMode);
+        if (!claim?.success) {
+          throw new Error(t('cart.claimFailed', 'Could not add a free product to your library. Please try again.'));
+        }
       }
 
       // ── Paid items: redirect to Stripe Checkout ──────────────────────────────

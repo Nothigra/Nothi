@@ -115,7 +115,8 @@
     "total": "Total",
     "checkout": "Checkout",
     "remove": "Remove",
-    "items": "items"
+    "items": "items",
+    "claimFailed": "Could not add a free product to your library. Please try again."
   },
   "auth": {
     "login": "Log In",

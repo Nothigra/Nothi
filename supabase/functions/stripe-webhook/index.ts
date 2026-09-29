@@ -94,7 +94,9 @@ serve(async (req) => {
       // Delayed payment methods (e.g. SEPA): completed arrives 'unpaid', the
       // money lands later with this event.
       const session = event.data.object as Stripe.Checkout.Session;
-      if (session.metadata?.type === 'boost') await handleBoostPaid(session);
+      const type = session.metadata?.type;
+      if (type === 'boost') await handleBoostPaid(session);
+      else if (type !== 'subscription') await handleCheckoutSessionCompleted(session, stripe);
     } else if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
       const type = session.metadata?.type;
@@ -134,6 +136,14 @@ async function handleCheckoutSessionCompleted(
   stripe: Stripe  // used for fetching balance_transaction
 ) {
   const { product_id, buyer_id, seller_id, price_paid } = session.metadata ?? {};
+
+  // Delayed payment methods (e.g. SEPA) complete the session BEFORE the money
+  // arrives ('unpaid'). The purchase is only created once it's actually paid —
+  // then checkout.session.async_payment_succeeded brings us back here.
+  if (session.payment_status !== 'paid') {
+    console.log(`Product session ${session.id} not paid yet (${session.payment_status}) — waiting`);
+    return;
+  }
 
   if (!product_id || !buyer_id || !seller_id || !price_paid) {
     console.error('checkout.session.completed missing required metadata:', session.metadata);
@@ -225,7 +235,7 @@ async function handleCheckoutSessionCompleted(
       seller_id,
       product_id,
       price_paid:               pricePaidFloat,
-      currency:                 session.currency?.toUpperCase() ?? 'USD',
+      currency:                 session.currency?.toUpperCase() ?? 'EUR',
       is_free:                  false,
       status:                   'completed',
       stripe_payment_intent_id: paymentIntentId,

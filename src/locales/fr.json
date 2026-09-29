@@ -114,7 +114,8 @@
     "total": "Total",
     "checkout": "Payer",
     "remove": "Supprimer",
-    "items": "articles"
+    "items": "articles",
+    "claimFailed": "Impossible d’ajouter un produit gratuit à ta bibliothèque. Réessaie."
   },
   "auth": {
     "login": "Connexion",

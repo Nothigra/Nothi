@@ -43,7 +43,7 @@ export default function DashboardPayouts() {
           .from('purchases')
           .select('id, purchased_at, seller_amount_cents, stripe_transfer_id, product:products(title)')
           .eq('seller_id', profile.id)
-          .not('stripe_transfer_id', 'is', null)
+          .like('stripe_transfer_id', 'tr_%') // real transfers only, not in-flight claims
           .order('purchased_at', { ascending: false })
       ).catch((err) => {
         console.error('Error fetching transfers:', err);
@@ -164,19 +164,26 @@ export default function DashboardPayouts() {
       const data = await withTimeoutSafety(() => invokeFunction('settle-pending-payouts'));
       if (data?.error) throw new Error(data.error);
       const failed = data?.errors?.length || 0;
+      const held = data?.skipped?.length || 0;
+      const heldNote = held
+        ? ` ${held} sale${held === 1 ? ' is' : 's are'} on hold (refunded, disputed or needing a manual check) and ${held === 1 ? 'was' : 'were'} not transferred.`
+        : '';
       if (data?.not_ready) {
         setStripeMessage({ type: 'warning', text: 'Your Stripe account isn\'t fully verified yet. Please check back in a few minutes.' });
       } else if (data?.settled > 0) {
         setStripeMessage({
           type: failed ? 'warning' : 'success',
           text: `${formatEur(data.total_cents / 100)} sent to your Stripe account. Money from recent sales becomes available once Stripe settles the payment (up to ~7 days).`
-            + (failed ? ` ${failed} sale${failed === 1 ? '' : 's'} could not be transferred — please try again later.` : ''),
+            + (failed ? ` ${failed} sale${failed === 1 ? '' : 's'} could not be transferred — please try again later.` : '')
+            + heldNote,
         });
         setEarningsReload((n) => n + 1);
       } else if (failed) {
         console.error('settle-pending-payouts errors:', data.errors);
         setStripeMessage({ type: 'error', text: `The transfer failed for ${failed} sale${failed === 1 ? '' : 's'}. Please try again later or contact support.` });
         setEarningsReload((n) => n + 1);
+      } else if (held) {
+        setStripeMessage({ type: 'warning', text: `Nothing was transferred.${heldNote} Contact support if this looks wrong.` });
       } else {
         setStripeMessage({ type: 'success', text: 'No pending earnings to transfer right now.' });
       }
