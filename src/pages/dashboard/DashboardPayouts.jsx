@@ -73,7 +73,7 @@ export default function DashboardPayouts() {
   useEffect(() => {
     if (!profile?.stripe_account_id) return;
     setStripeStatusLoading(true);
-    withTimeoutSafety(() => invokeFunction('get-stripe-account-status'), 10000)
+    invokeFunction('get-stripe-account-status')
       .then((data) => {
         if (data && !data.error) setStripeStatus(data);
       })
@@ -103,7 +103,7 @@ export default function DashboardPayouts() {
       // charges_enabled may not be true yet — settle-pending-payouts handles
       // this gracefully and returns not_ready:true if so. Seller can retry
       // via 'Request Payout' button once Stripe finishes verification.
-      withTimeoutSafety(() => invokeFunction('settle-pending-payouts'))
+      invokeFunction('settle-pending-payouts')
         .then((data) => {
           if (data?.not_ready) {
             setStripeMessage({ type: 'success', text: 'Stripe account connected! Your pending earnings will be transferred once Stripe completes verification — click "Request Payout" to check.' });
@@ -128,7 +128,7 @@ export default function DashboardPayouts() {
     setStripeConnecting(true);
     setStripeMessage(null);
     try {
-      const data = await withTimeoutSafety(() => invokeFunction('create-stripe-connect-account'));
+      const data = await invokeFunction('create-stripe-connect-account');
       if (data?.error) throw new Error(data.error);
       window.location.href = data.url;
     } catch (err) {
@@ -146,7 +146,7 @@ export default function DashboardPayouts() {
     setIsManagingStripe(true);
     setStripeMessage(null);
     try {
-      const data = await withTimeoutSafety(() => invokeFunction('create-stripe-login-link'));
+      const data = await invokeFunction('create-stripe-login-link');
       if (data?.error) throw new Error(data.error);
       window.open(data.url, '_blank', 'noopener,noreferrer');
     } catch (err) {
@@ -161,7 +161,7 @@ export default function DashboardPayouts() {
     setIsSettling(true);
     setStripeMessage(null);
     try {
-      const data = await withTimeoutSafety(() => invokeFunction('settle-pending-payouts'));
+      const data = await invokeFunction('settle-pending-payouts');
       if (data?.error) throw new Error(data.error);
       const failed = data?.errors?.length || 0;
       const held = data?.skipped?.length || 0;

@@ -139,7 +139,11 @@ export async function withTimeoutSafety(promiseFactory, timeoutMs = 5000, maxRet
  * @returns {Promise<object>}    - Parsed JSON response body
  * @throws {Error}               - On non-OK response, network error, or auth failure
  */
-export async function invokeFunction(functionName, body = null) {
+// NOTE: never wrap invokeFunction in withTimeoutSafety. withTimeoutSafety RETRIES
+// on timeout, and Edge Functions have side effects (payments, transfers, Stripe
+// accounts): a slow-but-successful call would run twice. invokeFunction handles
+// auth-lock recovery itself and aborts (without retrying) after `timeoutMs`.
+export async function invokeFunction(functionName, body = null, { timeoutMs = 45000 } = {}) {
   if (isMockMode || !supabase) {
     throw new Error('Supabase is not configured (mock mode)');
   }
@@ -202,15 +206,28 @@ export async function invokeFunction(functionName, body = null) {
     }
   }
 
-  const res = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authToken}`,
-      'apikey': supabaseAnonKey,
-    },
-    body: body != null ? JSON.stringify(body) : undefined,
-  });
+  const controller = new AbortController();
+  const abortTimer = setTimeout(() => controller.abort(), timeoutMs);
+  let res;
+  try {
+    res = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`,
+        'apikey': supabaseAnonKey,
+      },
+      body: body != null ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err?.name === 'AbortError') {
+      throw new Error('The server is taking too long to respond. Please check again in a moment before retrying.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(abortTimer);
+  }
 
   // Parse response — handle both JSON and non-JSON error bodies gracefully
   let responseData;

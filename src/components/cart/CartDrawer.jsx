@@ -69,9 +69,9 @@ export default function CartDrawer() {
 
       // ── Paid items: ONE Stripe Checkout for all of them (any sellers) ────────
       if (paidItems.length > 0 && !isMockMode) {
-        const data = await withTimeoutSafety(() => invokeFunction('create-checkout-session', {
+        const data = await invokeFunction('create-checkout-session', {
           productIds: paidItems.map(p => p.id),
-        }));
+        });
         if (data?.error) throw new Error(data.error);
         // Don't clear the cart yet — the buyer may cancel on Stripe's page.
         // CheckoutSuccess removes exactly these products once payment succeeds.
