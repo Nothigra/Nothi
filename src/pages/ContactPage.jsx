@@ -4,6 +4,8 @@ import { Mail, MessageSquare, Check, Copy, CheckCircle2, Send } from 'lucide-rea
 import { useTranslation } from 'react-i18next';
 import { submitContactMessage } from '../lib/accountStore';
 import './ContactPage.css';
+import Input from '../components/ui/Input';
+import Textarea from '../components/ui/Textarea';
 
 const DISCORD_INVITE_URL = null; // null triggers the 'Coming soon' disabled state
 
@@ -176,30 +178,25 @@ export default function ContactPage() {
 
         <form className="contact-form" onSubmit={handleFormSubmit}>
           <div className="form-row">
-            <div className={`form-group ${errors.name ? 'has-error' : ''}`}>
-              <label htmlFor="name">{t('contact.nameLabel', 'Name')}</label>
-              <input 
-                type="text" 
-                id="name" 
-                placeholder={t('contact.namePlaceholder', 'Your name')}
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                disabled={isSubmitting}
-              />
-              {errors.name && <span className="form-error">{errors.name}</span>}
-            </div>
-            <div className={`form-group ${errors.email ? 'has-error' : ''}`}>
-              <label htmlFor="email">{t('contact.emailLabel', 'Email address')}</label>
-              <input 
-                type="email" 
-                id="email" 
-                placeholder={t('contact.emailPlaceholder', 'you@example.com')}
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                disabled={isSubmitting}
-              />
-              {errors.email && <span className="form-error">{errors.email}</span>}
-            </div>
+            <Input
+              id="name"
+              label={t('contact.nameLabel', 'Name')}
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              error={errors.name || null}
+              disabled={isSubmitting}
+              autoComplete="name"
+            />
+            <Input
+              id="email"
+              type="email"
+              label={t('contact.emailLabel', 'Email address')}
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              error={errors.email || null}
+              disabled={isSubmitting}
+              autoComplete="email"
+            />
           </div>
 
           <div className="form-group">
@@ -224,17 +221,15 @@ export default function ContactPage() {
             </div>
           </div>
 
-          <div className={`form-group ${errors.message ? 'has-error' : ''}`}>
-            <label htmlFor="message">{t('contact.messageLabel', 'Message')}</label>
-            <textarea 
-              id="message" 
-              placeholder={t('contact.messagePlaceholder', 'How can we help you today?')}
-              value={formData.message}
-              onChange={(e) => setFormData({...formData, message: e.target.value})}
-              disabled={isSubmitting}
-            />
-            {errors.message && <span className="form-error">{errors.message}</span>}
-          </div>
+          <Textarea
+            id="message"
+            label={t('contact.messageLabel', 'Message')}
+            value={formData.message}
+            onChange={(e) => setFormData({...formData, message: e.target.value})}
+            error={errors.message || null}
+            disabled={isSubmitting}
+            minRows={5}
+          />
 
           <button 
             type="submit" 

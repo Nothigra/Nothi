@@ -23,6 +23,7 @@ import { getLocalizedString } from '../utils/i18nHelpers';
 import './CreatorProfilePage.css';
 
 import ProBadge from '../components/common/ProBadge';
+import Checkbox from '../components/ui/Checkbox';
 export default function CreatorProfilePage() {
   const { username } = useParams();
   const navigate = useNavigate();
@@ -557,20 +558,23 @@ export default function CreatorProfilePage() {
                       {orderedProducts.map(p => {
                         const isFeatured = (shopSettings.featured_products || []).includes(p.id);
                         return (
-                          <div 
-                            key={p.id} 
-                            className="flex items-center gap-sm p-sm border border-border rounded-lg cursor-pointer hover:bg-bg-secondary"
-                            onClick={() => {
+                          <Checkbox
+                            key={p.id}
+                            className="featured-product-option p-sm border border-border rounded-lg hover:bg-bg-secondary"
+                            checked={isFeatured}
+                            onChange={() => {
                               const newFeatured = isFeatured 
                                 ? (shopSettings.featured_products || []).filter(id => id !== p.id)
                                 : [...(shopSettings.featured_products || []), p.id];
                               setShopSettings(prev => ({ ...prev, featured_products: newFeatured }));
                             }}
-                          >
-                            <input type="checkbox" checked={isFeatured} readOnly className="mr-sm cursor-pointer" />
-                            <img src={p.images?.[0]} className="w-12 h-12 object-cover rounded" alt="" />
-                            <span className="font-medium text-sm truncate">{getLocalizedString(p.title, baseLang)}</span>
-                          </div>
+                            label={
+                              <span className="flex items-center gap-sm min-w-0">
+                                <img src={p.images?.[0]} className="w-12 h-12 object-cover rounded" alt="" />
+                                <span className="font-medium text-sm truncate">{getLocalizedString(p.title, baseLang)}</span>
+                              </span>
+                            }
+                          />
                         );
                       })}
                     </div>

@@ -182,6 +182,12 @@
   }
 }
 
+/* Name + Email share the row equally */
+.form-row > * {
+  flex: 1;
+  min-width: 0;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;

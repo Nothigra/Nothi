@@ -132,7 +132,9 @@ export default function VerifyEmailPage() {
                 setCode(val);
                 if (val.length === 6) setError('');
               }}
-              className="text-center text-3xl font-bold tracking-widest p-sm border border-border rounded-md w-full bg-bg focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+              className="otp-code-input"
+              aria-label="6-digit verification code"
+              autoComplete="one-time-code"
               placeholder="000000"
               autoFocus
             />

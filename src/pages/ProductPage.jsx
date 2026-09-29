@@ -22,6 +22,7 @@ import { supabase, isMockMode as supabaseMockMode, invokeFunction, withTimeoutSa
 import ProductCard from '../components/product/ProductCard';
 import ProBadge from '../components/common/ProBadge';
 import './ProductPage.css';
+import Textarea from '../components/ui/Textarea';
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -537,12 +538,12 @@ export default function ProductPage() {
                         )}
                       </div>
                       {/* Comment */}
-                      <textarea
+                      <Textarea
+                        label="Share your experience (optional)"
                         value={reviewComment}
                         onChange={e => setReviewComment(e.target.value)}
-                        placeholder="Share your experience (optional)..."
-                        rows={3}
-                        className="w-full p-md border border-border rounded-lg bg-bg-card text-primary text-sm resize-none mb-md focus:outline-none focus:ring-2 focus:ring-accent"
+                        minRows={3}
+                        wrapperClassName="mb-md"
                       />
                       {/* Status */}
                       {reviewStatus === 'success' && (
@@ -554,7 +555,7 @@ export default function ProductPage() {
                       <button
                         onClick={handleSubmitReview}
                         disabled={!reviewRating || reviewSubmitting}
-                        className="btn-primary text-sm px-xl py-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="btn btn-primary text-sm px-xl py-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {reviewSubmitting ? 'Saving…' : ownReview ? 'Update Review' : 'Submit Review'}
                       </button>

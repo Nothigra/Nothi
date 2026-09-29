@@ -826,3 +826,16 @@
     padding: 12px 24px;
   }
 }
+
+/* Featured products picker (shop editor) — full-width rows */
+.digi-checkbox-wrapper.featured-product-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.featured-product-option .digi-checkbox-content,
+.featured-product-option .digi-checkbox-label {
+  min-width: 0;
+  flex: 1;
+}
