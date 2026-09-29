@@ -35,8 +35,9 @@ export default function CartDrawer() {
     
     try {
       // Separate free vs paid items
-      const freeItems  = items.filter(item => (item.salePrice ?? item.price ?? 0) === 0);
-      const paidItems  = items.filter(item => (item.salePrice ?? item.price ?? 0) >  0);
+      // Free = regular price 0 (a promotion can never make a product free).
+      const freeItems  = items.filter(item => Number(item.price ?? 0) === 0);
+      const paidItems  = items.filter(item => Number(item.price ?? 0) >  0);
 
       // ── Free items: direct insert (bypasses Stripe, unaffected by RLS change) ──
       for (const item of freeItems) {
@@ -47,7 +48,7 @@ export default function CartDrawer() {
           seller_id:  freshProduct.seller_id || freshProduct.creator_id,
           product_id: freshProduct.id,
           price_paid: 0,
-          currency:   'USD',
+          currency:   'EUR',
           is_free:    true,
           status:     'completed'
         }, isMockMode);
@@ -160,7 +161,12 @@ export default function CartDrawer() {
                         </div>
                       </div>
                       <div className="cart-drawer-item-price">
-                        {formatPrice(item.price)}
+                        {(item.salePrice ?? item.sale_price) != null ? (
+                          <>
+                            <s style={{ opacity: 0.6, marginRight: 6, fontWeight: 400 }}>{formatPrice(item.price)}</s>
+                            {formatPrice(item.salePrice ?? item.sale_price)}
+                          </>
+                        ) : formatPrice(item.price)}
                       </div>
                     </div>
                   </div>

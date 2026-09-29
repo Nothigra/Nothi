@@ -11,6 +11,7 @@ import Textarea from '../../components/ui/Textarea';
 import CurrencyInput from '../../components/ui/CurrencyInput';
 import Select from '../../components/ui/Select';
 import Checkbox from '../../components/ui/Checkbox';
+import Toggle from '../../components/ui/Toggle';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createProduct, requestProductFileUploadUrl, updateProduct } from '../../api/productApi';
 import { supabase, withTimeoutSafety } from '../../lib/supabase';
@@ -25,6 +26,41 @@ import './UploadProductPage.css';
 
 const formatEur = (amount) =>
   new Intl.NumberFormat('fr-BE', { style: 'currency', currency: 'EUR' }).format(amount);
+
+// ── Promotion helpers ──────────────────────────────────────────────────────
+// Mirrors the DB rule (products_sale_price_valid / active_sale_price):
+// 0.50 EUR <= sale price < regular price. 0.50 EUR is Stripe's minimum charge.
+const MIN_SALE_PRICE = 0.5;
+
+const pad2 = (n) => String(n).padStart(2, '0');
+// ISO timestamp -> 'YYYY-MM-DD' in the seller's local time (for <input type="date">)
+const toDateInputValue = (iso) => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+};
+const todayInputValue = () => toDateInputValue(new Date().toISOString());
+
+function validatePromo(form) {
+  if (!form.promoEnabled) return '';
+  const price = parseFloat(form.price);
+  const sale = parseFloat(form.salePrice);
+  if (!price || price <= 0) return 'A promotion needs a regular price above 0.';
+  if (!sale || Number.isNaN(sale)) return 'Enter the promotional price.';
+  if (sale < MIN_SALE_PRICE) return `The promotional price must be at least ${formatEur(MIN_SALE_PRICE)}.`;
+  if (sale >= price) return 'The promotional price must be lower than the regular price.';
+  if (form.saleEndsAt && form.saleEndsAt < todayInputValue()) return 'The promotion end date is in the past.';
+  return '';
+}
+
+function promoPayload(form) {
+  if (!form.promoEnabled) return { sale_price: null, sale_ends_at: null };
+  return {
+    sale_price: Math.round(parseFloat(form.salePrice) * 100) / 100,
+    // The promotion runs until the END of the chosen day, in the seller's time zone.
+    sale_ends_at: form.saleEndsAt ? new Date(`${form.saleEndsAt}T23:59:59`).toISOString() : null,
+  };
+}
 
 // Prices must match BOOST_OPTIONS in src/config/plans.js (server: create-boost-checkout)
 const BOOST_PLANS = [
@@ -63,8 +99,14 @@ export default function UploadProductPage() {
     software: [],
     style: [],
     videoUrl: '',
-    visibility: 'public'
+    visibility: 'public',
+    // Promotion (all amounts in EUR). Validated again by the DB constraint
+    // products_sale_price_valid and applied at checkout server-side.
+    promoEnabled: false,
+    salePrice: '',
+    saleEndsAt: '', // YYYY-MM-DD, optional
   });
+  const [promoError, setPromoError] = useState('');
 
   const thumbnailInputRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -110,7 +152,10 @@ export default function UploadProductPage() {
         features: p.features || [],
         tags: p.tags ? (Array.isArray(p.tags) ? p.tags.join(', ') : p.tags) : '',
         visibility: p.visibility || 'public',
-        videoUrl: p.videoUrl || ''
+        videoUrl: p.videoUrl || '',
+        promoEnabled: p.sale_price != null,
+        salePrice: p.sale_price != null ? String(p.sale_price) : '',
+        saleEndsAt: p.sale_ends_at ? toDateInputValue(p.sale_ends_at) : '',
       }));
       
       // Hydrate media items
@@ -211,6 +256,13 @@ export default function UploadProductPage() {
       return;
     }
     if (fileError) return;
+
+    const promoProblem = validatePromo(formData);
+    if (promoProblem) {
+      setPromoError(promoProblem);
+      setPublishError(promoProblem);
+      return;
+    }
     
     // Enforce mandatory product file for publishing (bypass if editing since they already have one)
     if (!productFile && !isMockMode && !isEditing) {
@@ -232,7 +284,8 @@ export default function UploadProductPage() {
       category: formData.category,
       media: validMedia.map((m, idx) => ({ type: m.type, url: m.url, posterUrl: m.posterUrl, order: idx })),
       software: formData.software,
-      style: formData.style
+      style: formData.style,
+      ...promoPayload(formData),
     };
 
     if (isMockMode) {
@@ -289,7 +342,8 @@ export default function UploadProductPage() {
         }
         
         // Update product metadata (and new file_path if applicable)
-        await updateProduct(productId, productPayload);
+        const updated = await updateProduct(productId, productPayload);
+        if (!updated) throw new Error('Could not save your changes. Please check the price and promotion, then try again.');
         
       } else {
         // === CREATE NEW PRODUCT FLOW ===
@@ -489,6 +543,54 @@ export default function UploadProductPage() {
                   <div className="mt-sm flex items-start gap-xs text-xs text-danger">
                     <AlertCircle size={14} className="shrink-0 mt-xs" />
                     <p>Price is too low to cover fixed transaction fees. Please increase.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {parseFloat(formData.price) > 0 && (
+              <div className="up-promo mt-lg" style={{ maxWidth: 360 }}>
+                <Toggle
+                  label="Put this product on sale"
+                  checked={formData.promoEnabled}
+                  onChange={(e) => {
+                    setPromoError('');
+                    setFormData(prev => ({ ...prev, promoEnabled: e.target.checked }));
+                  }}
+                />
+
+                {formData.promoEnabled && (
+                  <div className="up-promo-fields">
+                    <CurrencyInput
+                      name="salePrice"
+                      min={MIN_SALE_PRICE}
+                      currency="EUR"
+                      currencies={[{ value: 'EUR', label: 'EUR', symbol: '€' }]}
+                      placeholder="Sale price *"
+                      value={formData.salePrice}
+                      onChange={(e) => {
+                        setPromoError('');
+                        setFormData(prev => ({ ...prev, salePrice: e.target.value }));
+                      }}
+                      error={promoError || null}
+                      hint={(() => {
+                        const price = parseFloat(formData.price);
+                        const sale = parseFloat(formData.salePrice);
+                        if (!sale || !price || sale >= price) return `Must be lower than ${formatEur(price || 0)}.`;
+                        return `-${Math.round((1 - sale / price) * 100)}% · buyers pay ${formatEur(sale)} instead of ${formatEur(price)}`;
+                      })()}
+                    />
+                    <Input
+                      type="date"
+                      label="Ends on (optional)"
+                      value={formData.saleEndsAt}
+                      min={todayInputValue()}
+                      onChange={(e) => {
+                        setPromoError('');
+                        setFormData(prev => ({ ...prev, saleEndsAt: e.target.value }));
+                      }}
+                      hint={formData.saleEndsAt ? 'The sale stops at the end of this day.' : 'Leave empty to keep the sale running until you turn it off.'}
+                    />
                   </div>
                 )}
               </div>

@@ -101,7 +101,8 @@
     "noReviews": "No reviews yet",
     "noReviewsDesc": "Be the first to review this product",
     "verified": "Verified Purchase",
-    "chargedInEur": "Charged in EUR: {{amount}}"
+    "chargedInEur": "Charged in EUR: {{amount}}",
+    "saleEndsOn": "Sale ends on {{date}}"
   },
   "cart": {
     "title": "Shopping Cart",

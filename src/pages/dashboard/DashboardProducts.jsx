@@ -16,6 +16,13 @@ import { getMyProducts } from '../../api/productApi';
 import { isMockMode } from '../../lib/supabase';
 import './DashboardProducts.css';
 
+// Same rule as the DB function active_sale_price()
+const isSaleActive = (p) =>
+  p.sale_price != null
+  && Number(p.sale_price) >= 0.5
+  && Number(p.sale_price) < Number(p.price)
+  && (!p.sale_ends_at || new Date(p.sale_ends_at) > new Date());
+
 export default function DashboardProducts() {
   const { profile, updateProfile, isLoading: isAuthLoading } = useAuth();
   const { formatPrice } = useCurrency();
@@ -297,7 +304,16 @@ export default function DashboardProducts() {
                         <span className={`dp-status ${status}`}>
                           {status.charAt(0).toUpperCase() + status.slice(1)}
                         </span>
-                        <span>{formatPrice(product.price)}</span>
+                        {isSaleActive(product) ? (
+                          <span className="dp-sale-price">
+                            <s>{formatPrice(product.price)}</s> {formatPrice(product.sale_price)}
+                            <span className="dp-sale-badge">
+                              Sale{product.sale_ends_at ? ` · until ${new Date(product.sale_ends_at).toLocaleDateString()}` : ''}
+                            </span>
+                          </span>
+                        ) : (
+                          <span>{formatPrice(product.price)}</span>
+                        )}
                         <span>{product.category}</span>
                         {renderBoostBadge(product)}
                       </div>

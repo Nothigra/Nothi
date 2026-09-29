@@ -49,7 +49,9 @@ export function CartProvider({ children }) {
   };
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  // Promotion price when the product was added during an active sale.
+  // (Display only — the server always charges the live price at checkout.)
+  const subtotal = items.reduce((sum, item) => sum + (Number(item.salePrice ?? item.sale_price ?? item.price) * item.quantity), 0);
   const total = subtotal; // Can add tax/discount logic later
 
   return (

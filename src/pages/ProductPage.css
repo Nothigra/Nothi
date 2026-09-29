@@ -269,7 +269,19 @@
   margin-bottom: var(--space-12);
 }
 
-.product-page-price:has(+ .product-charged-in-eur) {
+.product-page-price:has(+ .product-charged-in-eur),
+.product-page-price:has(+ .product-sale-ends) {
+  margin-bottom: var(--space-2);
+}
+
+.product-sale-ends {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-accent);
+  margin-bottom: var(--space-12);
+}
+
+.product-sale-ends:has(+ .product-charged-in-eur) {
   margin-bottom: var(--space-2);
 }
 

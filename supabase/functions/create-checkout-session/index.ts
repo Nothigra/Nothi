@@ -15,11 +15,8 @@
 //     checkout.session.completed — this is the real security boundary.
 //   - Sellers do NOT need a connected Stripe account for buyers to purchase from them.
 //     Verification is deferred to payout time.
-//
-// !! PRODUCTION TODO !!
-// Set APP_URL secret before going live:
-//   npx supabase secrets set APP_URL=https://yourdomain.com
-// Without this, success/cancel redirects send buyers to localhost.
+//   - The charged amount is the active promotion price when there is one
+//     (public_products.sale_price), otherwise the regular price.
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -85,6 +82,16 @@ serve(async (req) => {
     // Prevent self-purchasing (consistent with DB no_self_purchasing constraint)
     if (product.seller_id === user.id) throw new Error('You cannot purchase your own product');
 
+    // Active promotion? Read it from public_products so the rule (valid
+    // amount, not expired) has ONE definition: public.active_sale_price().
+    const { data: publicRow, error: saleError } = await supabaseAdmin
+      .from('public_products')
+      .select('sale_price')
+      .eq('id', productId)
+      .maybeSingle();
+    if (saleError) throw new Error('Could not read product price');
+    const chargedPrice = publicRow?.sale_price != null ? Number(publicRow.sale_price) : Number(product.price);
+
     // Prevent re-purchasing an already owned product
     const { data: existingPurchase } = await supabaseAdmin
       .from('purchases')
@@ -108,7 +115,7 @@ serve(async (req) => {
 
     const appUrl = getAppUrl(req);
 
-    const totalCents = Math.round(product.price * 100);
+    const totalCents = Math.round(chargedPrice * 100);
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -132,7 +139,7 @@ serve(async (req) => {
         product_id: product.id,
         buyer_id:   user.id,
         seller_id:  product.seller_id,
-        price_paid: product.price.toString(),
+        price_paid: chargedPrice.toString(),
       },
 
       success_url: `${appUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,

@@ -100,7 +100,8 @@
     "noReviews": "Pas encore d'avis",
     "noReviewsDesc": "Soyez le premier à donner votre avis",
     "verified": "Achat Vérifié",
-    "chargedInEur": "Facturé en EUR : {{amount}}"
+    "chargedInEur": "Facturé en EUR : {{amount}}",
+    "saleEndsOn": "Promo jusqu’au {{date}}"
   },
   "cart": {
     "title": "Panier",

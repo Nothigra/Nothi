@@ -104,6 +104,7 @@ export default function ProductPage() {
     creatorName: rawProduct.creator_username || rawProduct.creatorName || MOCK_CREATORS.find(c => c.id === (rawProduct.creator_id || rawProduct.seller_id))?.username || profile?.username || 'Unknown',
     reviews: rawProduct.reviews ?? rawProduct.reviews_count ?? 0,
     salePrice: rawProduct.salePrice ?? rawProduct.sale_price ?? null,
+    saleEndsAt: rawProduct.saleEndsAt ?? rawProduct.sale_ends_at ?? null,
   } : null;
 
   // STRIP SALES COUNT FROM PUBLIC PAYLOAD FOR SECURITY
@@ -200,7 +201,7 @@ export default function ProductPage() {
         seller_id: product.seller_id || product.creator_id, 
         product_id: product.id,
         price_paid: 0,
-        currency: 'USD',
+        currency: 'EUR',
         is_free: true,
         status: 'completed'
       }, isMockMode);
@@ -379,16 +380,21 @@ export default function ProductPage() {
               {product.salePrice ? (
                 <>
                   <span className="current">{formatPrice(product.salePrice)}</span>
-                  <div className="product-price-large">{formatPrice(product.price)}</div>
-                  <span className="save-badge">Save {Math.round((1 - product.salePrice / product.price) * 100)}%</span>
+                  <span className="original">{formatPrice(product.price)}</span>
+                  <span className="save-badge">-{Math.round((1 - product.salePrice / product.price) * 100)}%</span>
                 </>
               ) : (
                 <span className="current">{formatPrice(product.price)}</span>
               )}
             </div>
+            {product.salePrice && product.saleEndsAt && (
+              <p className="product-sale-ends">
+                {t('product.saleEndsOn', { date: new Date(product.saleEndsAt).toLocaleDateString(i18n.language), defaultValue: 'Sale ends on {{date}}' })}
+              </p>
+            )}
             {isConverted && product.price > 0 && (
               <p className="product-charged-in-eur">
-                {t('product.chargedInEur', { amount: formatEur(product.price), defaultValue: 'Charged in EUR: {{amount}}' })}
+                {t('product.chargedInEur', { amount: formatEur(product.salePrice ?? product.price), defaultValue: 'Charged in EUR: {{amount}}' })}
               </p>
             )}
 
