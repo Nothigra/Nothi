@@ -114,7 +114,9 @@
     "checkout": "Pagar",
     "remove": "Eliminar",
     "items": "artículos",
-    "claimFailed": "No se pudo añadir un producto gratuito a tu biblioteca. Inténtalo de nuevo."
+    "claimFailed": "No se pudo añadir un producto gratuito a tu biblioteca. Inténtalo de nuevo.",
+    "alreadyOwned": "Ya tienes los productos de tu carrito. Quítalos para continuar.",
+    "tooManyItems": "Demasiados productos para un solo pago (máx. 20). Quita algunos e inténtalo de nuevo."
   },
   "auth": {
     "login": "Iniciar Sesión",

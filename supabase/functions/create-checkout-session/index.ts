@@ -1,22 +1,24 @@
 // supabase/functions/create-checkout-session/index.ts
 //
-// PURPOSE: Creates a Stripe Checkout Session for a single paid product purchase.
-//          The platform collects the FULL charge on its own Stripe account.
-//          No Connect split happens at charge time — the seller's share is computed
-//          and stored in the DB by stripe-webhook, then transferred later by
-//          settle-pending-payouts once the seller connects and verifies their account.
-//          This is the "separate charges and transfers" / deferred payout model.
+// PURPOSE: Creates ONE Stripe Checkout Session for every paid product in the
+//          buyer's cart (any number of sellers). The platform collects the FULL
+//          charge on its own Stripe account; stripe-webhook then creates one
+//          purchase row per product with its own platform/seller split, and
+//          settle-pending-payouts later transfers each seller's share
+//          ("separate charges and transfers" / deferred payout model).
+//
+// Request body: { productIds: string[] }   (or the legacy { productId })
 //
 // Security model:
 //   - Caller must be authenticated (JWT verified). Buyer ID comes from JWT, never client body.
-//   - Fetches product price + seller_id server-side — client cannot spoof price or seller.
-//   - Free products (price = 0) must NOT call this function — they use the direct insert path.
-//   - No purchase row is created here. The stripe-webhook function creates it on
-//     checkout.session.completed — this is the real security boundary.
+//   - Prices, sellers and availability are read server-side — the client only
+//     sends product ids. The charged price is the active promotion price when
+//     there is one (public_products.sale_price), otherwise the regular price.
+//   - Free products (price = 0) are not accepted here — they use the free-claim path.
+//   - The cart snapshot is stored in checkout_carts (service role only) and the
+//     session only carries its id. No purchase row is created here: the
+//     verified stripe-webhook does that once the payment is confirmed.
 //   - Sellers do NOT need a connected Stripe account for buyers to purchase from them.
-//     Verification is deferred to payout time.
-//   - The charged amount is the active promotion price when there is one
-//     (public_products.sale_price), otherwise the regular price.
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -33,10 +35,19 @@ const ALLOWED_ORIGINS = [
   'http://localhost:5173',
 ];
 
+const MAX_ITEMS = 20;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function getAppUrl(req: Request): string {
   const origin = req.headers.get('origin') ?? '';
   if (ALLOWED_ORIGINS.includes(origin)) return origin;
   return Deno.env.get('APP_URL') ?? ALLOWED_ORIGINS[0];
+}
+
+function productName(title: unknown): string {
+  if (typeof title === 'string') return title.slice(0, 250) || 'Digital Product';
+  const t = title as Record<string, string> | null;
+  return (t?.en ?? t?.fr ?? Object.values(t ?? {})[0] ?? 'Digital Product').slice(0, 250);
 }
 
 serve(async (req) => {
@@ -59,55 +70,84 @@ serve(async (req) => {
     if (userError || !user) throw new Error('Unauthorized');
 
     // ── Parse request body ────────────────────────────────────────────────────
-    const { productId } = await req.json();
-    if (!productId) throw new Error('Missing productId');
+    const body = await req.json();
+    const rawIds: unknown[] = Array.isArray(body?.productIds)
+      ? body.productIds
+      : (body?.productId ? [body.productId] : []);
+    const productIds = [...new Set(rawIds.filter((id): id is string => typeof id === 'string' && UUID_RE.test(id)))];
+    if (productIds.length === 0) throw new Error('Missing productId');
+    if (productIds.length > MAX_ITEMS) throw new Error(`too_many_items:${MAX_ITEMS}`);
 
-    // ── Fetch product server-side (price cannot be spoofed by client) ─────────
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Fetch from raw products table (not public view) so we get seller_id + status
-    const { data: product, error: productError } = await supabaseAdmin
+    // ── Products, server-side (raw table: status + seller_id) ─────────────────
+    const { data: products, error: productsError } = await supabaseAdmin
       .from('products')
       .select('id, title, price, seller_id, status')
-      .eq('id', productId)
-      .single();
+      .in('id', productIds);
+    if (productsError) throw new Error('Could not read products');
 
-    if (productError || !product) throw new Error('Product not found');
-    if (product.status !== 'published') throw new Error('Product is not available for purchase');
-    if (product.price <= 0) throw new Error('Use the free download path for free products');
-
-    // Prevent self-purchasing (consistent with DB no_self_purchasing constraint)
-    if (product.seller_id === user.id) throw new Error('You cannot purchase your own product');
-
-    // Active promotion? Read it from public_products so the rule (valid
-    // amount, not expired) has ONE definition: public.active_sale_price().
-    const { data: publicRow, error: saleError } = await supabaseAdmin
+    // Active promotion prices — ONE definition: public.active_sale_price()
+    const { data: publicRows, error: saleError } = await supabaseAdmin
       .from('public_products')
-      .select('sale_price')
-      .eq('id', productId)
-      .maybeSingle();
-    if (saleError) throw new Error('Could not read product price');
-    const chargedPrice = publicRow?.sale_price != null ? Number(publicRow.sale_price) : Number(product.price);
+      .select('id, sale_price')
+      .in('id', productIds);
+    if (saleError) throw new Error('Could not read product prices');
+    const saleById = new Map((publicRows ?? []).map((r) => [r.id, r.sale_price]));
 
-    // Prevent re-purchasing an already owned product
-    const { data: existingPurchase } = await supabaseAdmin
+    // Already owned by this buyer → left out of the payment
+    const { data: owned } = await supabaseAdmin
       .from('purchases')
-      .select('id')
+      .select('product_id')
       .eq('buyer_id', user.id)
-      .eq('product_id', productId)
-      .eq('status', 'completed')
-      .maybeSingle();
+      .in('product_id', productIds);
+    const ownedIds = new Set((owned ?? []).map((r) => r.product_id));
 
-    if (existingPurchase) {
-      throw new Error('already_purchased');
+    const items: { product_id: string; seller_id: string; price_cents: number; name: string }[] = [];
+    const skipped: { product_id: string; reason: string }[] = [];
+
+    for (const id of productIds) {
+      const p = (products ?? []).find((x) => x.id === id);
+      if (!p || p.status !== 'published') { skipped.push({ product_id: id, reason: 'unavailable' }); continue; }
+      if (Number(p.price) <= 0) { skipped.push({ product_id: id, reason: 'free' }); continue; }
+      if (p.seller_id === user.id) { skipped.push({ product_id: id, reason: 'own_product' }); continue; }
+      if (ownedIds.has(id)) { skipped.push({ product_id: id, reason: 'already_purchased' }); continue; }
+
+      const sale = saleById.get(id);
+      const charged = sale != null ? Number(sale) : Number(p.price);
+      items.push({
+        product_id: p.id,
+        seller_id: p.seller_id,
+        price_cents: Math.round(charged * 100),
+        name: productName(p.title),
+      });
     }
 
-    // ── Create Stripe Checkout Session ────────────────────────────────────────
-    // Full charge goes to the platform's own Stripe account.
-    // No application_fee_amount or transfer_data — the Connect split is deferred.
+    if (items.length === 0) {
+      // Keep the historical single-product error codes for the UI.
+      const reason = skipped.length === 1 ? skipped[0].reason : 'nothing_to_pay';
+      if (reason === 'own_product') throw new Error('You cannot purchase your own product');
+      throw new Error(reason);
+    }
+
+    const totalCents = items.reduce((sum, i) => sum + i.price_cents, 0);
+
+    // ── Snapshot the cart (service role only) ─────────────────────────────────
+    const { data: cart, error: cartError } = await supabaseAdmin
+      .from('checkout_carts')
+      .insert({
+        buyer_id: user.id,
+        items: items.map(({ product_id, seller_id, price_cents }) => ({ product_id, seller_id, price_cents })),
+        total_cents: totalCents,
+      })
+      .select('id')
+      .single();
+    if (cartError || !cart) throw new Error('Could not start checkout');
+
+    // ── Stripe Checkout Session ───────────────────────────────────────────────
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
       apiVersion: '2024-06-20',
       httpClient: Stripe.createFetchHttpClient(),
@@ -115,46 +155,45 @@ serve(async (req) => {
 
     const appUrl = getAppUrl(req);
 
-    const totalCents = Math.round(chargedPrice * 100);
-
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-
-      line_items: [{
+      line_items: items.map((i) => ({
         price_data: {
           currency: 'eur',
-          unit_amount: totalCents,
-          product_data: {
-            name: typeof product.title === 'string'
-              ? product.title
-              : (product.title?.en ?? 'Digital Product'),
-          },
+          unit_amount: i.price_cents,
+          product_data: { name: i.name },
         },
         quantity: 1,
-      }],
-
-      // Embed all fields needed by stripe-webhook to create the purchase row
-      // and compute the platform/seller split.
+      })),
+      client_reference_id: user.id,
       metadata: {
-        product_id: product.id,
-        buyer_id:   user.id,
-        seller_id:  product.seller_id,
-        price_paid: chargedPrice.toString(),
+        type: 'cart',
+        checkout_id: cart.id,
+        buyer_id: user.id,
       },
-
       success_url: `${appUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${appUrl}/checkout/cancel`,
     });
 
+    await supabaseAdmin
+      .from('checkout_carts')
+      .update({ stripe_session_id: session.id })
+      .eq('id', cart.id);
+
     return new Response(
-      JSON.stringify({ url: session.url, sessionId: session.id }),
+      JSON.stringify({
+        url: session.url,
+        sessionId: session.id,
+        productIds: items.map((i) => i.product_id),
+        skipped: skipped.length ? skipped : undefined,
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
 
   } catch (error) {
     console.error('create-checkout-session error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
     );
   }

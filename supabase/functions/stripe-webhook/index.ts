@@ -86,9 +86,10 @@ serve(async (req) => {
 
   // ── Route events ──────────────────────────────────────────────────────────
   // checkout.session.completed is routed on metadata.type:
+  //   'cart'         -> one or more products (create-checkout-session)
   //   'boost'        -> paid product boost (create-boost-checkout)
   //   'subscription' -> Nothi Pro subscription (create-subscription-checkout)
-  //   (none)         -> product purchase (create-checkout-session, legacy shape)
+  //   (none)         -> single product purchase (older create-checkout-session sessions)
   try {
     if (event.type === 'checkout.session.async_payment_succeeded') {
       // Delayed payment methods (e.g. SEPA): completed arrives 'unpaid', the
@@ -96,12 +97,15 @@ serve(async (req) => {
       const session = event.data.object as Stripe.Checkout.Session;
       const type = session.metadata?.type;
       if (type === 'boost') await handleBoostPaid(session);
+      else if (type === 'cart') await handleCartPaid(session, stripe);
       else if (type !== 'subscription') await handleCheckoutSessionCompleted(session, stripe);
     } else if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
       const type = session.metadata?.type;
       if (type === 'boost') {
         await handleBoostPaid(session);
+      } else if (type === 'cart') {
+        await handleCartPaid(session, stripe);
       } else if (type === 'subscription') {
         await handleSubscriptionCheckout(session, stripe);
       } else {
@@ -260,6 +264,128 @@ async function handleCheckoutSessionCompleted(
     `Purchase created: product=${product_id} buyer=${buyer_id} pi=${paymentIntentId} ` +
     `platform_fee=${platformFeeCents}¢ seller_amount=${sellerAmountCents}¢`
   );
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Cart purchases (one Checkout Session, one or more products, any sellers)
+// ─────────────────────────────────────────────────────────────────────────
+// One purchase row per product, each with its own split. The single Stripe
+// processing fee of the charge is shared between the products in proportion
+// to their price (the last item takes the rounding remainder), so the rows
+// always add up exactly to the charge. All rows share the payment intent;
+// settle-pending-payouts makes one transfer per row from that same charge.
+async function handleCartPaid(session: Stripe.Checkout.Session, stripe: Stripe) {
+  if (session.payment_status !== 'paid') {
+    console.log(`Cart session ${session.id} not paid yet (${session.payment_status}) — waiting`);
+    return;
+  }
+  const checkoutId = session.metadata?.checkout_id;
+  if (!checkoutId) {
+    console.error(`Cart session ${session.id} has no checkout_id`);
+    return; // bad metadata: don't make Stripe retry forever
+  }
+
+  const supabaseAdmin = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+
+  const { data: cart, error: cartError } = await supabaseAdmin
+    .from('checkout_carts')
+    .select('id, buyer_id, items, total_cents, stripe_session_id, completed_at')
+    .eq('id', checkoutId)
+    .maybeSingle();
+  if (cartError) throw new Error(`Could not load cart ${checkoutId}: ${cartError.message}`);
+  if (!cart) {
+    console.error(`Cart ${checkoutId} not found for session ${session.id} — needs manual review`);
+    return;
+  }
+  if (cart.completed_at) {
+    console.log(`Cart ${checkoutId} already processed — skipping`);
+    return;
+  }
+  if (cart.stripe_session_id && cart.stripe_session_id !== session.id) {
+    console.error(`Cart ${checkoutId} belongs to session ${cart.stripe_session_id}, not ${session.id} — skipping`);
+    return;
+  }
+  if (session.amount_total !== cart.total_cents || (session.currency ?? '').toLowerCase() !== 'eur') {
+    console.error(`Cart ${checkoutId}: session charged ${session.amount_total} ${session.currency}, cart says ${cart.total_cents} eur — needs manual review`);
+    return;
+  }
+
+  const paymentIntentId = typeof session.payment_intent === 'string'
+    ? session.payment_intent
+    : session.payment_intent?.id ?? null;
+  if (!paymentIntentId) throw new Error(`Cart session ${session.id} has no payment intent yet`);
+
+  // Real Stripe processing fee of the whole charge (retry until it exists)
+  const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId, {
+    expand: ['latest_charge.balance_transaction'],
+  });
+  const balanceTransaction = (paymentIntent.latest_charge as any)?.balance_transaction;
+  if (!balanceTransaction || typeof balanceTransaction === 'string') {
+    throw new Error('Balance transaction not yet available on the payment intent');
+  }
+  const stripeFeeTotal: number = balanceTransaction.fee ?? 0;
+
+  const items = (cart.items ?? []) as { product_id: string; seller_id: string; price_cents: number }[];
+  let feeLeft = stripeFeeTotal;
+
+  for (let idx = 0; idx < items.length; idx++) {
+    const item = items[idx];
+    const isLast = idx === items.length - 1;
+    const stripeFeeCents = isLast
+      ? feeLeft
+      : Math.round(stripeFeeTotal * item.price_cents / cart.total_cents);
+    feeLeft -= stripeFeeCents;
+
+    const platformFeeCents = Math.round(item.price_cents * PLATFORM_COMMISSION_RATE);
+    const sellerAmountCents = item.price_cents - platformFeeCents - stripeFeeCents;
+
+    const { error } = await supabaseAdmin
+      .from('purchases')
+      .insert([{
+        buyer_id:                 cart.buyer_id,
+        seller_id:                item.seller_id,
+        product_id:               item.product_id,
+        price_paid:               item.price_cents / 100,
+        currency:                 'EUR',
+        is_free:                  false,
+        status:                   'completed',
+        stripe_payment_intent_id: paymentIntentId,
+        platform_fee_cents:       platformFeeCents,
+        stripe_fee_cents:         stripeFeeCents,
+        seller_amount_cents:      sellerAmountCents,
+      }]);
+
+    if (error) {
+      if (error.code === '23505') {
+        // Already owned: either a webhook retry (row already created) or the
+        // buyer bought it twice in parallel checkouts.
+        const { data: existing } = await supabaseAdmin
+          .from('purchases')
+          .select('stripe_payment_intent_id')
+          .eq('buyer_id', cart.buyer_id)
+          .eq('product_id', item.product_id)
+          .maybeSingle();
+        if (existing?.stripe_payment_intent_id !== paymentIntentId) {
+          console.error(
+            `DOUBLE PAYMENT: buyer ${cart.buyer_id} already owned product ${item.product_id} ` +
+            `but paid ${item.price_cents}¢ again in ${paymentIntentId} — refund manually`
+          );
+        }
+        continue;
+      }
+      throw new Error(`Database insert failed for product ${item.product_id}: ${error.message}`);
+    }
+  }
+
+  await supabaseAdmin
+    .from('checkout_carts')
+    .update({ completed_at: new Date().toISOString(), stripe_session_id: session.id })
+    .eq('id', cart.id);
+
+  console.log(`Cart ${cart.id} paid: ${items.length} product(s), pi=${paymentIntentId}, stripe_fee=${stripeFeeTotal}¢`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

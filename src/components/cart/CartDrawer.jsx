@@ -14,7 +14,7 @@ import './CartDrawer.css';
 
 export default function CartDrawer() {
   const { t, i18n } = useTranslation();
-  const { isCartOpen, closeCart, items, subtotal, removeItem, clearCart } = useCart();
+  const { isCartOpen, closeCart, items, subtotal, removeItem, clearCart, rememberPendingCheckout } = useCart();
   const { formatPrice, formatEur, isConverted } = useCurrency();
   const { profile, updateProfile } = useAuth();
   const navigate = useNavigate();
@@ -63,22 +63,19 @@ export default function CartDrawer() {
         }
       }
 
-      // ── Paid items: redirect to Stripe Checkout ──────────────────────────────
-      if (paidItems.length > 0 && !isMockMode) {
-        // Hard constraint: Stripe Connect only supports one destination account per
-        // Checkout Session. Block carts with paid items from multiple sellers.
-        const uniqueSellerIds = new Set(paidItems.map(item => item.seller_id).filter(Boolean));
-        if (uniqueSellerIds.size > 1) {
-          throw new Error(
-            'Your cart contains paid products from multiple creators. ' +
-            'Please checkout one creator\'s products at a time.'
-          );
-        }
+      // Free items are in the library now — take them out of the cart right away
+      // (even if the buyer then cancels the payment for the paid ones).
+      if (!isMockMode) freeItems.forEach(p => removeItem(p.id));
 
-        const data = await withTimeoutSafety(() => invokeFunction('create-checkout-session', { productId: paidItems[0].id }));
+      // ── Paid items: ONE Stripe Checkout for all of them (any sellers) ────────
+      if (paidItems.length > 0 && !isMockMode) {
+        const data = await withTimeoutSafety(() => invokeFunction('create-checkout-session', {
+          productIds: paidItems.map(p => p.id),
+        }));
         if (data?.error) throw new Error(data.error);
-        // Don't clear cart — buyer may cancel on Stripe's page.
-        // Cart persists in localStorage and will be available if they return.
+        // Don't clear the cart yet — the buyer may cancel on Stripe's page.
+        // CheckoutSuccess removes exactly these products once payment succeeds.
+        rememberPendingCheckout(data.productIds || paidItems.map(p => p.id));
         closeCart();
         window.location.href = data.url;
         return;
@@ -97,7 +94,11 @@ export default function CartDrawer() {
     } catch (err) {
       console.error('Checkout error:', err);
       const msg = err.message || '';
-      if (msg.includes('seller_not_connected')) {
+      if (msg.includes('already_purchased') || msg.includes('nothing_to_pay')) {
+        setCheckoutError(t('cart.alreadyOwned', 'You already own the products in your cart. Remove them to continue.'));
+      } else if (msg.includes('too_many_items')) {
+        setCheckoutError(t('cart.tooManyItems', 'Too many products for one payment (20 max). Remove a few and try again.'));
+      } else if (msg.includes('seller_not_connected')) {
         setCheckoutError('A creator in your cart hasn\'t connected their Stripe account yet.');
       } else if (msg.includes('seller_not_ready')) {
         setCheckoutError('A creator\'s Stripe account isn\'t fully verified yet. Try again later.');

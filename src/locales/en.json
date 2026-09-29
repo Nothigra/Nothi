@@ -116,7 +116,9 @@
     "checkout": "Checkout",
     "remove": "Remove",
     "items": "items",
-    "claimFailed": "Could not add a free product to your library. Please try again."
+    "claimFailed": "Could not add a free product to your library. Please try again.",
+    "alreadyOwned": "You already own the products in your cart. Remove them to continue.",
+    "tooManyItems": "Too many products for one payment (20 max). Remove a few and try again."
   },
   "auth": {
     "login": "Log In",

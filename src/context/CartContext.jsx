@@ -44,6 +44,21 @@ export function CartProvider({ children }) {
     setItems([]);
   };
 
+  // Products sent to Stripe Checkout: removed from the cart only once the
+  // payment succeeded (see completePendingCheckout on the success page).
+  const PENDING_KEY = 'nothi-pending-checkout';
+  const rememberPendingCheckout = (productIds) => {
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify(productIds || [])); } catch { /* ignore */ }
+  };
+  const completePendingCheckout = () => {
+    let ids = [];
+    try { ids = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]'); } catch { ids = []; }
+    try { localStorage.removeItem(PENDING_KEY); } catch { /* ignore */ }
+    if (Array.isArray(ids) && ids.length) {
+      setItems(prev => prev.filter(item => !ids.includes(item.id)));
+    }
+  };
+
   const isInCart = (productId) => {
     return items.some(item => item.id === productId);
   };
@@ -60,6 +75,8 @@ export function CartProvider({ children }) {
       itemCount,
       subtotal,
       total,
+      rememberPendingCheckout,
+      completePendingCheckout,
       isCartOpen,
       openCart,
       closeCart,

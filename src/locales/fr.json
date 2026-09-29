@@ -115,7 +115,9 @@
     "checkout": "Payer",
     "remove": "Supprimer",
     "items": "articles",
-    "claimFailed": "Impossible d’ajouter un produit gratuit à ta bibliothèque. Réessaie."
+    "claimFailed": "Impossible d’ajouter un produit gratuit à ta bibliothèque. Réessaie.",
+    "alreadyOwned": "Tu possèdes déjà les produits de ton panier. Retire-les pour continuer.",
+    "tooManyItems": "Trop de produits pour un seul paiement (20 max). Retires-en quelques-uns et réessaie."
   },
   "auth": {
     "login": "Connexion",

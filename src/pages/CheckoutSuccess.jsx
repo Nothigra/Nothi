@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useGamification } from '../context/GamificationContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase, withTimeoutSafety } from '../lib/supabase';
+import { useCart } from '../context/CartContext';
 
 export default function CheckoutSuccess() {
   const [searchParams] = useSearchParams();
@@ -15,6 +16,13 @@ export default function CheckoutSuccess() {
   const { gamificationState, refreshState } = useGamification();
   const { profile } = useAuth();
   
+  // Payment succeeded: take the products that were just paid out of the cart.
+  const { completePendingCheckout } = useCart();
+  useEffect(() => {
+    if (sessionId) completePendingCheckout();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]);
+
   // Capture the XP before the webhook finishes
   const initialXpRef = useRef(gamificationState?.xp);
 
