@@ -98,7 +98,8 @@
     "writeReview": "Escribir una Reseña",
     "noReviews": "Sin reseñas aún",
     "noReviewsDesc": "Sé el primero en reseñar este producto",
-    "verified": "Compra Verificada"
+    "verified": "Compra Verificada",
+    "chargedInEur": "Cobrado en EUR: {{amount}}"
   },
   "cart": {
     "title": "Carrito de Compras",

@@ -9,11 +9,12 @@ import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { supabase, withTimeoutSafety, invokeFunction, isMockMode } from '../../lib/supabase';
 import CurrencyInput from '../../components/ui/CurrencyInput';
+import { getSellerEarnings, EMPTY_EARNINGS } from '../../api/billingApi';
 import './DashboardPages.css';
 
 export default function DashboardPayouts() {
   const { profile, updateProfile } = useAuth();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, formatEur } = useCurrency();
   const location = useLocation();
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -23,8 +24,10 @@ export default function DashboardPayouts() {
   const [isManagingStripe, setIsManagingStripe] = useState(false);
   const [stripeStatus, setStripeStatus] = useState(null);
   const [stripeStatusLoading, setStripeStatusLoading] = useState(false);
-  // Real pending balance: SUM of seller_amount_cents where stripe_transfer_id IS NULL
-  const [pendingBalanceCents, setPendingBalanceCents] = useState(null);
+  // Real earnings from purchase rows (EUR cents). null = still loading.
+  const [earnings, setEarnings] = useState(null);
+  const [earningsReload, setEarningsReload] = useState(0);
+  const pendingBalanceCents = isMockMode ? (profile?.balance || 0) : (earnings ? earnings.pendingCents : null);
   const [isSettling, setIsSettling] = useState(false);
   const [transfers, setTransfers] = useState([]);
   const [loadingTransfers, setLoadingTransfers] = useState(true);
@@ -51,11 +54,10 @@ export default function DashboardPayouts() {
       setLoadingTransfers(false);
     };
     fetchTransfers();
-  }, [profile?.id, isMockMode]);
+  }, [profile?.id, isMockMode, earningsReload]);
 
-  const balance = (profile?.balance || 0) / 100; // cents to dollars
-  const totalRevenue = profile?.revenue || 0; // already in dollars/cents from backfill
-  const lifetimeWithdrawals = transfers.reduce((sum, t) => sum + (t.seller_amount_cents || 0), 0) / 100;
+  // Mock mode only: simulated balance (real mode never uses profiles.balance)
+  const balance = (profile?.balance || 0) / 100;
 
   // Derived charge-readiness signals — based on LIVE Stripe data, not just ID presence.
   const hasStripeAccount  = !!profile?.stripe_account_id;
@@ -76,36 +78,18 @@ export default function DashboardPayouts() {
       .finally(() => setStripeStatusLoading(false));
   }, [profile?.stripe_account_id]);
 
-  // Fetch real pending balance: SUM(seller_amount_cents) WHERE stripe_transfer_id IS NULL
+  // Fetch real earnings (same source as the Overview page)
   useEffect(() => {
-    if (!profile?.id) return;
-    if (isMockMode) {
-      setPendingBalanceCents(profile.balance || 0);
-      return;
-    }
-    
-    supabase
-      .from('purchases')
-      .select('seller_amount_cents')
-      .eq('seller_id', profile.id)
-      .is('stripe_transfer_id', null)
-      .gt('seller_amount_cents', 0)
-      .then(({ data, error }) => {
-        if (error) {
-          console.error('Error fetching pending balance:', error);
-          setPendingBalanceCents(0);
-        } else if (data) {
-          const total = data.reduce((sum, row) => sum + (row.seller_amount_cents || 0), 0);
-          setPendingBalanceCents(total);
-        } else {
-          setPendingBalanceCents(0);
-        }
-      })
+    if (!profile?.id || isMockMode) return;
+    let cancelled = false;
+    getSellerEarnings(profile.id)
+      .then((e) => { if (!cancelled) setEarnings(e); })
       .catch((err) => {
-        console.error('Caught error fetching pending balance:', err);
-        setPendingBalanceCents(0);
+        console.error('Error fetching earnings:', err);
+        if (!cancelled) setEarnings({ ...EMPTY_EARNINGS });
       });
-  }, [profile?.id, isMockMode]);
+    return () => { cancelled = true; };
+  }, [profile?.id, earningsReload]);
 
   // Handle Stripe's redirect back to this page after onboarding
   useEffect(() => {
@@ -121,8 +105,8 @@ export default function DashboardPayouts() {
           if (data?.not_ready) {
             setStripeMessage({ type: 'success', text: 'Stripe account connected! Your pending earnings will be transferred once Stripe completes verification — click "Request Payout" to check.' });
           } else if (data?.settled > 0) {
-            setStripeMessage({ type: 'success', text: `Stripe account connected! $${(data.total_cents / 100).toFixed(2)} in pending earnings has been transferred to your account.` });
-            setPendingBalanceCents(0);
+            setStripeMessage({ type: 'success', text: `Stripe account connected! ${formatEur(data.total_cents / 100)} in pending earnings has been transferred to your account.` });
+            setEarningsReload((n) => n + 1);
           } else {
             setStripeMessage({ type: 'success', text: 'Your Stripe account is connected! Future sales will be transferred automatically.' });
           }
@@ -175,12 +159,11 @@ export default function DashboardPayouts() {
     setStripeMessage(null);
     try {
       const data = await withTimeoutSafety(() => invokeFunction('settle-pending-payouts'));
-      console.log('[DEBUG] settle-pending-payouts raw response:', JSON.stringify(data));
       if (data?.not_ready) {
         setStripeMessage({ type: 'warning', text: 'Your Stripe account isn\'t fully verified yet. Please check back in a few minutes.' });
       } else if (data?.settled > 0) {
-        setStripeMessage({ type: 'success', text: `$${(data.total_cents / 100).toFixed(2)} transferred to your Stripe account successfully.` });
-        setPendingBalanceCents(0);
+        setStripeMessage({ type: 'success', text: `${formatEur(data.total_cents / 100)} transferred to your Stripe account successfully.` });
+        setEarningsReload((n) => n + 1);
       } else {
         setStripeMessage({ type: 'success', text: 'No pending earnings to transfer right now.' });
       }
@@ -234,36 +217,56 @@ export default function DashboardPayouts() {
         </div>
       </div>
 
+      {isMockMode ? (
       <div className="stats-grid mb-xl" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
         <div className="premium-stat-card">
           <p className="text-sm text-secondary font-medium mb-xs uppercase tracking-wider">Available Balance</p>
           <h3 className="text-3xl font-bold font-display text-primary">{formatPrice(balance)}</h3>
-          <p className="text-sm text-secondary mt-sm">Ready to withdraw</p>
+          <p className="text-sm text-secondary mt-sm">Ready to withdraw (demo)</p>
         </div>
+      </div>
+      ) : (
+      <div className="stats-grid mb-xl" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
         <div className="premium-stat-card">
-          <p className="text-sm text-secondary font-medium mb-xs uppercase tracking-wider">Pending Balance</p>
+          <p className="text-sm text-secondary font-medium mb-xs uppercase tracking-wider">To Be Transferred</p>
           <h3 className="text-3xl font-bold font-display text-primary">
-            {pendingBalanceCents === null ? '...' : `$${(pendingBalanceCents / 100).toFixed(2)}`}
+            {earnings === null ? '…' : formatEur(earnings.pendingCents / 100)}
           </h3>
           <p className="text-sm text-secondary mt-sm flex items-center gap-xs">
-            {isChargeReady
-              ? <><CheckCircle2 size={14} className="text-success" /> Ready to settle</>  
+            {isFullyConnected
+              ? <><CheckCircle2 size={14} className="text-success" /> Ready to transfer</>
               : <><Clock size={14} /> Connect Stripe to receive</>}
           </p>
         </div>
         <div className="premium-stat-card">
-          <p className="text-sm text-secondary font-medium mb-xs uppercase tracking-wider">Lifetime Earnings</p>
-          <h3 className="text-3xl font-bold font-display text-primary">{formatPrice(totalRevenue)}</h3>
-          <p className="text-sm text-secondary mt-sm">Since your first sale</p>
+          <p className="text-sm text-secondary font-medium mb-xs uppercase tracking-wider">Total Transferred</p>
+          <h3 className="text-3xl font-bold font-display text-primary">
+            {earnings === null ? '…' : formatEur(earnings.transferredCents / 100)}
+          </h3>
+          <p className="text-sm text-secondary mt-sm flex items-center gap-xs"><CheckCircle2 size={14} className="text-success" /> Sent to your Stripe account</p>
         </div>
         <div className="premium-stat-card">
-          <p className="text-sm text-secondary font-medium mb-xs uppercase tracking-wider">Total Withdrawn</p>
-          <h3 className="text-3xl font-bold font-display text-primary">{formatPrice(lifetimeWithdrawals)}</h3>
-          <p className="text-sm text-secondary mt-sm flex items-center gap-xs"><CheckCircle2 size={14} className="text-success" /> Safely transferred</p>
+          <p className="text-sm text-secondary font-medium mb-xs uppercase tracking-wider">Net Earnings</p>
+          <h3 className="text-3xl font-bold font-display text-primary">
+            {earnings === null ? '…' : formatEur(earnings.netCents / 100)}
+          </h3>
+          <p className="text-sm text-secondary mt-sm">Your share, after fees</p>
+        </div>
+        <div className="premium-stat-card">
+          <p className="text-sm text-secondary font-medium mb-xs uppercase tracking-wider">Gross Sales</p>
+          <h3 className="text-3xl font-bold font-display text-primary">
+            {earnings === null ? '…' : formatEur(earnings.grossCents / 100)}
+          </h3>
+          <p className="text-sm text-secondary mt-sm">
+            {earnings === null ? '' : `${earnings.paidSales} paid sale${earnings.paidSales === 1 ? '' : 's'}`}
+          </p>
         </div>
       </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-xl mb-xl">
+        {isMockMode ? (
+        <>
         {/* Withdraw Form */}
         <div className="settings-card m-0 lg:col-span-2 flex flex-col">
           <div className="card-header pb-md border-b border-border">
@@ -335,6 +338,56 @@ export default function DashboardPayouts() {
           </div>
         </div>
 
+        </>
+        ) : (
+        <>
+        {/* Earnings breakdown (real mode) — money only moves through Stripe */}
+        <div className="settings-card m-0 lg:col-span-2 flex flex-col">
+          <div className="card-header pb-md border-b border-border">
+            <h3 className="card-title text-base flex items-center gap-sm"><Wallet size={18} /> Earnings Breakdown</h3>
+          </div>
+          <div className="card-body pt-xl">
+            {earnings === null ? (
+              <p className="text-sm text-secondary">Loading…</p>
+            ) : (
+              <div className="flex flex-col gap-sm max-w-md">
+                <div className="flex justify-between text-sm">
+                  <span className="text-secondary">Gross sales</span>
+                  <span className="font-medium">{formatEur(earnings.grossCents / 100)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-secondary">Nothi commission (5%) + Stripe fees</span>
+                  <span className="font-medium text-danger">-{formatEur(earnings.feesCents / 100)}</span>
+                </div>
+                <div className="flex justify-between text-sm pt-sm border-t border-border">
+                  <span className="font-semibold">Net earnings</span>
+                  <span className="font-bold">{formatEur(earnings.netCents / 100)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-secondary">Already transferred</span>
+                  <span className="font-medium">{formatEur(earnings.transferredCents / 100)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-secondary">Waiting to be transferred</span>
+                  <span className="font-bold text-accent">{formatEur(earnings.pendingCents / 100)}</span>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-xl p-md bg-bg-tertiary rounded-lg text-sm text-secondary leading-snug flex items-start gap-sm">
+              <Info size={16} className="shrink-0 mt-[2px]" />
+              <span>
+                Your share of each sale is kept safely until your Stripe account is connected and verified.
+                Then click <strong>Request Payout</strong>: the money is sent to your Stripe account, and Stripe
+                pays it out to your bank automatically. All amounts are in euros (EUR).
+              </span>
+            </div>
+          </div>
+        </div>
+
+        </>
+        )}
+
         {/* Stripe Connect — Payout Method */}
         <div className="settings-card m-0 flex flex-col">
           <div className="card-header pb-md border-b border-border">
@@ -396,7 +449,7 @@ export default function DashboardPayouts() {
                     {isSettling ? (
                       <><div className="loader spin" style={{ width: '14px', height: '14px', borderWidth: '2px' }} /> Transferring...</>
                     ) : (
-                      <><ArrowUpRight size={14} /> Request Payout (${(pendingBalanceCents / 100).toFixed(2)})</>
+                      <><ArrowUpRight size={14} /> Request Payout ({formatEur(pendingBalanceCents / 100)})</>
                     )}
                   </button>
                 )}
@@ -458,7 +511,7 @@ export default function DashboardPayouts() {
                     <div className="flex items-center gap-sm">
                       <DollarSign size={16} style={{ color: '#10b981', flexShrink: 0 }} />
                       <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                        <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>${(pendingBalanceCents / 100).toFixed(2)} in pending earnings</span> — connect Stripe to receive this.
+                        <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>{formatEur(pendingBalanceCents / 100)} in pending earnings</span> — connect Stripe to receive this.
                       </p>
                     </div>
                   </div>
@@ -508,7 +561,7 @@ export default function DashboardPayouts() {
                 ) : transfers.length > 0 ? transfers.map((wd) => (
                   <tr key={wd.id} className="hover:bg-bg-tertiary transition-colors cursor-pointer">
                     <td className="pl-xl text-sm font-medium">{new Date(wd.purchased_at).toLocaleDateString()}</td>
-                    <td className="text-sm font-bold text-primary">{formatPrice(wd.seller_amount_cents / 100)}</td>
+                    <td className="text-sm font-bold text-primary">{formatEur(wd.seller_amount_cents / 100)}</td>
                     <td>
                       <span className="badge badge-success text-xs px-sm py-[2px] rounded-full flex items-center gap-xs w-max">
                         <CheckCircle2 size={12} /> completed

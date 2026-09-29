@@ -99,7 +99,8 @@
     "writeReview": "Écrire un Avis",
     "noReviews": "Pas encore d'avis",
     "noReviewsDesc": "Soyez le premier à donner votre avis",
-    "verified": "Achat Vérifié"
+    "verified": "Achat Vérifié",
+    "chargedInEur": "Facturé en EUR : {{amount}}"
   },
   "cart": {
     "title": "Panier",

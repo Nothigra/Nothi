@@ -100,7 +100,8 @@
     "writeReview": "Write a Review",
     "noReviews": "No reviews yet",
     "noReviewsDesc": "Be the first to review this product",
-    "verified": "Verified Purchase"
+    "verified": "Verified Purchase",
+    "chargedInEur": "Charged in EUR: {{amount}}"
   },
   "cart": {
     "title": "Shopping Cart",

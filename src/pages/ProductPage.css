@@ -269,6 +269,16 @@
   margin-bottom: var(--space-12);
 }
 
+.product-page-price:has(+ .product-charged-in-eur) {
+  margin-bottom: var(--space-2);
+}
+
+.product-charged-in-eur {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-12);
+}
+
 .product-page-price .current {
   font-size: var(--font-size-3xl);
   font-weight: 800;

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabase, withTimeoutSafety } from '../../lib/supabase';
+import { getSellerEarnings } from '../../api/billingApi';
 import { 
   DollarSign, TrendingUp, Package, ShoppingBag, Plus, ExternalLink, 
   Activity, ArrowRight, Settings, BarChart3, CheckCircle2, Circle, Users, Globe, Eye,
@@ -20,23 +21,34 @@ export default function DashboardOverview() {
   const [realProducts, setRealProducts] = useState([]);
   const [realOrders, setRealOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [earnings, setEarnings] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       if (isMockMode || !profile?.id) return;
       
-      const [productsRes, ordersRes] = await Promise.all([
-        supabase.from('products').select('*').eq('seller_id', profile.id),
-        supabase.from('purchases')
-          .select('id, purchased_at, price_paid, status, product:products(title), buyer:public_profiles!buyer_id(username, avatar_url)')
-          .eq('seller_id', profile.id)
-          .order('purchased_at', { ascending: false })
-          .limit(4)
-      ]);
+      try {
+        const [productsRes, ordersRes, earningsRes] = await Promise.all([
+          withTimeoutSafety(() => supabase.from('products').select('*').eq('seller_id', profile.id)),
+          withTimeoutSafety(() => supabase.from('purchases')
+            .select('id, purchased_at, price_paid, status, product:products(title), buyer:public_profiles!buyer_id(username, avatar_url)')
+            .eq('seller_id', profile.id)
+            .order('purchased_at', { ascending: false })
+            .limit(4)),
+          getSellerEarnings(profile.id).catch((err) => {
+            console.error('Error fetching earnings:', err);
+            return null;
+          }),
+        ]);
 
-      if (productsRes.data) setRealProducts(productsRes.data);
-      if (ordersRes.data) setRealOrders(ordersRes.data);
-      setLoadingOrders(false);
+        if (productsRes.data) setRealProducts(productsRes.data);
+        if (ordersRes.data) setRealOrders(ordersRes.data);
+        setEarnings(earningsRes);
+      } catch (err) {
+        console.error('Error loading dashboard overview:', err);
+      } finally {
+        setLoadingOrders(false);
+      }
     };
 
     fetchData();
@@ -53,20 +65,34 @@ export default function DashboardOverview() {
     status: o.status
   }));
   const totalSales = products.reduce((sum, p) => sum + (p.sales_count || 0), 0);
-  const totalRevenue = products.reduce((sum, p) => sum + (p.revenue || 0), 0);
+  // products.revenue = gross amount paid by buyers, in euros
+  const totalRevenue = products.reduce((sum, p) => sum + Number(p.revenue || 0), 0);
   const totalViews = products.reduce((sum, p) => sum + (p.views || 0), 0);
-  const balance = (profile?.balance || 0) / 100;
+  // Store-wide totals include sales of products that were later deleted, so
+  // they come from the purchase history / profile counters, not from summing
+  // the products that still exist (the per-product table does that).
+  const grossSales = isMockMode ? totalRevenue : (earnings ? earnings.grossCents / 100 : null);
+  const totalOrders = isMockMode ? totalSales : Math.max(profile?.sales_count || 0, totalSales);
+  const publishedCount = products.filter(p => (p.status || 'published') === 'published').length;
+  // Real mode: seller's share after fees + what's still waiting to be transferred.
+  // Mock mode keeps the simulated balance.
+  const netEarnings = isMockMode ? totalRevenue : (earnings ? earnings.netCents / 100 : null);
+  const pendingEarnings = isMockMode ? (profile?.balance || 0) / 100 : (earnings ? earnings.pendingCents / 100 : null);
 
   const sortedTopProducts = useMemo(() => {
     return [...products].sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0)).slice(0, 5);
   }, [products]);
+  const productsBySales = useMemo(
+    () => [...products].sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0)),
+    [products]
+  );
 
   // Calculate completion percentage
   const steps = [
     { id: 'profile', label: 'Complete profile', done: !!profile?.username },
-    { id: 'payment', label: 'Connect payouts', done: false }, // Mock
+    { id: 'payment', label: 'Connect payouts', done: !!profile?.stripe_account_id },
     { id: 'product', label: 'Publish first product', done: products.length > 0 },
-    { id: 'sale', label: 'Make first sale', done: totalSales > 0 }
+    { id: 'sale', label: 'Make first sale', done: totalOrders > 0 }
   ];
   const completedSteps = steps.filter(s => s.done).length;
   const completionPercentage = Math.round((completedSteps / steps.length) * 100);
@@ -77,21 +103,24 @@ export default function DashboardOverview() {
       <div className="premium-hero">
         <div>
           <h1 className="dashboard-title text-3xl mb-xs">Welcome back, {profile?.username || 'Creator'}</h1>
-          <p className="text-secondary text-lg">Your store is ready. You have {products.length} published products and 0 pending payouts.</p>
+          <p className="text-secondary text-lg">
+            You have {publishedCount} published product{publishedCount === 1 ? '' : 's'}
+            {pendingEarnings > 0 ? <> and {formatPrice(pendingEarnings)} waiting to be transferred.</> : '.'}
+          </p>
         </div>
         
         <div className="hero-stats-row">
           <div className="hero-stat">
-            <span className="text-sm text-secondary">Total Revenue</span>
-            <span className="text-2xl font-bold">{formatPrice(totalRevenue)}</span>
+            <span className="text-sm text-secondary">Net Earnings</span>
+            <span className="text-2xl font-bold">{netEarnings === null ? '…' : formatPrice(netEarnings)}</span>
           </div>
           <div className="hero-stat">
-            <span className="text-sm text-secondary">Available Balance</span>
-            <span className="text-2xl font-bold">{formatPrice(balance)}</span>
+            <Link to="/dashboard/payouts" className="text-sm text-secondary">To Be Transferred</Link>
+            <span className="text-2xl font-bold">{pendingEarnings === null ? '…' : formatPrice(pendingEarnings)}</span>
           </div>
           <div className="hero-stat">
-            <span className="text-sm text-secondary">Total Sales</span>
-            <span className="text-2xl font-bold">{totalSales}</span>
+            <span className="text-sm text-secondary">Total Orders</span>
+            <span className="text-2xl font-bold">{totalOrders}</span>
           </div>
         </div>
       </div>
@@ -168,8 +197,8 @@ export default function DashboardOverview() {
               <DollarSign size={20} />
             </div>
           </div>
-          <p className="text-sm text-secondary mb-xs">Net Revenue</p>
-          <h3 className="text-3xl font-bold">{formatPrice(totalRevenue)}</h3>
+          <p className="text-sm text-secondary mb-xs">Gross Sales</p>
+          <h3 className="text-3xl font-bold">{grossSales === null ? '…' : formatPrice(grossSales)}</h3>
         </div>
 
         <div className="premium-stat-card">
@@ -179,7 +208,7 @@ export default function DashboardOverview() {
             </div>
           </div>
           <p className="text-sm text-secondary mb-xs">Total Orders</p>
-          <h3 className="text-3xl font-bold">{totalSales}</h3>
+          <h3 className="text-3xl font-bold">{totalOrders}</h3>
         </div>
 
         <div className="premium-stat-card">
@@ -257,7 +286,7 @@ export default function DashboardOverview() {
                       <td colSpan="5" className="text-center py-xl text-secondary italic">No products yet.</td>
                     </tr>
                   )}
-                  {products.sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0)).map(p => {
+                  {productsBySales.map(p => {
                     const views = p.views || 0;
                     const sales = p.sales_count || 0;
                     const revenue = p.revenue || 0;
@@ -288,7 +317,7 @@ export default function DashboardOverview() {
             {products.length === 0 ? (
               <p className="text-center py-xl text-secondary italic">No products yet.</p>
             ) : (
-              products.sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0)).map(p => {
+              productsBySales.map(p => {
                 const views = p.views || 0;
                 const sales = p.sales_count || 0;
                 const revenue = p.revenue || 0;

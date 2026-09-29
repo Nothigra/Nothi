@@ -15,7 +15,7 @@ import './CartDrawer.css';
 export default function CartDrawer() {
   const { t, i18n } = useTranslation();
   const { isCartOpen, closeCart, items, subtotal, removeItem, clearCart } = useCart();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, formatEur, isConverted } = useCurrency();
   const { profile, updateProfile } = useAuth();
   const navigate = useNavigate();
   const baseLang = (i18n.language || 'en').split('-')[0];
@@ -174,6 +174,11 @@ export default function CartDrawer() {
                   <span>{t('cart.subtotal', 'Subtotal')}</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
+                {isConverted && subtotal > 0 && (
+                  <p className="text-xs text-secondary mb-sm" style={{ textAlign: 'right' }}>
+                    {t('product.chargedInEur', { amount: formatEur(subtotal), defaultValue: 'Charged in EUR: {{amount}}' })}
+                  </p>
+                )}
                 {checkoutError && (
                   <div className="text-danger text-sm mb-sm text-center">
                     {checkoutError}

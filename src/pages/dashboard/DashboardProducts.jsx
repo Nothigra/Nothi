@@ -76,7 +76,8 @@ export default function DashboardProducts() {
   // Calculate quick stats
   const publishedCount = myProducts.filter(p => p.status === 'published' || !p.status).length;
   const draftCount = myProducts.filter(p => p.status === 'draft').length;
-  const totalRevenue = myProducts.reduce((sum, p) => sum + (p.revenue || 0), 0) / 100;
+  // products.revenue is stored in euros (numeric), not cents
+  const totalRevenue = myProducts.reduce((sum, p) => sum + Number(p.revenue || 0), 0);
   const totalDownloads = myProducts.reduce((sum, p) => sum + (p.sales_count || 0), 0);
 
   let filteredProducts = activeTab === 'All' 
@@ -309,7 +310,7 @@ export default function DashboardProducts() {
                       </div>
                       <div className="dp-stat-group">
                         <span className="label">Revenue</span>
-                        <span className="value text-success">{formatPrice((product.revenue || 0) / 100)}</span>
+                        <span className="value text-success">{formatPrice(Number(product.revenue || 0))}</span>
                       </div>
                     </div>
 

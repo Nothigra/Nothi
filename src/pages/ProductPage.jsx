@@ -32,7 +32,7 @@ export default function ProductPage() {
   const baseLang = (i18n.language || 'en').split('-')[0];
   const { user, profile, isMockMode, followCreator, unfollowCreator, updateProfile } = useAuth();
   const { refreshState } = useGamification();
-  const { currency, formatPrice } = useCurrency();
+  const { currency, formatPrice, formatEur, isConverted } = useCurrency();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { addItem, openCart } = useCart();
   
@@ -386,6 +386,11 @@ export default function ProductPage() {
                 <span className="current">{formatPrice(product.price)}</span>
               )}
             </div>
+            {isConverted && product.price > 0 && (
+              <p className="product-charged-in-eur">
+                {t('product.chargedInEur', { amount: formatEur(product.price), defaultValue: 'Charged in EUR: {{amount}}' })}
+              </p>
+            )}
 
             <div className="purchase-actions flex flex-col gap-sm w-full" ref={purchaseActionsRef}>
               <div className="flex w-full gap-sm items-stretch" style={{ height: '56px' }}>

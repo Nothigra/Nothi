@@ -4,6 +4,11 @@ import * as store from '../lib/accountStore';
 
 const CurrencyContext = createContext();
 
+// Every amount stored in the database (product prices, price_paid, revenue,
+// seller_amount_cents...) is in EUR, and Stripe charges in EUR. Other
+// currencies are a display-only conversion of that EUR amount.
+export const BASE_CURRENCY = 'EUR';
+
 // Static fallback rates (USD base) — used when API is unavailable
 const STATIC_RATES = {
   USD: 1, EUR: 0.92, GBP: 0.79, JPY: 151.20, CAD: 1.36,
@@ -29,7 +34,7 @@ export function CurrencyProvider({ children }) {
         if (account?.currency) return account.currency;
       }
     }
-    return 'USD';
+    return BASE_CURRENCY;
   });
 
   const [rates, setRates] = useState(STATIC_RATES);
@@ -73,13 +78,26 @@ export function CurrencyProvider({ children }) {
     }
   }, [isMockMode]);
 
-  const convertPrice = useCallback((usdAmount) => {
-    const rate = rates[currency] || 1;
-    return usdAmount * rate;
+  // `rates` are quoted against USD, so EUR -> X = amount / rate(EUR) * rate(X).
+  const convertPrice = useCallback((eurAmount) => {
+    const amount = Number(eurAmount) || 0;
+    if (currency === BASE_CURRENCY) return amount;
+    const eurRate = rates[BASE_CURRENCY] || STATIC_RATES[BASE_CURRENCY];
+    const targetRate = rates[currency];
+    if (!eurRate || !targetRate) return amount;
+    return (amount / eurRate) * targetRate;
   }, [currency, rates]);
 
-  const formatPrice = useCallback((usdAmount) => {
-    const converted = convertPrice(usdAmount);
+  // Always shows the real EUR amount, whatever currency the viewer picked.
+  // Use it wherever the exact charged/earned figure matters.
+  const formatEur = useCallback((eurAmount) => new Intl.NumberFormat('fr-BE', {
+    style: 'currency', currency: BASE_CURRENCY,
+  }).format(Number(eurAmount) || 0), []);
+
+  const isConverted = currency !== BASE_CURRENCY;
+
+  const formatPrice = useCallback((eurAmount) => {
+    const converted = convertPrice(eurAmount);
     const parts = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency
@@ -90,7 +108,7 @@ export function CurrencyProvider({ children }) {
   }, [currency, convertPrice]);
 
   return (
-    <CurrencyContext.Provider value={{ currency, changeCurrency, convertPrice, formatPrice, rates, CURRENCY_SYMBOLS }}>
+    <CurrencyContext.Provider value={{ currency, changeCurrency, convertPrice, formatPrice, formatEur, isConverted, rates, CURRENCY_SYMBOLS }}>
       {children}
     </CurrencyContext.Provider>
   );

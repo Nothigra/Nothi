@@ -5,7 +5,6 @@ import {
   AlertCircle, X, Type, Tag, Globe, Settings, ExternalLink, CheckCircle2, Eye, ChevronDown, Rocket, Loader2
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { useCurrency } from '../../context/CurrencyContext';
 import { CATEGORIES, SOFTWARE_LIST, STYLE_LIST } from '../../lib/seed';
 import Input from '../../components/ui/Input';
 import Textarea from '../../components/ui/Textarea';
@@ -39,7 +38,6 @@ export default function UploadProductPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile, updateProfile, isMockMode } = useAuth();
-  const { currency, changeCurrency, formatPrice } = useCurrency();
   const { refreshState } = useGamification();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -458,8 +456,9 @@ export default function UploadProductPage() {
               <CurrencyInput 
                 name="price"
                 min="0"
-                currency={currency}
-                onCurrencyChange={changeCurrency}
+                currency="EUR"
+                currencies={[{ value: 'EUR', label: 'EUR', symbol: '€' }]}
+                hint="Prices are set and charged in euros (EUR)."
                 placeholder="Product Price *"
                 value={formData.price}
                 onChange={handlePriceChange}
@@ -471,15 +470,15 @@ export default function UploadProductPage() {
               <div className="up-revenue mt-md" style={{ maxWidth: 360 }}>
                 <div className="up-revenue-row text-sm text-secondary">
                   <span>Platform fee (5%):</span>
-                  <span className="text-danger">-{formatPrice(revenue.commission)}</span>
+                  <span className="text-danger">-{formatEur(revenue.commission)}</span>
                 </div>
                 <div className="up-revenue-row text-sm text-secondary">
                   <span>Estimated Stripe fee (~1.5% + €0.25):</span>
-                  <span className="text-danger">-{formatPrice(revenue.stripeFee)}</span>
+                  <span className="text-danger">-{formatEur(revenue.stripeFee)}</span>
                 </div>
                 <div className="up-revenue-row total mt-xs pt-xs border-t border-border">
                   <span className="font-bold text-primary">You'll receive approximately:</span>
-                  <span className="text-success font-bold">{formatPrice(revenue.net)}</span>
+                  <span className="text-success font-bold">{formatEur(revenue.net)}</span>
                 </div>
                 
                 <p className="mt-sm text-xs text-tertiary leading-relaxed">

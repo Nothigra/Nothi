@@ -73,3 +73,48 @@ export async function getAdvancedAnalytics(days = 30) {
   if (error) throw new Error(error.message);
   return data;
 }
+
+/**
+ * Seller earnings — the single source of truth for every money figure shown
+ * in the seller dashboard (Overview, Withdrawals...). Computed from the
+ * purchase rows written by the verified stripe-webhook, never from
+ * profiles.balance (which no real payment ever updates).
+ *
+ * All values are in EUR cents:
+ *   grossCents       what buyers paid (before any fee)
+ *   feesCents        Nothi commission + Stripe processing fees
+ *   netCents         the seller's share (gross - fees)
+ *   pendingCents     net share not yet transferred to the seller's Stripe account
+ *   transferredCents net share already transferred
+ *   paidSales        number of paid sales (free claims excluded)
+ */
+export const EMPTY_EARNINGS = {
+  grossCents: 0, feesCents: 0, netCents: 0,
+  pendingCents: 0, transferredCents: 0, paidSales: 0,
+};
+
+export async function getSellerEarnings(sellerId) {
+  if (!sellerId || isMockMode) return { ...EMPTY_EARNINGS };
+
+  const { data, error } = await withTimeoutSafety(() =>
+    supabase
+      .from('purchases')
+      .select('price_paid, seller_amount_cents, stripe_transfer_id')
+      .eq('seller_id', sellerId)
+      .eq('status', 'completed')
+      .gt('price_paid', 0)
+  );
+  if (error) throw error;
+
+  return (data || []).reduce((acc, row) => {
+    const gross = Math.round(Number(row.price_paid || 0) * 100);
+    const net = Math.max(0, Number(row.seller_amount_cents || 0));
+    acc.grossCents += gross;
+    acc.netCents += net;
+    acc.feesCents += gross - net;
+    if (row.stripe_transfer_id) acc.transferredCents += net;
+    else acc.pendingCents += net;
+    acc.paidSales += 1;
+    return acc;
+  }, { ...EMPTY_EARNINGS });
+}
