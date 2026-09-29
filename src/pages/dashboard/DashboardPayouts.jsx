@@ -11,9 +11,11 @@ import { supabase, withTimeoutSafety, invokeFunction, isMockMode } from '../../l
 import CurrencyInput from '../../components/ui/CurrencyInput';
 import { getSellerEarnings, EMPTY_EARNINGS } from '../../api/billingApi';
 import './DashboardPages.css';
+import { isNativePlatform, openExternal } from '../../lib/native';
 
 export default function DashboardPayouts() {
-  const { profile, updateProfile } = useAuth();
+  const { profile, updateProfile, refreshProfile } = useAuth();
+  const [statusReload, setStatusReload] = useState(0);
   const { formatPrice, formatEur } = useCurrency();
   const location = useLocation();
   const [withdrawAmount, setWithdrawAmount] = useState('');
@@ -79,7 +81,7 @@ export default function DashboardPayouts() {
       })
       .catch(() => {/* non-fatal — UI stays in loading state */})
       .finally(() => setStripeStatusLoading(false));
-  }, [profile?.stripe_account_id]);
+  }, [profile?.stripe_account_id, statusReload]);
 
   // Fetch real earnings (same source as the Overview page)
   useEffect(() => {
@@ -130,6 +132,12 @@ export default function DashboardPayouts() {
     try {
       const data = await invokeFunction('create-stripe-connect-account');
       if (data?.error) throw new Error(data.error);
+      if (isNativePlatform) {
+        // App: Stripe onboarding runs in the in-app browser; when the seller
+        // closes it, pick up the new account + its verification status.
+        await openExternal(data.url, { onClose: async () => { await refreshProfile?.(); setStatusReload((n) => n + 1); setEarningsReload((n) => n + 1); } });
+        return;
+      }
       window.location.href = data.url;
     } catch (err) {
       console.error('Stripe connect error:', err);
@@ -148,7 +156,7 @@ export default function DashboardPayouts() {
     try {
       const data = await invokeFunction('create-stripe-login-link');
       if (data?.error) throw new Error(data.error);
-      window.open(data.url, '_blank', 'noopener,noreferrer');
+      await openExternal(data.url, { onClose: () => setStatusReload((n) => n + 1) });
     } catch (err) {
       console.error('Stripe login link error:', err);
       setStripeMessage({ type: 'error', text: err.message || 'Failed to open Stripe Dashboard. Please try again.' });

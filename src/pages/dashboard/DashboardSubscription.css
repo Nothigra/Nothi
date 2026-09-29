@@ -89,3 +89,5 @@
   .sub-usage-grid { grid-template-columns: 1fr; }
   .sub-usage + .sub-usage { border-left: none; border-top: 1px solid var(--color-border); }
 }
+
+.sub-app-note { margin: 0; color: var(--color-text-secondary); font-size: 14px; line-height: 1.45; }

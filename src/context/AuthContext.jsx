@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import * as store from '../lib/accountStore';
 import { supabase, isMockMode, withTimeoutSafety } from '../lib/supabase';
 import { calculateUserTier } from '../api/creatorApi';
+import { isNativePlatform, OAUTH_REDIRECT, WEBSITE_URL, openExternal } from '../lib/native';
 
 const AuthContext = createContext();
 
@@ -57,6 +58,17 @@ export function AuthProvider({ children }) {
   // OAuth login (Google or Discord)
   const loginWithOAuth = useCallback(async (provider) => {
     if (!isMockMode) {
+      if (isNativePlatform) {
+        // In the app: open the provider in the in-app browser; it returns to
+        // app.nothi.mobile://auth/callback, handled by startNativeApp().
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: { redirectTo: OAUTH_REDIRECT, skipBrowserRedirect: true },
+        });
+        if (error) throw error;
+        if (data?.url) await openExternal(data.url);
+        return;
+      }
       const { error } = await withTimeoutSafety(() =>
         supabase.auth.signInWithOAuth({
           provider,
@@ -152,7 +164,8 @@ export function AuthProvider({ children }) {
     if (!isMockMode) {
       return await withTimeoutSafety(() =>
         supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/auth/reset-password`,
+          // In the app the WebView origin is not a real website: reset on nothi's site.
+          redirectTo: `${isNativePlatform ? WEBSITE_URL : window.location.origin}/auth/reset-password`,
         })
       );
     }

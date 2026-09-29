@@ -23,6 +23,7 @@ import ProductCard from '../components/product/ProductCard';
 import ProBadge from '../components/common/ProBadge';
 import './ProductPage.css';
 import Textarea from '../components/ui/Textarea';
+import { isNativeApp } from '../lib/native';
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -284,9 +285,9 @@ export default function ProductPage() {
         <button
           className="btn btn-primary flex-center gap-sm text-lg font-bold"
           style={sizeProps.style}
-          onClick={() => navigate('/dashboard/purchases')}
+          onClick={() => navigate(isNativeApp ? '/library' : '/dashboard/purchases')}
         >
-          View in My Purchases
+          {isNativeApp ? 'Open in Library' : 'View in My Purchases'}
         </button>
       );
     }
@@ -303,6 +304,17 @@ export default function ProductPage() {
         </button>
       );
     }
+    // Mobile app: App Store / Play rules forbid selling digital goods outside
+    // their billing, and any button or link pointing to another checkout.
+    // Paid products are bought on the website; purchases then appear in Library.
+    if (isNativeApp && !isOwnProduct) {
+      return (
+        <div className={`app-web-only ${compact ? 'compact' : ''}`}>
+          Available on the Nothi website
+          <small>Bought with this account? It appears in your Library.</small>
+        </div>
+      );
+    }
     return (
       <button
         className="btn btn-primary flex-center gap-sm text-lg font-bold"
@@ -317,7 +329,7 @@ export default function ProductPage() {
   };
 
   return (
-    <div className="product-page" style={{ paddingTop: '120px' }}>
+    <div className="product-page" style={{ paddingTop: isNativeApp ? '8px' : '120px' }}>
       <div className="container pb-xl">
         <Link to="/marketplace" className="back-to-marketplace mb-lg">
           <ArrowLeft size={18} />
@@ -411,10 +423,12 @@ export default function ProductPage() {
                   <Heart size={20} fill={isInWishlist(product.id) ? "currentColor" : "none"} />
                 </button>
               </div>
-              <div className="secure-badge flex-center gap-xs text-xs text-secondary justify-center">
-                <ShieldCheck size={14} className="text-success" />
-                Secure payment via Stripe
-              </div>
+              {!isNativeApp && (
+                <div className="secure-badge flex-center gap-xs text-xs text-secondary justify-center">
+                  <ShieldCheck size={14} className="text-success" />
+                  Secure payment via Stripe
+                </div>
+              )}
             </div>
 
             <div className="product-features p-md rounded-xl bg-secondary">

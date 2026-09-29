@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Nothi</string>
+    <string name="title_activity_main">Nothi</string>
+    <string name="package_name">app.nothi.mobile</string>
+    <string name="custom_url_scheme">app.nothi.mobile</string>
+</resources>

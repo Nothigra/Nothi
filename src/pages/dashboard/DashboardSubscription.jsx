@@ -12,6 +12,7 @@ import Toggle from '../../components/ui/Toggle';
 import ProBadge from '../../components/common/ProBadge';
 import './DashboardPages.css';
 import './DashboardSubscription.css';
+import { isNativeApp } from '../../lib/native';
 
 const formatEur = (amount, lang) =>
   new Intl.NumberFormat(lang || 'fr-BE', {
@@ -168,7 +169,12 @@ export default function DashboardSubscription() {
           </div>
 
           <div className="sub-plan-actions">
-            {userIsPro ? (
+            {isNativeApp ? (
+              // Store rules: no subscription purchase or management links in the app.
+              <p className="sub-app-note">{userIsPro
+                ? 'Your Pro plan is managed on the Nothi website.'
+                : 'Nothi Pro is available on the Nothi website. Your plan syncs to the app automatically.'}</p>
+            ) : userIsPro ? (
               <button className="btn btn-outline" onClick={handlePortal} disabled={busy !== null}>
                 {busy === 'portal' ? t('billing.opening', 'Opening…') : t('billing.manageBtn', 'Manage subscription')}
               </button>

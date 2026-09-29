@@ -6,6 +6,7 @@ import { useCurrency } from '../../context/CurrencyContext';
 import { getAdvancedAnalytics, billingErrorMessage } from '../../api/billingApi';
 import { getLocalizedString } from '../../utils/i18nHelpers';
 import './AdvancedAnalytics.css';
+import { isNativeApp } from '../../lib/native';
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Monday first
@@ -48,7 +49,9 @@ function LockedTeaser() {
         <Lock size={22} />
         <h3>{t('billing.aaLockedTitle', 'Advanced analytics')}</h3>
         <p>{t('billing.aaLockedDesc', 'See conversion per product, the best days and hours to post, comparison with the previous period and the real impact of your boosts.')}</p>
-        <Link to="/pricing" className="btn btn-primary"><Crown size={16} /> {t('billing.aaUnlock', 'Unlock with Pro')}</Link>
+        {isNativeApp
+          ? <p className="text-secondary text-sm">{t('billing.aaOnWebsite', 'Available with Nothi Pro, on the Nothi website.')}</p>
+          : <Link to="/pricing" className="btn btn-primary"><Crown size={16} /> {t('billing.aaUnlock', 'Unlock with Pro')}</Link>}
       </div>
     </div>
   );

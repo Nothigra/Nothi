@@ -1,0 +1,142 @@
+/* ─────────────────────────────────────────────────────────────
+   Nothi mobile app shell (Capacitor). Same tokens as the website.
+   Safe areas: env() on iOS; Capacitor 8 also exposes --safe-area-inset-*
+   on Android edge-to-edge WebViews, so both are read.
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --app-safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --app-safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --app-bar-h: 52px;
+  --app-tabs-h: 64px;
+}
+
+html.is-app, html.is-app body {
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  text-size-adjust: 100%;
+}
+html.is-app body { user-select: none; -webkit-user-select: none; }
+html.is-app input, html.is-app textarea, html.is-app [contenteditable="true"],
+html.is-app .selectable { user-select: text; -webkit-user-select: text; }
+
+.app-shell { min-height: 100vh; background: var(--color-bg); color: var(--color-text-primary); }
+
+/* ── top bar ─────────────────────────────────────────────── */
+.app-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 900;
+  height: calc(var(--app-bar-h) + var(--app-safe-top));
+  padding: var(--app-safe-top) 6px 0;
+  display: grid; grid-template-columns: 76px 1fr 76px; align-items: center;
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition: background .2s ease, border-color .2s ease;
+}
+.app-bar.scrolled, .is-child .app-bar {
+  background: color-mix(in srgb, var(--color-bg) 82%, transparent);
+  backdrop-filter: blur(22px) saturate(1.6);
+  -webkit-backdrop-filter: blur(22px) saturate(1.6);
+}
+.app-bar.scrolled { border-bottom-color: var(--color-border); }
+.app-bar-side { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.app-bar-side.right { justify-content: flex-end; }
+.app-bar-logo { width: 34px; height: 34px; margin-left: 10px; object-fit: contain; transform: scale(2.6); transform-origin: left center; filter: brightness(0) invert(1); pointer-events: none; }
+[data-theme="light"] .app-bar-logo { filter: brightness(0); }
+.app-bar-title {
+  text-align: center; font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: -0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  opacity: 0; transform: translateY(4px); transition: opacity .18s ease, transform .18s ease;
+}
+.app-bar-title.show { opacity: 1; transform: none; }
+.app-icon-btn {
+  width: 44px; height: 44px; border-radius: 50%; border: 0; background: transparent;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--color-text-primary); text-decoration: none; cursor: pointer;
+}
+.app-icon-btn:active { background: var(--color-bg-secondary); transform: scale(.94); }
+
+/* ── screen area ─────────────────────────────────────────── */
+.app-main {
+  padding-top: calc(var(--app-bar-h) + var(--app-safe-top));
+  padding-bottom: calc(var(--app-tabs-h) + 28px + var(--app-safe-bottom));
+  min-height: 100vh;
+  transition: transform .3s cubic-bezier(.22, 1, .36, 1);
+}
+.app-screen { min-height: 60vh; display: flex; flex-direction: column; }
+.app-large-title {
+  font-family: var(--font-display); font-weight: 800; font-size: 34px; letter-spacing: -0.035em; line-height: 1.1;
+  padding: 2px 20px 10px; margin: 0;
+}
+
+/* pull to refresh */
+.app-ptr {
+  position: fixed; left: 50%; top: calc(var(--app-bar-h) + var(--app-safe-top) - 6px); z-index: 850;
+  width: 36px; height: 36px; margin-left: -18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--color-bg-secondary); border: 1px solid var(--color-border); color: var(--color-text-primary);
+  pointer-events: none;
+}
+
+/* ── tab bar: the site's floating glass pill ─────────────── */
+.app-tabs {
+  position: fixed; left: 12px; right: 12px; z-index: 900;
+  bottom: calc(10px + var(--app-safe-bottom));
+  height: var(--app-tabs-h);
+  display: flex; align-items: stretch; padding: 5px;
+  background: color-mix(in srgb, var(--color-bg-secondary) 90%, transparent);
+  backdrop-filter: blur(24px) saturate(1.6); -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  border: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, var(--color-border));
+  border-radius: 26px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .45), 0 2px 10px rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+.app-tab {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  border-radius: 20px; text-decoration: none; color: var(--color-text-tertiary);
+  transition: color .15s ease, background .2s ease, transform .12s ease;
+}
+.app-tab:active { transform: scale(.92); }
+.app-tab.active { color: var(--color-text-primary); background: color-mix(in srgb, var(--color-text-primary) 8%, transparent); }
+.app-tab-icon { position: relative; display: flex; }
+.app-tab-label { font-family: var(--font-sans); font-size: 10.5px; font-weight: 600; letter-spacing: .01em; }
+.app-tab-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 1.5px transparent; }
+.app-tab-avatar.active { box-shadow: 0 0 0 2px var(--color-text-primary); }
+.app-tab-badge {
+  position: absolute; top: -5px; right: -10px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+  background: var(--color-text-primary); color: var(--color-bg); font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 2px var(--color-bg-secondary);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Website pages rendered inside the app: remove the offsets that
+   existed for the website's fixed navbar, and the website-only bits.
+   ───────────────────────────────────────────────────────────── */
+.app-shell .product-page,
+.app-shell .marketplace-page,
+.app-shell .creator-profile-page,
+.app-shell .bestsellers-page,
+.app-shell .rewards-page,
+.app-shell .notifications-page,
+.app-shell .static-page,
+.app-shell .about-page,
+.app-shell .contact-page,
+.app-shell .auth-page,
+.app-shell .downloads-page { padding-top: 8px !important; }
+.app-shell .back-to-marketplace { display: none !important; }
+.app-shell .dashboard-page, .app-shell .dashboard-overview, .app-shell .dashboard-orders { padding-top: 4px; }
+.app-shell .dashboard-quick-links-groups { display: none !important; } /* the Profile tab replaces them */
+.app-shell .dashboard-content, .app-shell .dashboard-main { padding-left: 16px; padding-right: 16px; }
+
+/* Store rules: paid purchases happen on the website — informational panel, no link */
+.app-web-only {
+  flex: 1; min-height: 100%; display: flex; flex-direction: column; justify-content: center;
+  padding: 10px 18px; border-radius: 16px; border: 1px dashed var(--color-border-strong, var(--color-border));
+  background: var(--color-bg-card); color: var(--color-text-primary); font-weight: 600; font-size: 15px; line-height: 1.25;
+}
+.app-web-only small { display: block; margin-top: 3px; font-weight: 400; font-size: 12.5px; color: var(--color-text-secondary); }
+.app-web-only.compact { padding: 6px 14px; font-size: 13.5px; }
+.app-web-only.compact small { display: none; }
+
+/* Explore: the app bar already carries the title */
+.app-shell .marketplace-header-inline { padding-top: 0 !important; margin-bottom: 14px; }
+.app-shell .marketplace-header-text { display: none !important; }
+.app-shell .bestsellers-page { padding-top: 8px !important; }

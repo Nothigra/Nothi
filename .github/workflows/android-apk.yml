@@ -1,0 +1,50 @@
+name: Android APK
+
+# Builds an installable test APK of the Nothi app.
+# Download it from the run's "Artifacts" section (nothi-debug-apk).
+on:
+  workflow_dispatch:
+  push:
+    branches: [redesign, main]
+    paths: ['src/**', 'public/**', 'android/**', 'capacitor.config.json', 'package.json', 'package-lock.json', 'index.html', '.github/workflows/android-apk.yml']
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Install
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Build debug APK
+        working-directory: android
+        run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nothi-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14

@@ -56,6 +56,15 @@ import NotFoundPage from './pages/NotFoundPage';
 
 import { useAuth } from './context/AuthContext';
 
+// Mobile app (Capacitor): its own shell + a few app-only screens
+import { isNativeApp } from './lib/native';
+import AppShell from './components/app/AppShell';
+import AppDiscoverPage from './pages/app/AppDiscoverPage';
+import AppProfilePage from './pages/app/AppProfilePage';
+
+const SiteLayout = isNativeApp ? AppShell : Layout;
+const AccountLayout = isNativeApp ? AppShell : DashboardLayout;
+
 function AuthCallback() {
   const navigate = useNavigate();
   const { user, profile, isLoading } = useAuth();
@@ -87,7 +96,7 @@ function AppRoot() {
   return (
     <>
       <Outlet />
-      <CookieBanner />
+      {!isNativeApp && <CookieBanner />}
       <XPGainPopup />
       <CommandPalette isOpen={isCommandPaletteOpen} setIsOpen={setIsCommandPaletteOpen} />
     </>
@@ -100,9 +109,13 @@ export const router = createBrowserRouter([
     element: <AppRoot />,
     children: [
       {
-        element: <Layout />,
+        element: <SiteLayout />,
         children: [
-          { index: true, element: <HomePage /> },
+          { index: true, element: isNativeApp ? <AppDiscoverPage /> : <HomePage /> },
+          ...(isNativeApp ? [
+            { path: "library", element: <DashboardPurchases /> },
+            { path: "me", element: <AppProfilePage /> },
+          ] : []),
           { path: "marketplace", element: <MarketplacePage /> },
           { path: "product/:id", element: <ProductPage /> },
           { path: "best-sellers", element: <BestSellersPage /> },
@@ -127,7 +140,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "dashboard",
-        element: <DashboardLayout />,
+        element: <AccountLayout />,
         children: [
           { index: true, element: <DashboardOverview /> },
           { path: "products", element: <DashboardProducts /> },

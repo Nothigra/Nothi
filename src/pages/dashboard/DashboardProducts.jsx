@@ -15,6 +15,7 @@ import { PLAN_LIMITS, isPro } from '../../config/plans';
 import { getMyProducts } from '../../api/productApi';
 import { isMockMode } from '../../lib/supabase';
 import './DashboardProducts.css';
+import { isNativeApp } from '../../lib/native';
 
 // Same rule as the DB function active_sale_price()
 const isSaleActive = (p) =>
@@ -192,7 +193,7 @@ export default function DashboardProducts() {
           <span>
             {myProducts.length}/{PLAN_LIMITS.free.maxProducts} products on the Free plan.
             {myProducts.length >= PLAN_LIMITS.free.maxProducts - 5 && ' '}
-            {myProducts.length >= PLAN_LIMITS.free.maxProducts - 5 && <Link to="/pricing">Go Pro for unlimited products.</Link>}
+            {myProducts.length >= PLAN_LIMITS.free.maxProducts - 5 && !isNativeApp && <Link to="/pricing">Go Pro for unlimited products.</Link>}
           </span>
         </div>
       )}

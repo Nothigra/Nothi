@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { getLocalizedString } from '../../utils/i18nHelpers';
 import { getThumbnailUrl } from '../../utils/mediaHelpers';
 import './DashboardPages.css';
+import { downloadFile } from '../../lib/native';
 
 export default function DashboardPurchases() {
   const { profile, isMockMode } = useAuth();
@@ -87,14 +88,7 @@ export default function DashboardPurchases() {
     setDownloadError('');
     try {
       const { downloadUrl } = await requestDownloadUrl(productId);
-      // Trigger browser download via a temporary anchor
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      await downloadFile(downloadUrl); // system browser in the app, <a> on the web
     } catch (err) {
       if (err.error === 'no_file') {
         setDownloadError(`"${purchase.product?.title ? (typeof purchase.product.title === 'string' ? purchase.product.title : Object.values(purchase.product.title)[0]) : 'This product'}" — the seller hasn't uploaded a file yet. Contact them for assistance.`);

@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next';
 import { languages } from '../../config/i18n';
 import { useGamification } from '../../context/GamificationContext';
 import './UploadProductPage.css';
+import { isNativeApp } from '../../lib/native';
 
 const formatEur = (amount) =>
   new Intl.NumberFormat('fr-BE', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -465,7 +466,7 @@ export default function UploadProductPage() {
         <div className="max-w-3xl mx-auto mb-lg p-lg rounded-xl border border-border bg-bg-card flex flex-col gap-sm" role="alert">
           <strong>You've reached the {MAX_PRODUCTS}-product limit of the Free plan.</strong>
           <span className="text-secondary text-sm">Upgrade to Pro to publish unlimited products, upload files up to {formatFileSize(PLAN_LIMITS.pro.maxFileSizeMB)} and get monthly boosts.</span>
-          <Link to="/pricing" className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>See Pro</Link>
+          {!isNativeApp && <Link to="/pricing" className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>See Pro</Link>}
         </div>
       )}
 
@@ -695,7 +696,7 @@ export default function UploadProductPage() {
               <span className="text-xs text-secondary font-medium">
                 Max {formatFileSize(MAX_FILE_SIZE_MB)} &mdash; {IS_PRO ? 'Pro' : 'Free'} plan
               </span>
-              {!IS_PRO && (
+              {!IS_PRO && !isNativeApp && (
                 <Link to="/pricing" className="text-xs text-accent opacity-80 hover:opacity-100 transition-opacity flex items-center gap-xs">
                   <Globe size={12} /> Go Pro for {formatFileSize(PLAN_LIMITS.pro.maxFileSizeMB)} uploads
                 </Link>
@@ -716,6 +717,8 @@ export default function UploadProductPage() {
           </div>
 
         {/* ─── SECTION 3: Boost Visibility ─── */}
+        {/* In the app only Pro boosts (no payment) are offered — store rules */}
+        {(!isNativeApp || IS_PRO) && (<>
         <div className="up-section">
           <div 
             className="up-section-header" 
@@ -775,6 +778,7 @@ export default function UploadProductPage() {
             )}
           </AnimatePresence>
         </div>
+        </>)}
 
         {/* ─── Footer Actions ─── */}
         <div className="up-footer" style={{ justifyContent: 'space-between', alignItems: 'center' }}>

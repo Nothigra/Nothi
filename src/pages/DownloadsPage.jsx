@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { getUserPurchases, getPublicProducts, requestDownloadUrl } from '../api/productApi';
 import { getLocalizedString } from '../utils/i18nHelpers';
 import './DownloadsPage.css';
+import { downloadFile } from '../lib/native';
 
 export default function DownloadsPage() {
   const { t, i18n } = useTranslation();
@@ -139,13 +140,7 @@ export default function DownloadsPage() {
                     setDownloadError('');
                     try {
                       const { downloadUrl } = await requestDownloadUrl(product.id);
-                      const a = document.createElement('a');
-                      a.href = downloadUrl;
-                      a.target = '_blank';
-                      a.rel = 'noopener noreferrer';
-                      document.body.appendChild(a);
-                      a.click();
-                      document.body.removeChild(a);
+                      await downloadFile(downloadUrl); // system browser in the app, <a> on the web
                     } catch (err) {
                       if (err.error === 'no_file') {
                         setDownloadError(`"${getLocalizedString(product.title, baseLang)}" — the seller hasn't uploaded a file yet.`);

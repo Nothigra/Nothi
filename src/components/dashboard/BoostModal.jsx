@@ -10,6 +10,7 @@ import {
   startBoostCheckout, activateProBoost, getBoostQuota, billingErrorMessage,
 } from '../../api/billingApi';
 import './BoostModal.css';
+import { isNativeApp } from '../../lib/native';
 
 const formatEur = (amount, lang) =>
   new Intl.NumberFormat(lang || 'fr-BE', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -170,7 +171,7 @@ export default function BoostModal({ isOpen, onClose, product, onBoost, onBooste
           </div>
         );
       })}
-      {!userIsPro && !isMockMode && (
+      {!userIsPro && !isMockMode && !isNativeApp && (
         <Link to="/pricing" className="boost-pro-upsell" onClick={onClose}>
           <Crown size={14} /> {t('billing.boostUpsell', 'Pro includes up to 3 boosts every month — see Pro')}
         </Link>
@@ -178,6 +179,8 @@ export default function BoostModal({ isOpen, onClose, product, onBoost, onBooste
     </div>
   );
 
+  // Store rules: in the app only Pro boosts (already paid) can be used.
+  const appPaidBlocked = isNativeApp && !userIsPro && !isMockMode;
   const confirmDisabled = isProcessing || !isPublished ||
     (mode === 'pro' && !isMockMode && (quotaLoading || proExhausted || (lockedPack !== null && lockedPack !== selectedDays)));
 
@@ -217,7 +220,7 @@ export default function BoostModal({ isOpen, onClose, product, onBoost, onBooste
             </p>
           </div>
 
-          {userIsPro && !isMockMode && (
+          {userIsPro && !isMockMode && !isNativeApp && (
             <div className="boost-mode-tabs" role="tablist">
               <button role="tab" aria-selected={mode === 'pro'} className={mode === 'pro' ? 'active' : ''}
                 onClick={() => { setMode('pro'); setError(null); if (lockedPack) setSelectedDays(lockedPack); }}>
@@ -234,21 +237,25 @@ export default function BoostModal({ isOpen, onClose, product, onBoost, onBooste
             <p className="boost-quota-note">{t('billing.publishFirst', 'Publish this product first to boost it.')}</p>
           )}
 
-          {mode === 'pro' && !isMockMode ? renderProPacks() : renderPaidOptions()}
+          {appPaidBlocked
+            ? <p className="boost-quota-note">{t('billing.boostOnWebsite', 'Paid boosts are available on the Nothi website. Pro members can use their monthly boosts right here.')}</p>
+            : (mode === 'pro' && !isMockMode ? renderProPacks() : renderPaidOptions())}
 
           {error && <p className="boost-error" role="alert">{error}</p>}
 
           <div className="boost-modal-footer">
             <p className="boost-disclaimer">
-              {mode === 'paid' && !isMockMode
+              {mode === 'paid' && !isMockMode && !appPaidBlocked
                 ? t('billing.boostPaidDisclaimer', 'One-time payment by Stripe. The boost starts as soon as payment is confirmed.')
                 : t('billing.boostDisclaimer', 'Boosted products rank higher in Marketplace listings during the selected period.')}
             </p>
             <div className="footer-actions">
               <button className="btn btn-outline" onClick={onClose} disabled={isProcessing}>{t('billing.cancel', 'Cancel')}</button>
-              <button className="btn btn-primary flex-center gap-sm" onClick={handleConfirm} disabled={confirmDisabled}>
-                {confirmLabel} <Rocket size={16} />
-              </button>
+              {!appPaidBlocked && (
+                <button className="btn btn-primary flex-center gap-sm" onClick={handleConfirm} disabled={confirmDisabled}>
+                  {confirmLabel} <Rocket size={16} />
+                </button>
+              )}
             </div>
           </div>
         </motion.div>
