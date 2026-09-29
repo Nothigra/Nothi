@@ -28,7 +28,8 @@
 // Why the claim marker: Stripe idempotency keys expire after 24h. If a
 // transfer succeeded but saving its id failed, a retry the next day would pay
 // the seller twice. With the marker, the row stays claimed; step 4 later looks
-// the transfer up at Stripe (metadata.purchase_id) and either records it or,
+// the transfer up at Stripe (via the charge's transfer_group + metadata.purchase_id)
+// and either records it or,
 // if Stripe has no such transfer, releases the row for a new attempt.
 //
 // Security model:
@@ -63,23 +64,34 @@ const json = (body: unknown, status = 200) =>
   });
 
 // Find the transfer created for a purchase (metadata.purchase_id), if any.
+// Searched through the buyer's CHARGE, not the seller's current account: a
+// transfer made with source_transaction shares the charge's transfer_group
+// (Stripe sets it to 'group_<payment_intent>' when the charge had none), so
+// this still finds it if the seller's Stripe account changed since.
 async function findTransferForPurchase(
-  stripe: Stripe, destination: string, purchaseId: string, sinceUnix: number,
+  stripe: Stripe, purchaseId: string, paymentIntentId: string | null,
 ): Promise<Stripe.Transfer | null> {
-  const list = stripe.transfers.list({ destination, created: { gte: sinceUnix - 300 }, limit: 100 });
-  for await (const t of list) {
-    if (t.metadata?.purchase_id === purchaseId) return t;
+  if (!paymentIntentId) return null;
+  const pi = await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ['latest_charge'] });
+  const charge = pi.latest_charge as Stripe.Charge | null;
+  const groups = new Set<string>([`group_${pi.id}`]);
+  if (charge && typeof charge !== 'string' && charge.transfer_group) groups.add(charge.transfer_group);
+
+  for (const transfer_group of groups) {
+    for await (const t of stripe.transfers.list({ transfer_group, limit: 100 })) {
+      if (t.metadata?.purchase_id === purchaseId) return t;
+    }
   }
   return null;
 }
 
 // Step 4: resolve rows claimed by a run that never finished.
 async function recoverStaleClaims(
-  supabaseAdmin: SupabaseClient, stripe: Stripe, sellerId: string, destination: string, errors: string[],
+  supabaseAdmin: SupabaseClient, stripe: Stripe, sellerId: string, errors: string[],
 ) {
   const { data: claimed } = await supabaseAdmin
     .from('purchases')
-    .select('id, stripe_transfer_id')
+    .select('id, stripe_transfer_id, stripe_payment_intent_id')
     .eq('seller_id', sellerId)
     .like('stripe_transfer_id', `${MARKER_PREFIX}%`);
 
@@ -89,7 +101,7 @@ async function recoverStaleClaims(
     if (now - claimedAt < STALE_MARKER_SECONDS) continue; // may still be running
 
     try {
-      const transfer = await findTransferForPurchase(stripe, destination, row.id, claimedAt);
+      const transfer = await findTransferForPurchase(stripe, row.id, row.stripe_payment_intent_id);
       await supabaseAdmin
         .from('purchases')
         .update({ stripe_transfer_id: transfer ? transfer.id : null })
@@ -166,7 +178,7 @@ serve(async (req) => {
     const skipped: { purchase_id: string; reason: string }[] = [];
 
     // ── 4. Recover rows left claimed by an interrupted run ───────────────────
-    await recoverStaleClaims(supabaseAdmin, stripe, user.id, destination, errors);
+    await recoverStaleClaims(supabaseAdmin, stripe, user.id, errors);
 
     // ── 5. Unsettled PAID purchases written by the verified webhook ──────────
     const { data: pendingPurchases, error: fetchError } = await supabaseAdmin
