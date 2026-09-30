@@ -1,0 +1,32 @@
+/* ── Money screens (payouts, plan) ── */
+.money-page { gap: 18px; }
+.money-hero {
+  position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 4px; padding: 22px 20px 18px; border-radius: 26px;
+  background: var(--color-text-primary); color: var(--color-bg);
+}
+.money-hero::after { content: ''; position: absolute; right: -70px; top: -90px; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--color-bg) 18%, transparent), transparent); pointer-events: none; }
+.money-label { font: 600 14px var(--font-sans); opacity: .7; }
+.money-amount { font: 800 46px/1.05 var(--font-display); letter-spacing: -0.045em; }
+.money-split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid color-mix(in srgb, var(--color-bg) 20%, transparent); }
+.money-split small { display: block; font-size: 12.5px; opacity: .65; }
+.money-split b { display: block; margin-top: 2px; font: 800 18px var(--font-display); }
+.money-note { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 16px; font-size: 14px; line-height: 1.45; background: var(--color-bg-card); border: 1px solid var(--color-border); }
+.money-note svg { flex: none; margin-top: 1px; }
+.money-note.success svg { color: var(--color-success, #22c55e); }
+.money-note.warning svg { color: var(--color-warning, #f59e0b); }
+.money-note.error { color: var(--color-danger, #ef4444); }
+.money-card { display: flex; flex-direction: column; gap: 10px; padding: 20px 18px; border-radius: 22px; background: var(--color-bg-card); border: 1px solid var(--color-border); }
+.money-card.row { flex-direction: row; align-items: center; color: var(--color-text-secondary); }
+.money-card h3 { margin: 0; font: 800 21px var(--font-display); letter-spacing: -0.02em; }
+.money-card p { margin: 0; color: var(--color-text-secondary); font-size: 14.5px; line-height: 1.5; }
+.money-card-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; background: var(--color-bg-secondary); }
+.money-btn { flex: none !important; margin-top: 4px; }
+.money-status { display: inline-flex; align-items: center; gap: 7px; font: 700 15.5px var(--font-sans); }
+.money-status.ok { color: var(--color-success, #22c55e); }
+.money-status.wait { color: var(--color-warning, #f59e0b); }
+.money-steps { list-style: none; margin: 0; padding: 4px 16px; border-radius: 20px; background: var(--color-bg-card); border: 1px solid var(--color-border); }
+.money-steps li { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--color-border); }
+.money-steps li:last-child { border-bottom: 0; }
+.money-steps li > span { width: 32px; height: 32px; flex: none; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: var(--color-bg-secondary); }
+.money-steps b { display: block; font: 600 14.5px var(--font-sans); }
+.money-steps small { display: block; margin-top: 2px; color: var(--color-text-secondary); font-size: 13px; }

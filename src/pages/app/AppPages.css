@@ -225,3 +225,15 @@
 .app-earn-card:hover, .app-pill-btn.primary:hover, .pub-btn.primary:hover, .app-hero-shop:hover { color: var(--color-bg); }
 .app-tab:hover:not(.active) { color: var(--color-text-tertiary); }
 .app-text-btn:hover, .app-rail-more:hover { color: var(--color-text-secondary); }
+
+/* ── Activity (notifications) ── */
+.act-row { width: 100%; display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 10px 12px; border: 0; border-bottom: 1px solid var(--color-border); background: transparent; color: var(--color-text-primary); text-align: left; }
+.act-row:active { background: var(--color-bg-secondary); }
+.act-row.unread .app-result-title::after { content: ''; display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--color-text-primary); vertical-align: middle; }
+.act-icon { width: 40px; height: 40px; flex: none; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--color-bg-secondary); color: var(--color-text-secondary); }
+.act-icon.money { background: color-mix(in srgb, var(--color-success, #22c55e) 15%, transparent); color: var(--color-success, #22c55e); }
+.act-icon.unread { background: var(--color-text-primary); color: var(--color-bg); }
+.act-text { font-size: 13.5px; color: var(--color-text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.act-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.act-time { font-size: 12px; color: var(--color-text-tertiary); }
+.app-banner.calm { width: 100%; text-align: left; background: var(--color-bg-card); border-color: var(--color-border); }

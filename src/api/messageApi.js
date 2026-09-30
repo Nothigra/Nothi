@@ -72,7 +72,8 @@ export function groupMessagesIntoConversations(messages, userId) {
 export async function sendMessage({ senderId, receiverId, productId, content, attachmentUrl, attachmentType }) {
   if (isMockMode) return { success: true };
 
-  const { data, error } = await withTimeoutSafety(() => supabase
+  // No withTimeoutSafety: it retries, and a retried insert sends the message (and its push) twice.
+  const { data, error } = await (supabase
     .from('messages')
     .insert([{
       sender_id: senderId,

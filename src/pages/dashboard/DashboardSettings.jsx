@@ -11,6 +11,10 @@ import Input from '../../components/ui/Input';
 import Textarea from '../../components/ui/Textarea';
 import { supabase, isMockMode, withTimeoutSafety, invokeFunction } from '../../lib/supabase';
 import './DashboardPages.css';
+import { Link, useSearchParams } from 'react-router';
+import { ChevronRight } from 'lucide-react';
+import { isNativeApp, tap } from '../../lib/native';
+import { useScreenTitle } from '../../lib/screenTitle';
 
 export default function DashboardSettings() {
   const { profile, updateProfile } = useAuth();
@@ -18,6 +22,10 @@ export default function DashboardSettings() {
   const { currency, changeCurrency } = useCurrency();
   
   const [activeTab, setActiveTab] = useState('profile');
+  // App: one section per screen (?section=profile), with a list of sections first
+  const [searchParams] = useSearchParams();
+  const appSection = isNativeApp ? searchParams.get('section') : null;
+  useScreenTitle('/dashboard/settings', appSection ? ({ profile: 'Public profile', software: 'Software', style: 'Style', theme: 'Appearance', currency: 'Currency' }[appSection] || null) : null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState(null);
 
@@ -322,15 +330,35 @@ export default function DashboardSettings() {
     setActiveTab(tabId);
   };
   const tabs = [
-    { id: 'profile', label: 'Public Profile', icon: User },
-    { id: 'software', label: 'Software Filters', icon: Monitor },
-    { id: 'style', label: 'Style Preferences', icon: Layers },
-    { id: 'theme', label: 'Appearance', icon: Palette },
-    { id: 'currency', label: 'Currency & Localization', icon: DollarSign },
+    { id: 'profile', label: 'Public Profile', icon: User, hint: 'Photo, name, bio, links' },
+    { id: 'software', label: 'Software Filters', icon: Monitor, hint: 'The tools you edit with' },
+    { id: 'style', label: 'Style Preferences', icon: Layers, hint: 'What you like to see first' },
+    { id: 'theme', label: 'Appearance', icon: Palette, hint: 'Light, dark or your own colours' },
+    { id: 'currency', label: 'Currency & Localization', icon: DollarSign, hint: 'Prices shown in your currency' },
   ];
+  const currentTab = appSection || activeTab;
+
+  if (isNativeApp && !appSection) {
+    return (
+      <div className="app-page">
+        <section className="app-group">
+          <div className="app-group-card">
+            {tabs.map(({ id, label, icon: Icon, hint }) => (
+              <Link key={id} to={`/dashboard/settings?section=${id}`} className="app-row app-row-2l" onClick={() => tap()}>
+                <span className="app-row-icon"><Icon size={18} /></span>
+                <span className="app-row-label">{label}<small>{hint}</small></span>
+                <ChevronRight size={18} className="app-row-chev" />
+              </Link>
+            ))}
+          </div>
+        </section>
+        <p className="app-version">Signed in as {profile?.email || profile?.username}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="dashboard-page pb-2xl">
+    <div className={`dashboard-page pb-2xl ${appSection ? 'settings-app-section' : ''}`}>
       <div className="dashboard-page-header">
         <div>
           <h1 className="dashboard-title">Settings</h1>
@@ -371,7 +399,7 @@ export default function DashboardSettings() {
         </div>
 
         <div className="settings-content" style={{ flex: 1, minWidth: 0 }}>
-          {activeTab === 'profile' && (
+          {currentTab === 'profile' && (
             <div className="settings-card m-0">
               <div className="card-header pb-md border-b border-border">
                 <h3 className="card-title text-lg">Public Profile</h3>
@@ -479,7 +507,7 @@ export default function DashboardSettings() {
             </div>
           )}
 
-          {activeTab === 'software' && (
+          {currentTab === 'software' && (
             <div className="settings-card m-0">
               <div className="card-header pb-md border-b border-border">
                 <h3 className="card-title text-lg">Software Preferences</h3>
@@ -507,7 +535,7 @@ export default function DashboardSettings() {
             </div>
           )}
 
-          {activeTab === 'style' && (
+          {currentTab === 'style' && (
             <div className="settings-card m-0">
               <div className="card-header pb-md border-b border-border">
                 <h3 className="card-title text-lg">Style Preferences</h3>
@@ -535,7 +563,7 @@ export default function DashboardSettings() {
             </div>
           )}
 
-          {activeTab === 'theme' && (
+          {currentTab === 'theme' && (
             <div className="settings-card m-0">
               <div className="card-header pb-md border-b border-border">
                 <h3 className="card-title text-lg">Appearance</h3>
@@ -663,7 +691,7 @@ export default function DashboardSettings() {
             </div>
           )}
 
-          {activeTab === 'currency' && (
+          {currentTab === 'currency' && (
             <div className="settings-card m-0">
               <div className="card-header pb-md border-b border-border">
                 <h3 className="card-title text-lg">Currency & Localization</h3>

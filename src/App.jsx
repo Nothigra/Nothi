@@ -65,6 +65,10 @@ import AppSearchPage from './pages/app/AppSearchPage';
 const AppPublishPage = lazyPage(() => import('./pages/app/AppPublishPage'));
 const AppMenuPage = lazyPage(() => import('./pages/app/AppMenuPage'));
 const AppLibraryPage = lazyPage(() => import('./pages/app/AppLibraryPage'));
+const AppConversationsPage = lazyPage(() => import('./pages/app/AppConversationsPage'));
+const AppChatPage = lazyPage(() => import('./pages/app/AppChatPage'));
+const AppPayoutsPage = lazyPage(() => import('./pages/app/AppPayoutsPage'));
+const AppActivityPage = lazyPage(() => import('./pages/app/AppActivityPage'));
 
 
 function AuthCallback() {
@@ -143,6 +147,12 @@ const dashboardPages = [
   { path: "messages", element: <MessagesPage /> },
 ];
 
+// App versions of account screens (same URL as on the website)
+const APP_SCREENS = isNativeApp ? {
+  messages: <AppConversationsPage />,
+  payouts: <AppPayoutsPage />,
+} : {};
+
 // Website: public layout + dashboard layout.
 // App: ONE persistent shell for every screen, so the tab bar and the kept-alive
 // tabs never unmount when moving between public pages and account pages.
@@ -156,8 +166,9 @@ const layoutRoutes = isNativeApp
         { path: "search", element: <AppSearchPage /> },
         { path: "publish", element: <AppPublishPage /> },
         { path: "menu", element: <AppMenuPage /> },
-        ...sitePages,
-        { path: "dashboard", children: dashboardPages },
+        { path: "messages/:id", element: <AppChatPage /> },
+        ...sitePages.map((r) => (r.path === 'notifications' ? { ...r, element: <AppActivityPage /> } : r)),
+        { path: "dashboard", children: dashboardPages.map((r) => (APP_SCREENS[r.path] ? { ...r, element: APP_SCREENS[r.path] } : r)) },
         { path: "*", element: <NotFoundPage /> },
       ],
     }]

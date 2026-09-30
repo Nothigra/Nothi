@@ -5,11 +5,12 @@ import {
 } from 'react-router';
 import { ChevronLeft, Compass, Search, MessageCircle, User, Bell, Settings, RefreshCw, Share2, Plus, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { useUnreadMessages } from '../../hooks/useUnreadMessages';
 import { invalidateProductCache } from '../../api/productApi';
 import { tap, platform, shareLink, enablePush } from '../../lib/native';
 import { supabase } from '../../lib/supabase';
 import PageFallback from '../common/PageFallback';
+import { useScreenTitleFor } from '../../lib/screenTitle';
+import { startChat, useChat } from '../../lib/chatStore';
 import './AppShell.css';
 
 /**
@@ -38,13 +39,14 @@ const TABS = [
 const ROOTS = TABS.filter((t) => !t.center).map((t) => t.to);
 // Full-screen flows: no tab bar (they have their own bottom actions)
 const IMMERSIVE = ['/publish'];
+const isImmersive = (p) => IMMERSIVE.includes(p) || p.startsWith('/messages/');
 const isRoot = (p) => ROOTS.includes(p);
 
 // Screen titles (large title on root tabs, small title in the bar elsewhere)
 const TITLES = [
-  ['/', 'Discover'], ['/marketplace', 'Explore'], ['/library', 'Library'], ['/dashboard/messages', 'Messages'], ['/me', 'Profile'], ['/publish', ''], ['/menu', 'Settings'],
+  ['/', 'Discover'], ['/marketplace', 'Explore'], ['/library', 'Library'], ['/dashboard/messages', 'Messages'], ['/me', 'Profile'], ['/publish', ''], ['/menu', 'Settings'], ['/messages/:id', ''],
   ['/search', 'Search'], ['/product/:id', ''], ['/creator/:username', ''], ['/best-sellers', ''], ['/rewards', 'Rewards'],
-  ['/notifications', 'Notifications'], ['/login', 'Sign in'], ['/onboarding', 'Welcome'], ['/about', 'About'],
+  ['/notifications', 'Notifications'], ['/login', 'Sign in'], ['/onboarding', 'Welcome'], ['/about', ''],
   ['/contact', 'Contact'], ['/terms', 'Terms'], ['/privacy', 'Privacy'], ['/downloads', 'Downloads'],
   ['/dashboard', 'Dashboard'], ['/dashboard/products', 'My products'], ['/dashboard/upload', 'Product'],
   ['/dashboard/analytics', 'Analytics'], ['/dashboard/payouts', 'Earnings'], ['/dashboard/settings', 'Settings'],
@@ -68,12 +70,14 @@ export default function AppShell() {
   const navType = useNavigationType();
   const navigate = useNavigate();
   const outlet = useOutlet();
-  const { user, isAuthenticated, isLoading, profile } = useAuth();
-  const unread = useUnreadMessages();
+  const { user, isAuthenticated, isLoading, profile, isMockMode } = useAuth();
+  const chat = useChat();
+  const unread = chat.conversations.reduce((n, c) => n + (c.unread || 0), 0);
   const { pathname } = location;
 
   const root = isRoot(pathname);
-  const title = titleFor(pathname);
+  const dynamicTitle = useScreenTitleFor(pathname);
+  const title = dynamicTitle ?? titleFor(pathname);
 
   // ── auth guard (same rules as the website's DashboardLayout)
   const needsAuth = AUTH_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'));
@@ -85,6 +89,9 @@ export default function AppShell() {
     }
   }, [isLoading, needsAuth, isAuthenticated, profile, pathname, navigate]);
 
+  // ── messages: one live copy shared by the Messages tab and chat screens
+  useEffect(() => { if (!isLoading) startChat(user?.id ?? null, isMockMode); }, [user?.id, isLoading, isMockMode]);
+
   // ── push notifications: register this phone once someone is signed in
   const signedInId = user?.id;
   useEffect(() => {
@@ -94,6 +101,11 @@ export default function AppShell() {
   // ── the website's upload form → the app's step-by-step flow (keeps ?edit and the product state)
   useEffect(() => {
     if (pathname === '/dashboard/upload') navigate({ pathname: '/publish', search: location.search }, { replace: true, state: location.state });
+    // The seller dashboard and product list live in Profile › My shop in the app
+    if (pathname === '/dashboard' || pathname === '/dashboard/products') {
+      try { localStorage.setItem('nothi-profile-segment', 'shop'); } catch { /* ignore */ }
+      navigate('/me', { replace: true });
+    }
   }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── the website's /pricing & checkout pages don't exist in the app (store rules)
@@ -228,7 +240,7 @@ export default function AppShell() {
   const tabPaths = ROOTS.filter((p) => kept.tabs[p] || (root && p === pathname));
 
   return (
-    <div className={`app-shell ${root ? 'is-root' : 'is-child'} ${IMMERSIVE.includes(pathname) ? 'is-immersive' : ''}`}>
+    <div className={`app-shell ${root ? 'is-root' : 'is-child'} ${isImmersive(pathname) ? 'is-immersive' : ''}`}>
       {/* ── top bar */}
       <header className={`app-bar ${scrolled ? 'scrolled' : ''}`}>
         <div className="app-bar-side">
