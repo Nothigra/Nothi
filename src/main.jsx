@@ -10,10 +10,10 @@ import { CurrencyProvider } from './context/CurrencyContext.jsx';
 import { GamificationProvider } from './context/GamificationContext.jsx';
 import './config/i18n.js';
 import './index.css';
-import { isNativeApp, startNativeApp } from './lib/native';
+import { isNativeApp, platform, startNativeApp } from './lib/native';
 import { supabase } from './lib/supabase';
 
-if (isNativeApp) document.documentElement.classList.add('is-app');
+if (isNativeApp) document.documentElement.classList.add('is-app', `platform-${platform}`);
 startNativeApp({ router, supabase });
 
 createRoot(document.getElementById('root')).render(

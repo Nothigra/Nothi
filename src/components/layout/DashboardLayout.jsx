@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
+import PageFallback from '../common/PageFallback';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -243,7 +244,9 @@ export default function DashboardLayout() {
 
         {/* Page Content */}
         <div className="dashboard-content-area">
-          <Outlet />
+          <Suspense fallback={<PageFallback />}>
+            <Outlet />
+          </Suspense>
         </div>
       </main>
       <MobileBottomNav />

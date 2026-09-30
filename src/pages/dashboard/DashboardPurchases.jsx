@@ -11,6 +11,15 @@ import { getThumbnailUrl } from '../../utils/mediaHelpers';
 import './DashboardPages.css';
 import { downloadFile } from '../../lib/native';
 
+function readLibraryCache(key) {
+  if (!key) return null;
+  try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
+}
+function writeLibraryCache(key, list) {
+  if (!key) return;
+  try { localStorage.setItem(key, JSON.stringify(list)); } catch { /* storage full / private mode */ }
+}
+
 export default function DashboardPurchases() {
   const { profile, isMockMode } = useAuth();
   const { formatPrice } = useCurrency();
@@ -18,8 +27,10 @@ export default function DashboardPurchases() {
   const baseLang = (i18n.language || 'en').split('-')[0];
   const navigate = useNavigate();
 
-  const [purchasedProducts, setPurchasedProducts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Library shows instantly (and offline) from the last copy saved on this device
+  const cacheKey = profile?.id && !isMockMode ? `nothi-library-${profile.id}` : null;
+  const [purchasedProducts, setPurchasedProducts] = useState(() => readLibraryCache(cacheKey) || []);
+  const [isLoading, setIsLoading] = useState(() => !readLibraryCache(cacheKey));
   const [downloadingId, setDownloadingId] = useState(null);
   const [downloadError, setDownloadError] = useState('');
 
@@ -45,11 +56,13 @@ export default function DashboardPurchases() {
           purchased_at: new Date().toISOString() 
         }));
         setPurchasedProducts(mockPurchased);
-      } else {
-        setPurchasedProducts(purchases || []);
+      } else if (purchases) {
+        setPurchasedProducts(purchases);
+        writeLibraryCache(cacheKey, purchases);
+      } else if (!readLibraryCache(cacheKey)) {
+        setPurchasedProducts([]); // offline and nothing saved yet
       }
       
-      setIsLoading(false);
       setIsLoading(false);
     }
     loadData();

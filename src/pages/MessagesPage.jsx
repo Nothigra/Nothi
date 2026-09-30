@@ -304,7 +304,7 @@ export default function MessagesPage() {
 
       // If not the seller, verify purchase
       const purchases = await getUserPurchases(user.id, false);
-      const hasBought = purchases.some(p => p.product_id === activeChat.productId);
+      const hasBought = (purchases || []).some(p => p.product_id === activeChat.productId);
       setHasPurchased(hasBought);
     }
     verifyPurchase();

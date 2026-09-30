@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Search, Package, Sparkles, FolderArchive, Contrast, Volume2, ArrowRightLeft, LayoutTemplate, TerminalSquare, Layers, ChevronRight } from 'lucide-react';
-import { getPublicProducts } from '../../api/productApi';
+import { getPublicProducts, peekPublicProducts } from '../../api/productApi';
 import { useAuth } from '../../context/AuthContext';
 import { CATEGORIES } from '../../lib/seed';
 import ProductCard from '../../components/product/ProductCard';
@@ -30,7 +30,7 @@ function Rail({ title, to, products }) {
 export default function AppDiscoverPage() {
   const { profile, isMockMode } = useAuth();
   const navigate = useNavigate();
-  const [products, setProducts] = useState(null);
+  const [products, setProducts] = useState(() => peekPublicProducts(isMockMode));
 
   useEffect(() => {
     let alive = true;
@@ -57,7 +57,7 @@ export default function AppDiscoverPage() {
         {profile?.username ? <>Hey <b>{profile.username}</b>, what are you editing today?</> : 'Assets for video editors, by video editors.'}
       </p>
 
-      <button type="button" className="app-search" onClick={() => { tap(); navigate('/marketplace'); }}>
+      <button type="button" className="app-search" onClick={() => { tap(); navigate('/search'); }}>
         <Search size={18} /> <span>Search presets, LUTs, SFX…</span>
       </button>
 

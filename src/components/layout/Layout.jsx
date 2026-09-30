@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import PageFallback from '../common/PageFallback';
 import { Outlet, useLocation, useOutlet } from 'react-router';
 import Navbar from './Navbar';
 import Footer from './Footer';
@@ -44,7 +45,9 @@ export default function Layout() {
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
           >
-            <AnimatedOutlet />
+            <Suspense fallback={<PageFallback />}>
+              <AnimatedOutlet />
+            </Suspense>
           </motion.div>
         </AnimatePresence>
       </main>

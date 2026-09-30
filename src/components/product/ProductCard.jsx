@@ -104,6 +104,8 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
             src={thumbnailUrl} 
             alt={localizedTitle} 
             className="thumbnail-img" 
+            loading="lazy"
+            decoding="async"
             onError={() => setImgError(true)}
           />
         ) : (

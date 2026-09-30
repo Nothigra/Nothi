@@ -1,19 +1,30 @@
-import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
-import { Link, useLocation, useNavigate, useNavigationType, useOutlet, matchPath } from 'react-router';
-import { motion } from 'framer-motion';
-import { ChevronLeft, Compass, Search, Library, MessageCircle, User, Bell, Settings, RefreshCw } from 'lucide-react';
+import { Activity, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+  Link, useLocation, useNavigate, useNavigationType, useOutlet, matchPath,
+  UNSAFE_LocationContext as LocationContext,
+} from 'react-router';
+import { ChevronLeft, Compass, Search, Library, MessageCircle, User, Bell, Settings, RefreshCw, Share2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useUnreadMessages } from '../../hooks/useUnreadMessages';
 import { invalidateProductCache } from '../../api/productApi';
-import { tap } from '../../lib/native';
+import { tap, platform, shareLink, enablePush } from '../../lib/native';
+import { supabase } from '../../lib/supabase';
+import PageFallback from '../common/PageFallback';
 import './AppShell.css';
 
 /**
  * AppShell — the mobile app's chrome (Capacitor build only).
- * Replaces the website's Navbar/Footer/sidebar with:
- *  - a native-style top bar (back button, title that appears on scroll)
- *  - five root tabs in a floating bar (same glass pill as the site's mobile nav)
- *  - push/pop page transitions, per-tab scroll memory, pull to refresh
+ *
+ * Performance model (what makes it feel native):
+ *  - The five tabs are KEPT ALIVE: each one stays mounted inside a React
+ *    <Activity> and is only hidden when you leave it. Coming back is instant,
+ *    with its scroll position, filters and loaded data intact.
+ *    A hidden tab sees a frozen copy of the location it was last shown with,
+ *    so it never reacts to other screens' URLs.
+ *  - Pushed screens (product, creator, settings…) mount on top with a CSS
+ *    transform animation (GPU only, no JS per frame).
+ *  - Pull-to-refresh and the iOS edge-swipe-back move the DOM directly
+ *    (refs, no React re-render per touch move).
  */
 
 const TABS = [
@@ -24,11 +35,12 @@ const TABS = [
   { to: '/me', label: 'Profile', icon: User },
 ];
 const ROOTS = TABS.map((t) => t.to);
+const isRoot = (p) => ROOTS.includes(p);
 
 // Screen titles (large title on root tabs, small title in the bar elsewhere)
 const TITLES = [
   ['/', 'Discover'], ['/marketplace', 'Explore'], ['/library', 'Library'], ['/dashboard/messages', 'Messages'], ['/me', 'Profile'],
-  ['/product/:id', ''], ['/creator/:username', ''], ['/best-sellers', ''], ['/rewards', 'Rewards'],
+  ['/search', 'Search'], ['/product/:id', ''], ['/creator/:username', ''], ['/best-sellers', ''], ['/rewards', 'Rewards'],
   ['/notifications', 'Notifications'], ['/login', 'Sign in'], ['/onboarding', 'Welcome'], ['/about', 'About'],
   ['/contact', 'Contact'], ['/terms', 'Terms'], ['/privacy', 'Privacy'], ['/downloads', 'Downloads'],
   ['/dashboard', 'Dashboard'], ['/dashboard/products', 'My products'], ['/dashboard/upload', 'Product'],
@@ -40,22 +52,20 @@ function titleFor(pathname) {
   for (const [pattern, title] of TITLES) if (matchPath({ path: pattern, end: true }, pathname)) return title;
   return '';
 }
-const isRoot = (p) => ROOTS.includes(p);
 
 // Pages that need a signed-in user (the dashboard group + Library/Messages)
 const AUTH_PREFIXES = ['/dashboard', '/library'];
 
-/** Current page; remounted by pull-to-refresh. */
-function ScreenOutlet({ refreshKey }) {
-  const outlet = useOutlet();
-  return <div key={refreshKey} style={{ display: 'contents' }}>{outlet}</div>;
-}
+// iOS has no system back gesture inside a WebView: we provide the edge swipe.
+// Android has its own system back gesture (handled in native.js).
+const EDGE_SWIPE = platform !== 'android';
 
 export default function AppShell() {
   const location = useLocation();
   const navType = useNavigationType();
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading, profile } = useAuth();
+  const outlet = useOutlet();
+  const { user, isAuthenticated, isLoading, profile } = useAuth();
   const unread = useUnreadMessages();
   const { pathname } = location;
 
@@ -72,24 +82,48 @@ export default function AppShell() {
     }
   }, [isLoading, needsAuth, isAuthenticated, profile, pathname, navigate]);
 
+  // ── push notifications: register this phone once someone is signed in
+  const signedInId = user?.id;
+  useEffect(() => {
+    if (signedInId && !isLoading) enablePush(supabase);
+  }, [signedInId, isLoading]);
+
   // ── the website's /pricing & checkout pages don't exist in the app (store rules)
   useEffect(() => {
     if (['/pricing', '/checkout/success', '/checkout/cancel'].includes(pathname)) navigate('/me', { replace: true });
   }, [pathname, navigate]);
 
-  // ── transition direction: tab switch = crossfade, push = from right, back = from left
-  // (derived during render from the previous path — React's "store info from previous renders" pattern)
-  const [nav, setNav] = useState({ path: pathname, dir: 'fade' });
+  // ── transition direction, derived from the previous path during render
+  const [nav, setNav] = useState({ path: pathname, dir: 'none', swiped: false });
   if (nav.path !== pathname) {
-    setNav({ path: pathname, dir: isRoot(pathname) && isRoot(nav.path) ? 'fade' : navType === 'POP' ? 'back' : 'push' });
+    let dir;
+    if (isRoot(pathname)) dir = navType === 'POP' && !isRoot(nav.path) ? 'back' : 'fade'; // tab jump = crossfade
+    else dir = navType === 'POP' ? 'back' : 'push';
+    if (nav.swiped) dir = 'none'; // the finger already did the animation
+    setNav({ path: pathname, dir, swiped: false });
   }
-  const prevPath = useRef(pathname);
+  const enterClass = nav.dir === 'none' ? '' : `app-enter-${nav.dir}`;
 
-  // ── scroll memory per screen (saved on leave, restored before paint on arrival)
+  // ── kept-alive tabs: { [tabPath]: { element, location } }
+  const userId = user?.id ?? null;
+  const [kept, setKept] = useState({ owner: userId, tabs: {} });
+  if (kept.owner !== userId) {
+    // signed in/out: drop tabs that hold another user's data
+    setKept({ owner: userId, tabs: {} });
+  } else if (root && outlet && kept.tabs[pathname]?.location !== location) {
+    setKept({ owner: userId, tabs: { ...kept.tabs, [pathname]: { element: outlet, location } } });
+  }
+
+  // ── scroll memory per screen (saved on leave, restored before paint)
   const scrollMemory = useRef(new Map());
   const lastY = useRef(0);
+  const prevPath = useRef(pathname);
+  const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    const onScroll = () => { lastY.current = window.scrollY; };
+    const onScroll = () => {
+      lastY.current = window.scrollY;
+      setScrolled(window.scrollY > (isRoot(prevPath.current) ? 44 : 4));
+    };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
@@ -100,45 +134,90 @@ export default function AppShell() {
     const y = navType === 'POP' || isRoot(pathname) ? (scrollMemory.current.get(pathname) ?? 0) : 0;
     window.scrollTo({ top: y, left: 0, behavior: 'instant' });
     lastY.current = y;
+    setScrolled(y > (isRoot(pathname) ? 44 : 4));
   }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── top bar state
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > (root ? 44 : 4));
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [root, pathname]);
-
-  // ── pull to refresh (root tabs)
-  const [pull, setPull] = useState(0);
+  // ── gestures: pull to refresh (root tabs) and edge swipe back (iOS).
+  // Both move the DOM directly — one React update when the finger lifts.
+  const [refreshKeys, setRefreshKeys] = useState({});
   const [refreshing, setRefreshing] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const startY = useRef(null);
-  const onTouchStart = (e) => { if (root && window.scrollY <= 0 && !refreshing) startY.current = e.touches[0].clientY; };
+  const mainRef = useRef(null);
+  const ptrRef = useRef(null);
+  const pushedRef = useRef(null);
+  const gesture = useRef(null); // { kind: 'pull' | 'swipe', x0, y0, d, t0 }
+
+  const setPullVisual = (d, animate) => {
+    const main = mainRef.current, ptr = ptrRef.current;
+    if (!main || !ptr) return;
+    main.style.transition = animate ? '' : 'none';
+    main.style.transform = d ? `translate3d(0, ${d * 0.6}px, 0)` : '';
+    ptr.style.transition = animate ? '' : 'none';
+    ptr.style.transform = `translate3d(0, ${d - 40}px, 0)`;
+    ptr.style.opacity = String(Math.min(1, d / 60));
+    const icon = ptr.firstElementChild;
+    if (icon && !icon.classList.contains('spin')) icon.style.transform = `rotate(${d * 3}deg)`;
+  };
+  const setSwipeVisual = (dx, animate) => {
+    const el = pushedRef.current;
+    if (!el) return;
+    el.style.animation = 'none';
+    el.style.transition = animate ? 'transform .24s cubic-bezier(.22,1,.36,1), opacity .24s ease' : 'none';
+    el.style.transform = dx ? `translate3d(${dx}px, 0, 0)` : '';
+    el.style.opacity = dx ? String(1 - Math.min(0.5, dx / window.innerWidth)) : '';
+  };
+
+  const onTouchStart = (e) => {
+    const t = e.touches[0];
+    if (!root && EDGE_SWIPE && t.clientX < 24) {
+      gesture.current = { kind: 'swipe', x0: t.clientX, y0: t.clientY, d: 0, t0: performance.now() };
+    } else if (root && window.scrollY <= 0 && !refreshing) {
+      gesture.current = { kind: 'pull', x0: t.clientX, y0: t.clientY, d: 0, t0: performance.now() };
+    }
+  };
   const onTouchMove = (e) => {
-    if (startY.current == null) return;
-    const d = e.touches[0].clientY - startY.current;
-    setPull(d > 0 ? Math.min(110, d * 0.5) : 0);
+    const g = gesture.current;
+    if (!g) return;
+    const t = e.touches[0];
+    if (g.kind === 'pull') {
+      const dy = t.clientY - g.y0;
+      g.d = dy > 0 ? Math.min(110, dy * 0.5) : 0;
+      setPullVisual(g.d, false);
+    } else {
+      const dx = Math.max(0, t.clientX - g.x0);
+      if (g.d === 0 && Math.abs(t.clientY - g.y0) > dx + 6) { gesture.current = null; return; } // it's a vertical scroll
+      g.d = dx;
+      setSwipeVisual(dx, false);
+    }
   };
   const onTouchEnd = useCallback(() => {
-    if (startY.current == null) return;
-    startY.current = null;
-    if (pull > 70) {
-      setRefreshing(true);
-      tap('MEDIUM');
-      invalidateProductCache();
-      setRefreshKey((k) => k + 1);
-      setTimeout(() => { setRefreshing(false); setPull(0); }, 700);
-    } else setPull(0);
-  }, [pull]);
+    const g = gesture.current;
+    gesture.current = null;
+    if (!g) return;
+    if (g.kind === 'pull') {
+      if (g.d > 70) {
+        tap('MEDIUM');
+        setRefreshing(true);
+        setPullVisual(56, true);
+        invalidateProductCache();
+        setRefreshKeys((k) => ({ ...k, [pathname]: (k[pathname] || 0) + 1 }));
+        setTimeout(() => { setRefreshing(false); setPullVisual(0, true); }, 700);
+      } else if (g.d > 0) setPullVisual(0, true);
+    } else if (g.d > 0) {
+      const w = window.innerWidth;
+      const velocity = g.d / Math.max(1, performance.now() - g.t0); // px/ms
+      if (g.d > w * 0.33 || (velocity > 0.5 && g.d > 40)) {
+        setSwipeVisual(w, true);
+        setTimeout(() => { setNav((n) => ({ ...n, swiped: true })); navigate(-1); }, 190);
+      } else setSwipeVisual(0, true);
+    }
+  }, [pathname, navigate]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Enter-only transitions: the new screen replaces the old one instantly and
-  // slides/fades in. No exit phase, so navigation can never get stuck waiting
-  // on an animation inside a page.
-  const dir = nav.dir;
-  const enterFrom = dir === 'fade' ? { opacity: 0 } : { opacity: 0, x: dir === 'push' ? 40 : -40 };
+  // Share button on product & creator pages
+  const shareable = !!(matchPath('/product/:id', pathname) || matchPath('/creator/:username', pathname));
+  const [toast, setToast] = useState('');
+
+  // Tabs to render: every visited tab (kept alive) + the current one
+  const tabPaths = ROOTS.filter((p) => kept.tabs[p] || (root && p === pathname));
 
   return (
     <div className={`app-shell ${root ? 'is-root' : 'is-child'}`}>
@@ -157,6 +236,21 @@ export default function AppShell() {
           {pathname === '/' && isAuthenticated && (
             <Link to="/notifications" className="app-icon-btn" aria-label="Notifications" onClick={() => tap()}><Bell size={21} /></Link>
           )}
+          {shareable && (
+            <button
+              type="button"
+              className="app-icon-btn"
+              aria-label="Share"
+              onClick={async () => {
+                tap();
+                const heading = document.querySelector('.app-pushed h1')?.textContent?.trim();
+                const res = await shareLink({ title: heading || 'Nothi', text: heading ? `${heading} on Nothi` : 'Nothi', path: pathname });
+                if (res === 'copied') { setToast('Link copied'); setTimeout(() => setToast(''), 1800); }
+              }}
+            >
+              <Share2 size={20} />
+            </button>
+          )}
           {pathname === '/me' && isAuthenticated && (
             <Link to="/dashboard/settings" className="app-icon-btn" aria-label="Settings" onClick={() => tap()}><Settings size={21} /></Link>
           )}
@@ -164,35 +258,55 @@ export default function AppShell() {
       </header>
 
       {/* ── pull to refresh indicator */}
-      <div className="app-ptr" style={{ transform: `translateY(${pull - 40}px)`, opacity: Math.min(1, pull / 60) }} aria-hidden="true">
-        <RefreshCw size={18} className={refreshing ? 'spin' : ''} style={{ transform: refreshing ? undefined : `rotate(${pull * 3}deg)` }} />
+      <div ref={ptrRef} className="app-ptr" style={{ opacity: 0, transform: 'translate3d(0,-40px,0)' }} aria-hidden="true">
+        <RefreshCw size={18} className={refreshing ? 'spin' : ''} />
       </div>
 
-      {/* ── screen */}
+      {/* ── screens */}
       <main
+        ref={mainRef}
         className="app-main"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        style={pull ? { transform: `translateY(${pull * 0.6}px)`, transition: 'none' } : undefined}
+        onTouchCancel={onTouchEnd}
       >
-        <motion.div
-          key={pathname}
-          initial={enterFrom}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: dir === 'fade' ? 0.18 : 0.28, ease: [0.22, 1, 0.36, 1] }}
-          className="app-screen"
-        >
-          {root && title && <h1 className="app-large-title">{title}</h1>}
-          <ScreenOutlet refreshKey={refreshKey} />
-        </motion.div>
+        {tabPaths.map((p) => {
+          const active = root && p === pathname;
+          const entry = kept.tabs[p];
+          const element = active ? outlet : entry?.element;
+          const loc = active ? location : entry?.location;
+          const tabTitle = titleFor(p);
+          return (
+            <Activity key={p} mode={active ? 'visible' : 'hidden'}>
+              <div className={`app-screen ${active ? enterClass : ''}`}>
+                {tabTitle && <h1 className="app-large-title">{tabTitle}</h1>}
+                <LocationContext.Provider value={{ location: loc, navigationType: active ? navType : 'POP' }}>
+                  <Suspense fallback={<PageFallback />}>
+                    <div key={refreshKeys[p] || 0} style={{ display: 'contents' }}>{element}</div>
+                  </Suspense>
+                </LocationContext.Provider>
+              </div>
+            </Activity>
+          );
+        })}
+
+        {!root && (
+          <div key={pathname} ref={pushedRef} className={`app-screen app-pushed ${enterClass}`}>
+            <Suspense fallback={<PageFallback />}>{outlet}</Suspense>
+          </div>
+        )}
       </main>
+
+      {toast && <div className="app-toast" role="status">{toast}</div>}
 
       {/* ── tab bar */}
       <nav className="app-tabs" aria-label="Main">
         {TABS.map(({ to, label, icon: Icon, exact, auth }) => {
           const active = exact ? pathname === to : pathname === to || pathname.startsWith(to + '/');
-          const target = auth && !isAuthenticated ? '/login' : to;
+          // A kept tab reopens exactly where you left it (e.g. Explore with its category)
+          const keptLoc = kept.tabs[to]?.location;
+          const target = auth && !isAuthenticated ? '/login' : keptLoc ? { pathname: keptLoc.pathname, search: keptLoc.search } : to;
           return (
             <Link
               key={to}
@@ -201,7 +315,7 @@ export default function AppShell() {
               className={`app-tab ${active ? 'active' : ''}`}
               onClick={(e) => {
                 tap();
-                if (active) { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+                if (active && pathname === to) { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
               }}
             >
               <span className="app-tab-icon">

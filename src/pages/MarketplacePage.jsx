@@ -7,7 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ProductCard from '../components/product/ProductCard';
 import { getLocalizedString } from '../utils/i18nHelpers';
 import { useAuth } from '../context/AuthContext';
-import { getPublicProducts } from '../api/productApi';
+import { isNativeApp } from '../lib/native';
+import { peekPublicProducts, getPublicProducts } from '../api/productApi';
 import { MOCK_CREATORS, CATEGORIES as categories, SOFTWARE_LIST as softwareList, STYLE_LIST as styleList } from '../lib/seed';
 import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
@@ -51,6 +52,11 @@ export default function MarketplacePage() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+  // ?q= (from the app's search screen) fills the search box
+  const queryParam = searchParams.get('q');
+  useEffect(() => {
+    if (queryParam != null) setSearchTerm(queryParam);
+  }, [queryParam]);
   const rawCategory = searchParams.get('category');
   const isValidCategory = rawCategory === 'all' || categories.some(c => c.id === rawCategory);
   const selectedCategory = rawCategory && isValidCategory ? rawCategory : 'all';
@@ -67,8 +73,9 @@ export default function MarketplacePage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true); // Distinct local loading state
+  // Paint instantly from the last loaded catalogue, then refresh in the background
+  const [products, setProducts] = useState(() => peekPublicProducts(isMockMode) || []);
+  const [loading, setLoading] = useState(() => !peekPublicProducts(isMockMode)); // Distinct local loading state
 
   const [selectedPrice, setSelectedPrice] = useState(savedFilters?.selectedPrice || 'all');
   const [selectedRating, setSelectedRating] = useState(savedFilters?.selectedRating || 'all');
@@ -89,6 +96,8 @@ export default function MarketplacePage() {
   useEffect(() => {
     if (!isFiltersOpen) setFilterView('main');
   }, [isFiltersOpen]);
+  // The filter sheet is portaled: close it when this screen is hidden (app tabs stay mounted)
+  useEffect(() => () => setIsFiltersOpen(false), []);
   const [hasInitializedFilters, setHasInitializedFilters] = useState(!!savedFilters || !!profile?.software);
 
   // Coming from the mobile header's search icon: jump straight into the search field
@@ -119,7 +128,7 @@ export default function MarketplacePage() {
     let isMounted = true;
     async function loadProducts() {
       if (isAuthLoading) return;
-      setLoading(true);
+      if (!peekPublicProducts(isMockMode)) setLoading(true); // spinner only on a cold start
       const data = await getPublicProducts(isMockMode, true);
       if (isMounted) {
         setProducts(data);
@@ -569,6 +578,14 @@ export default function MarketplacePage() {
           {loading ? (
             <BrandedLoader />
           ) : filteredProducts.length > 0 ? (
+            isNativeApp ? (
+              // App: plain grid — per-card layout/blur animations are too heavy for phones
+              <div className="products-grid-view">
+                {filteredProducts.map(product => (
+                  <div key={product.id}><ProductCard product={product} /></div>
+                ))}
+              </div>
+            ) : (
             <motion.div 
               className="products-grid-view"
               layout
@@ -588,6 +605,7 @@ export default function MarketplacePage() {
                 ))}
               </AnimatePresence>
             </motion.div>
+            )
           ) : (
             <div className="empty-state">
               <Search size={40} className="text-muted mb-md" />

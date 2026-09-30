@@ -283,7 +283,7 @@ export default function UploadProductPage() {
       description: baseDesc,
       price: parseFloat(formData.price) || 0,
       category: formData.category,
-      media: validMedia.map((m, idx) => ({ type: m.type, url: m.url, posterUrl: m.posterUrl, order: idx })),
+      media: validMedia.map((m, idx) => ({ type: m.type, url: m.url, posterUrl: m.posterUrl, ...(m.thumbUrl ? { thumbUrl: m.thumbUrl } : {}), order: idx })),
       software: formData.software,
       style: formData.style,
       ...promoPayload(formData),

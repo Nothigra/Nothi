@@ -1427,3 +1427,17 @@ tr:hover td { background: var(--color-bg-secondary); }
     padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* ── Page loading fallback (code-split pages) ── */
+.loader {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 2.5px solid var(--color-border);
+  border-top-color: var(--color-text-primary);
+}
+.loader.spin { animation: nothi-spin .7s linear infinite; }
+@keyframes nothi-spin { to { transform: rotate(360deg); } }
+.page-fallback {
+  flex: 1; min-height: 50vh; display: flex; align-items: center; justify-content: center;
+  animation: page-fallback-in .2s ease .25s both; /* invisible if the page arrives within 250 ms */
+}
+@keyframes page-fallback-in { from { opacity: 0; } to { opacity: 1; } }

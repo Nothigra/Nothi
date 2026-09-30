@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import * as store from '../lib/accountStore';
 import { supabase, isMockMode, withTimeoutSafety } from '../lib/supabase';
 import { calculateUserTier } from '../api/creatorApi';
-import { isNativePlatform, OAUTH_REDIRECT, WEBSITE_URL, openExternal } from '../lib/native';
+import { isNativePlatform, OAUTH_REDIRECT, WEBSITE_URL, openExternal, disablePush } from '../lib/native';
 
 const AuthContext = createContext();
 
@@ -174,6 +174,7 @@ export function AuthProvider({ children }) {
 
   // Logout
   const logout = useCallback(async () => {
+    if (!isMockMode) await disablePush(supabase); // while still signed in
     store.signOut();
     setUser(null);
     setProfile(null);

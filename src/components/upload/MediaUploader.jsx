@@ -3,6 +3,29 @@ import { Upload, X, Video, Image as ImageIcon, Loader2, PlayCircle, ImagePlus, C
 import { supabase, withTimeoutSafety, isMockMode, invokeFunction } from '../../lib/supabase';
 import './MediaUploader.css';
 
+/**
+ * Small WebP copy of an image for product lists (cards, search, rails).
+ * The original stays untouched for the product page gallery.
+ * Returns null when the browser can't encode WebP — lists then use the original.
+ */
+async function makeThumbnail(source, maxWidth = 720) {
+  try {
+    const bitmap = await createImageBitmap(source);
+    const scale = Math.min(1, maxWidth / bitmap.width);
+    const w = Math.round(bitmap.width * scale), h = Math.round(bitmap.height * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, w, h);
+    bitmap.close?.();
+    const blob = await new Promise((res) => canvas.toBlob(res, 'image/webp', 0.8));
+    if (!blob || blob.type !== 'image/webp') return null;
+    if (source.size && blob.size >= source.size) return null; // already light: lists use the original
+    return new File([blob], 'thumb.webp', { type: 'image/webp' });
+  } catch {
+    return null;
+  }
+}
+
 export default function MediaUploader({ mediaItems, setMediaItems, maxImages = 10, maxVideos = 5 }) {
   const fileInputRef = useRef(null);
   const posterInputRef = useRef(null);
@@ -155,15 +178,26 @@ export default function MediaUploader({ mediaItems, setMediaItems, maxImages = 1
 
       try {
         let posterUrl = '';
+        let thumbUrl = '';
         
         if (isVideo) {
           // Extract and upload poster first
           try {
             const posterBlob = await extractVideoFrame(file);
             posterUrl = await uploadToR2(posterBlob, 'product-images');
+            const thumb = await makeThumbnail(posterBlob);
+            if (thumb) thumbUrl = await uploadToR2(thumb, 'product-images');
           } catch (posterErr) {
             console.error("Poster extraction failed:", posterErr);
             // Non-fatal, just no poster
+          }
+        } else {
+          // Light copy for lists — non-fatal if it fails
+          try {
+            const thumb = await makeThumbnail(file);
+            if (thumb) thumbUrl = await uploadToR2(thumb, 'product-images');
+          } catch (thumbErr) {
+            console.warn('Thumbnail generation failed:', thumbErr);
           }
         }
 
@@ -173,7 +207,7 @@ export default function MediaUploader({ mediaItems, setMediaItems, maxImages = 1
         });
 
         setMediaItems(prev => prev.map(item => 
-          item.id === id ? { ...item, url, posterUrl, isUploading: false } : item
+          item.id === id ? { ...item, url, posterUrl, thumbUrl, isUploading: false } : item
         ));
       } catch (err) {
         console.error("Upload error:", err);
@@ -234,8 +268,13 @@ export default function MediaUploader({ mediaItems, setMediaItems, maxImages = 1
       const posterUrl = await uploadToR2(file, 'product-images', (progress) => {
         setMediaItems(prev => prev.map(item => item.id === videoId ? { ...item, progress } : item));
       });
+      let thumbUrl = '';
+      try {
+        const thumb = await makeThumbnail(file);
+        if (thumb) thumbUrl = await uploadToR2(thumb, 'product-images');
+      } catch { /* lists fall back to the poster */ }
       setMediaItems(prev => prev.map(item => 
-        item.id === videoId ? { ...item, posterUrl, isUploading: false } : item
+        item.id === videoId ? { ...item, posterUrl, thumbUrl, isUploading: false } : item
       ));
     } catch (err) {
       console.error("Custom poster upload error:", err);

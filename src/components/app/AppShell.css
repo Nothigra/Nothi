@@ -63,6 +63,20 @@ html.is-app .selectable { user-select: text; -webkit-user-select: text; }
   transition: transform .3s cubic-bezier(.22, 1, .36, 1);
 }
 .app-screen { min-height: 60vh; display: flex; flex-direction: column; }
+
+/* Screen entrances — CSS only, transform + opacity (composited on the GPU).
+   A kept-alive tab replays its entrance when it is shown again, because
+   <Activity> toggles display:none → block. */
+.app-enter-fade { animation: app-in-fade .2s ease-out both; }
+.app-enter-push { animation: app-in-push .3s cubic-bezier(.22, 1, .36, 1) both; }
+.app-enter-back { animation: app-in-back .28s cubic-bezier(.22, 1, .36, 1) both; }
+@keyframes app-in-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes app-in-push { from { opacity: 0; transform: translate3d(42px, 0, 0); } to { opacity: 1; transform: none; } }
+@keyframes app-in-back { from { opacity: .4; transform: translate3d(-28px, 0, 0); } to { opacity: 1; transform: none; } }
+.app-pushed { will-change: transform; }
+@media (prefers-reduced-motion: reduce) {
+  .app-enter-fade, .app-enter-push, .app-enter-back { animation: none; }
+}
 .app-large-title {
   font-family: var(--font-display); font-weight: 800; font-size: 34px; letter-spacing: -0.035em; line-height: 1.1;
   padding: 2px 20px 10px; margin: 0;
@@ -140,3 +154,26 @@ html.is-app .selectable { user-select: text; -webkit-user-select: text; }
 .app-shell .marketplace-header-inline { padding-top: 0 !important; margin-bottom: 14px; }
 .app-shell .marketplace-header-text { display: none !important; }
 .app-shell .bestsellers-page { padding-top: 8px !important; }
+
+/* ── Android WebView: backdrop blur is expensive while scrolling.
+   Same look with a near-opaque surface instead (iOS keeps the glass). */
+html.platform-android *, html.platform-android *::before, html.platform-android *::after {
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+html.platform-android .app-bar.scrolled, html.platform-android .is-child .app-bar { background: color-mix(in srgb, var(--color-bg) 97%, transparent); }
+html.platform-android .app-tabs { background: var(--color-bg-secondary); }
+
+/* ── Long lists: let the browser skip layout/paint for cards far off-screen */
+.app-shell .product-card { content-visibility: auto; contain-intrinsic-block-size: auto 420px; }
+.app-shell .products-grid-view > * { min-width: 0; }
+.app-rail-item .product-card { content-visibility: visible; }
+/* Website hover effects are useless on touch and cost paint time */
+.app-shell .product-card, .app-shell .product-card * { transition-property: opacity, background-color, color !important; }
+.app-shell .product-card:hover { transform: none !important; }
+
+.app-toast {
+  position: fixed; left: 50%; bottom: calc(var(--app-tabs-h) + 24px + var(--app-safe-bottom)); z-index: 950;
+  transform: translateX(-50%); padding: 10px 16px; border-radius: 999px;
+  background: var(--color-text-primary); color: var(--color-bg); font: 600 14px var(--font-sans);
+  animation: app-in-fade .18s ease-out both; pointer-events: none;
+}

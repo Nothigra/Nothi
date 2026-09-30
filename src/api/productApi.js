@@ -30,6 +30,12 @@ export async function getPublicProducts(isMockMode, forceFresh = false) {
   return data;
 }
 
+/** Last loaded catalogue, even if stale — lets screens paint instantly and refresh in the background. */
+export function peekPublicProducts(isMockMode) {
+  if (isMockMode) return MOCK_PRODUCTS;
+  return publicProductsCache;
+}
+
 export function invalidateProductCache() {
   publicProductsCache = null;
   publicProductsCacheTime = 0;
@@ -223,7 +229,7 @@ export async function getUserPurchases(userId, isMockMode) {
 
   if (purchasesError) {
     console.error('Error fetching purchases:', purchasesError);
-    return [];
+    return null; // unknown (offline/error) — callers keep what they already show
   }
 
   if (!purchases || purchases.length === 0) {

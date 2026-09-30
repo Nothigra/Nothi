@@ -1,4 +1,4 @@
-.h-full { height: calc(100vh - var(--navbar-height)); }
+.messages-container.h-full, .messages-layout.h-full { height: calc(100vh - var(--navbar-height)); }
 
 .messages-container {
   padding: 0;

@@ -12,9 +12,10 @@ export function getThumbnailUrl(product) {
   // 1. Try unified media array
   if (product.media && product.media.length > 0) {
     // Prefer the first image if available, else use video poster
+    // thumbUrl = small WebP generated at upload (fast lists); fall back to the original
     const firstMedia = product.media[0];
-    if (firstMedia.type === 'image') return firstMedia.url;
-    if (firstMedia.type === 'video' && firstMedia.posterUrl) return firstMedia.posterUrl;
+    if (firstMedia.type === 'image') return firstMedia.thumbUrl || firstMedia.url;
+    if (firstMedia.type === 'video' && (firstMedia.thumbUrl || firstMedia.posterUrl)) return firstMedia.thumbUrl || firstMedia.posterUrl;
   }
   
   // 2. Try legacy images array
