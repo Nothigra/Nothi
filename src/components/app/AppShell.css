@@ -235,3 +235,4 @@ html.platform-android .app-tabs { background: var(--color-bg-secondary); }
 .app-row-2l { min-height: 64px; }
 .app-shell .rewards-page h1.bg-clip-text { display: none; }
 .app-shell .rewards-page { padding-left: 16px; padding-right: 16px; }
+.app-shell .settings-app-section .settings-content { padding: 0 4px; }
