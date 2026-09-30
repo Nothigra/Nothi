@@ -177,3 +177,19 @@ html.platform-android .app-tabs { background: var(--color-bg-secondary); }
   background: var(--color-text-primary); color: var(--color-bg); font: 600 14px var(--font-sans);
   animation: app-in-fade .18s ease-out both; pointer-events: none;
 }
+
+/* ── centre "+" (publish) ── */
+.app-tab-center { justify-content: center; }
+.app-tab-plus {
+  width: 50px; height: 42px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+  background: var(--color-text-primary); color: var(--color-bg);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--color-text-primary) 25%, transparent);
+  transition: transform .15s cubic-bezier(.34,1.56,.64,1);
+}
+.app-tab-center:active .app-tab-plus { transform: scale(.88) rotate(90deg); }
+.app-tab-center:active { transform: none; }
+
+/* ── full-screen flows (publish): no tab bar, room for their own bottom bar ── */
+.app-shell.is-immersive .app-tabs { transform: translateY(calc(100% + 40px)); pointer-events: none; }
+.app-shell.is-immersive .app-main { padding-bottom: 0; }
+.app-tabs { transition: transform .3s cubic-bezier(.22,1,.36,1); }

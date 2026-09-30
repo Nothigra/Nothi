@@ -25,51 +25,10 @@ import { useGamification } from '../../context/GamificationContext';
 import './UploadProductPage.css';
 import { isNativeApp } from '../../lib/native';
 
-const formatEur = (amount) =>
-  new Intl.NumberFormat('fr-BE', { style: 'currency', currency: 'EUR' }).format(amount);
-
-// ── Promotion helpers ──────────────────────────────────────────────────────
-// Mirrors the DB rule (products_sale_price_valid / active_sale_price):
-// 0.50 EUR <= sale price < regular price. 0.50 EUR is Stripe's minimum charge.
-const MIN_SALE_PRICE = 0.5;
-
-const pad2 = (n) => String(n).padStart(2, '0');
-// ISO timestamp -> 'YYYY-MM-DD' in the seller's local time (for <input type="date">)
-const toDateInputValue = (iso) => {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-};
-const todayInputValue = () => toDateInputValue(new Date().toISOString());
-
-function validatePromo(form) {
-  if (!form.promoEnabled) return '';
-  const price = parseFloat(form.price);
-  const sale = parseFloat(form.salePrice);
-  if (!price || price <= 0) return 'A promotion needs a regular price above 0.';
-  if (!sale || Number.isNaN(sale)) return 'Enter the promotional price.';
-  if (sale < MIN_SALE_PRICE) return `The promotional price must be at least ${formatEur(MIN_SALE_PRICE)}.`;
-  if (sale >= price) return 'The promotional price must be lower than the regular price.';
-  if (form.saleEndsAt && form.saleEndsAt < todayInputValue()) return 'The promotion end date is in the past.';
-  return '';
-}
-
-function promoPayload(form) {
-  if (!form.promoEnabled) return { sale_price: null, sale_ends_at: null };
-  return {
-    sale_price: Math.round(parseFloat(form.salePrice) * 100) / 100,
-    // The promotion runs until the END of the chosen day, in the seller's time zone.
-    sale_ends_at: form.saleEndsAt ? new Date(`${form.saleEndsAt}T23:59:59`).toISOString() : null,
-  };
-}
-
-// Prices must match BOOST_OPTIONS in src/config/plans.js (server: create-boost-checkout)
-const BOOST_PLANS = [
-  { id: 'none', days: 0, title: 'No Boost', price: 0, desc: 'Standard marketplace visibility.' },
-  { id: '24h', days: 1, title: '24 Hours', price: 2.99, desc: 'Perfect for launching a new product.' },
-  { id: '3d', days: 3, title: '3 Days', price: 4.99, desc: 'Great for increasing visibility.' },
-  { id: '7d', days: 7, title: '7 Days', price: 6.99, desc: 'Ideal for maximizing exposure.', recommended: true }
-];
+import {
+  formatEur, MIN_SALE_PRICE, toDateInputValue, todayInputValue,
+  validatePromo, promoPayload, BOOST_PLANS, ALLOWED_EXTENSIONS,
+} from '../../lib/productPublishing';
 
 export default function UploadProductPage() {
   const navigate = useNavigate();
@@ -177,14 +136,6 @@ export default function UploadProductPage() {
       }
     }
   }, [isEditing, location.state]);
-
-  // Extension allowlist — must mirror the server-side set in generate-product-file-upload-url
-  const ALLOWED_EXTENSIONS = new Set([
-    '.zip', '.rar', '.7z',
-    '.aep', '.prproj', '.mogrt', '.drp', '.blend', '.c4d', '.fcpxml',
-    '.mp4', '.mov', '.png',
-    '.lut', '.cube', '.xmp', '.dng', '.ffx',
-  ]);
 
   useEffect(() => {
     const price = parseFloat(formData.price);

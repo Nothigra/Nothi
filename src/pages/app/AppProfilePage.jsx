@@ -1,17 +1,17 @@
-import { Link, useNavigate } from 'react-router';
-import {
-  LayoutDashboard, Package, Plus, BarChart3, Wallet, Heart, Users, Gift, Award, Bell,
-  Crown, Settings, Moon, Sun, Info, Mail, FileText, Shield, LogOut, ChevronRight, Store,
-} from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router';
+import { Award, Gift, Info, Mail, FileText, Shield, ChevronRight, Moon, Sun, Share2, Store, Pencil, Flame } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useGamification } from '../../context/GamificationContext';
 import ProBadge from '../../components/common/ProBadge';
 import { isPro } from '../../config/plans';
-import { tap, platform } from '../../lib/native';
+import { tap, platform, shareLink } from '../../lib/native';
+import AppShopPanel from './AppShopPanel';
+import AppLibraryPanel from './AppLibraryPanel';
 import './AppPages.css';
 
-function Row({ to, icon: Icon, label, hint, onClick, danger }) {
+export function Row({ to, icon: Icon, label, hint, onClick, danger }) {
   const inner = (
     <>
       <span className={`app-row-icon ${danger ? 'danger' : ''}`}><Icon size={18} /></span>
@@ -24,7 +24,7 @@ function Row({ to, icon: Icon, label, hint, onClick, danger }) {
   return <button type="button" className={`app-row ${danger ? 'danger' : ''}`} onClick={() => { tap(); onClick?.(); }}>{inner}</button>;
 }
 
-function Group({ title, children }) {
+export function Group({ title, children }) {
   return (
     <section className="app-group">
       {title && <h3 className="app-group-title">{title}</h3>}
@@ -33,17 +33,20 @@ function Group({ title, children }) {
   );
 }
 
+export const versionLine = `Nothi for ${platform === 'ios' ? 'iOS' : platform === 'android' ? 'Android' : 'mobile'} · 1.1`;
+
+const SEG_KEY = 'nothi-profile-segment';
+
 export default function AppProfilePage() {
-  const { profile, isAuthenticated, logout } = useAuth();
+  const { profile, isAuthenticated } = useAuth();
   const { theme, setTheme } = useTheme();
   const { gamificationState } = useGamification();
-  const navigate = useNavigate();
   const dark = theme !== 'light';
   const pro = isPro(profile);
-
-  const themeRow = (
-    <Row icon={dark ? Moon : Sun} label="Appearance" hint={dark ? 'Dark' : 'Light'} onClick={() => setTheme(dark ? 'light' : 'dark')} />
-  );
+  const [segment, setSegment] = useState(() => {
+    try { return localStorage.getItem(SEG_KEY) || 'shop'; } catch { return 'shop'; }
+  });
+  const choose = (s) => { tap(); setSegment(s); try { localStorage.setItem(SEG_KEY, s); } catch { /* ignore */ } };
 
   if (!isAuthenticated) {
     return (
@@ -51,76 +54,62 @@ export default function AppProfilePage() {
         <div className="app-hero-card guest">
           <img src="/logo.png" alt="" className="app-profile-logo" />
           <h2>Join Nothi</h2>
-          <p>Save your favourites, get your assets on every device, and open your own shop.</p>
+          <p>Get your assets on every device, follow creators — and open your own shop.</p>
           <Link to="/login" className="btn btn-primary app-hero-btn" onClick={() => tap()}>Sign in or create an account</Link>
         </div>
         <Group title="Explore">
           <Row to="/best-sellers" icon={Award} label="Top creators" />
           <Row to="/rewards" icon={Gift} label="Rewards" />
         </Group>
-        <Group title="App">{themeRow}</Group>
+        <Group title="App">
+          <Row icon={dark ? Moon : Sun} label="Appearance" hint={dark ? 'Dark' : 'Light'} onClick={() => setTheme(dark ? 'light' : 'dark')} />
+        </Group>
         <Group title="About">
           <Row to="/about" icon={Info} label="About Nothi" />
           <Row to="/contact" icon={Mail} label="Contact" />
           <Row to="/terms" icon={FileText} label="Terms" />
           <Row to="/privacy" icon={Shield} label="Privacy" />
         </Group>
-        <p className="app-version">Nothi for {platform === 'ios' ? 'iOS' : platform === 'android' ? 'Android' : 'mobile'} · 1.0</p>
+        <p className="app-version">{versionLine}</p>
       </div>
     );
   }
 
   const level = gamificationState?.level || profile?.level || 1;
+  const streak = gamificationState?.streak || 0;
 
   return (
-    <div className="app-page">
-      <div className="app-hero-card">
-        <span className="app-hero-avatar">
+    <div className="app-page app-profile">
+      <header className="app-me">
+        <span className="app-me-avatar">
           {profile?.avatar_url ? <img src={profile.avatar_url} alt="" /> : (profile?.username || '?').charAt(0).toUpperCase()}
         </span>
-        <div className="app-hero-meta">
+        <div className="app-me-meta">
           <h2>{profile?.username} {pro && profile?.show_pro_badge !== false && <ProBadge size={18} />}</h2>
-          <p>Level {level}{gamificationState?.streak ? ` · ${gamificationState.streak}-day streak` : ''}</p>
+          <p>
+            <span className="app-me-chip">Level {level}</span>
+            {streak > 0 && <span className="app-me-chip"><Flame size={13} /> {streak} days</span>}
+            {pro && <span className="app-me-chip">Pro</span>}
+          </p>
         </div>
-        <Link to={`/creator/${profile?.username}`} className="app-hero-shop" onClick={() => tap()}>
-          <Store size={16} /> My shop
-        </Link>
+      </header>
+      <div className="app-me-actions">
+        <Link to={`/creator/${profile?.username}`} className="app-pill-btn" onClick={() => tap()}><Store size={17} /> My page</Link>
+        <Link to="/dashboard/settings" className="app-pill-btn" onClick={() => tap()}><Pencil size={16} /> Edit profile</Link>
+        <button type="button" className="app-pill-btn square" aria-label="Share my page" onClick={() => { tap(); shareLink({ title: profile?.username, text: `${profile?.username} on Nothi`, path: `/creator/${profile?.username}` }); }}>
+          <Share2 size={17} />
+        </button>
       </div>
 
-      <Group title="Selling">
-        <Row to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
-        <Row to="/dashboard/products" icon={Package} label="My products" />
-        <Row to="/dashboard/upload" icon={Plus} label="Publish a product" />
-        <Row to="/dashboard/analytics" icon={BarChart3} label="Analytics" />
-        <Row to="/dashboard/payouts" icon={Wallet} label="Earnings & payouts" />
-      </Group>
+      <div className="app-segment" role="tablist">
+        <button type="button" role="tab" aria-selected={segment === 'shop'} className={segment === 'shop' ? 'on' : ''} onClick={() => choose('shop')}>My shop</button>
+        <button type="button" role="tab" aria-selected={segment === 'library'} className={segment === 'library' ? 'on' : ''} onClick={() => choose('library')}>Library</button>
+        <span className="app-segment-thumb" style={{ transform: segment === 'library' ? 'translateX(100%)' : 'none' }} aria-hidden="true" />
+      </div>
 
-      <Group title="Activity">
-        <Row to="/dashboard/wishlist" icon={Heart} label="Wishlist" />
-        <Row to="/dashboard/following" icon={Users} label="Following" />
-        <Row to="/notifications" icon={Bell} label="Notifications" />
-        <Row to="/rewards" icon={Gift} label="Rewards" />
-        <Row to="/dashboard/badges" icon={Award} label="Badges" />
-      </Group>
-
-      <Group title="Account">
-        <Row to="/dashboard/subscription" icon={Crown} label="Plan" hint={pro ? 'Pro' : 'Free'} />
-        <Row to="/dashboard/settings" icon={Settings} label="Settings" />
-        {themeRow}
-      </Group>
-
-      <Group title="About">
-        <Row to="/about" icon={Info} label="About Nothi" />
-        <Row to="/contact" icon={Mail} label="Contact" />
-        <Row to="/terms" icon={FileText} label="Terms" />
-        <Row to="/privacy" icon={Shield} label="Privacy" />
-      </Group>
-
-      <Group>
-        <Row icon={LogOut} label="Sign out" danger onClick={async () => { await logout(); navigate('/', { replace: true }); }} />
-      </Group>
-
-      <p className="app-version">Nothi for {platform === 'ios' ? 'iOS' : platform === 'android' ? 'Android' : 'mobile'} · 1.0</p>
+      <div key={segment} className="app-segment-panel">
+        {segment === 'shop' ? <AppShopPanel /> : <AppLibraryPanel />}
+      </div>
     </div>
   );
 }

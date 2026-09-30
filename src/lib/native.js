@@ -176,7 +176,7 @@ export async function startNativeApp({ router, supabase }) {
   // Android back: pushed screen → previous screen; other tab → Discover; Discover → leave the app
   App.addListener('backButton', () => {
     const path = router.state.location.pathname;
-    const roots = ['/', '/marketplace', '/library', '/dashboard/messages', '/me'];
+    const roots = ['/', '/marketplace', '/dashboard/messages', '/me'];
     if (!roots.includes(path) && window.history.length > 1) router.navigate(-1);
     else if (path !== '/') router.navigate('/', { replace: true });
     else App.minimizeApp();

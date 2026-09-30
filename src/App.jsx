@@ -62,6 +62,9 @@ import AppShell from './components/app/AppShell';
 import AppDiscoverPage from './pages/app/AppDiscoverPage';
 import AppProfilePage from './pages/app/AppProfilePage';
 import AppSearchPage from './pages/app/AppSearchPage';
+const AppPublishPage = lazyPage(() => import('./pages/app/AppPublishPage'));
+const AppMenuPage = lazyPage(() => import('./pages/app/AppMenuPage'));
+const AppLibraryPage = lazyPage(() => import('./pages/app/AppLibraryPage'));
 
 
 function AuthCallback() {
@@ -148,9 +151,11 @@ const layoutRoutes = isNativeApp
       element: <AppShell />,
       children: [
         { index: true, element: <AppDiscoverPage /> },
-        { path: "library", element: <DashboardPurchases /> },
+        { path: "library", element: <AppLibraryPage /> },
         { path: "me", element: <AppProfilePage /> },
         { path: "search", element: <AppSearchPage /> },
+        { path: "publish", element: <AppPublishPage /> },
+        { path: "menu", element: <AppMenuPage /> },
         ...sitePages,
         { path: "dashboard", children: dashboardPages },
         { path: "*", element: <NotFoundPage /> },

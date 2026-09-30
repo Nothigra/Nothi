@@ -3,7 +3,7 @@ import {
   Link, useLocation, useNavigate, useNavigationType, useOutlet, matchPath,
   UNSAFE_LocationContext as LocationContext,
 } from 'react-router';
-import { ChevronLeft, Compass, Search, Library, MessageCircle, User, Bell, Settings, RefreshCw, Share2 } from 'lucide-react';
+import { ChevronLeft, Compass, Search, MessageCircle, User, Bell, Settings, RefreshCw, Share2, Plus, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useUnreadMessages } from '../../hooks/useUnreadMessages';
 import { invalidateProductCache } from '../../api/productApi';
@@ -30,16 +30,19 @@ import './AppShell.css';
 const TABS = [
   { to: '/', label: 'Discover', icon: Compass, exact: true },
   { to: '/marketplace', label: 'Explore', icon: Search },
-  { to: '/library', label: 'Library', icon: Library, auth: true },
+  { to: '/publish', label: 'Publish', icon: Plus, auth: true, center: true },
   { to: '/dashboard/messages', label: 'Messages', icon: MessageCircle, auth: true },
   { to: '/me', label: 'Profile', icon: User },
 ];
-const ROOTS = TABS.map((t) => t.to);
+// Root tabs are kept alive; the centre "+" opens the publish flow on top instead
+const ROOTS = TABS.filter((t) => !t.center).map((t) => t.to);
+// Full-screen flows: no tab bar (they have their own bottom actions)
+const IMMERSIVE = ['/publish'];
 const isRoot = (p) => ROOTS.includes(p);
 
 // Screen titles (large title on root tabs, small title in the bar elsewhere)
 const TITLES = [
-  ['/', 'Discover'], ['/marketplace', 'Explore'], ['/library', 'Library'], ['/dashboard/messages', 'Messages'], ['/me', 'Profile'],
+  ['/', 'Discover'], ['/marketplace', 'Explore'], ['/library', 'Library'], ['/dashboard/messages', 'Messages'], ['/me', 'Profile'], ['/publish', ''], ['/menu', 'Settings'],
   ['/search', 'Search'], ['/product/:id', ''], ['/creator/:username', ''], ['/best-sellers', ''], ['/rewards', 'Rewards'],
   ['/notifications', 'Notifications'], ['/login', 'Sign in'], ['/onboarding', 'Welcome'], ['/about', 'About'],
   ['/contact', 'Contact'], ['/terms', 'Terms'], ['/privacy', 'Privacy'], ['/downloads', 'Downloads'],
@@ -54,7 +57,7 @@ function titleFor(pathname) {
 }
 
 // Pages that need a signed-in user (the dashboard group + Library/Messages)
-const AUTH_PREFIXES = ['/dashboard', '/library'];
+const AUTH_PREFIXES = ['/dashboard', '/library', '/publish'];
 
 // iOS has no system back gesture inside a WebView: we provide the edge swipe.
 // Android has its own system back gesture (handled in native.js).
@@ -87,6 +90,11 @@ export default function AppShell() {
   useEffect(() => {
     if (signedInId && !isLoading) enablePush(supabase);
   }, [signedInId, isLoading]);
+
+  // ── the website's upload form → the app's step-by-step flow (keeps ?edit and the product state)
+  useEffect(() => {
+    if (pathname === '/dashboard/upload') navigate({ pathname: '/publish', search: location.search }, { replace: true, state: location.state });
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── the website's /pricing & checkout pages don't exist in the app (store rules)
   useEffect(() => {
@@ -220,13 +228,13 @@ export default function AppShell() {
   const tabPaths = ROOTS.filter((p) => kept.tabs[p] || (root && p === pathname));
 
   return (
-    <div className={`app-shell ${root ? 'is-root' : 'is-child'}`}>
+    <div className={`app-shell ${root ? 'is-root' : 'is-child'} ${IMMERSIVE.includes(pathname) ? 'is-immersive' : ''}`}>
       {/* ── top bar */}
       <header className={`app-bar ${scrolled ? 'scrolled' : ''}`}>
         <div className="app-bar-side">
           {!root && (
-            <button type="button" className="app-icon-btn" aria-label="Back" onClick={() => { tap(); navigate(-1); }}>
-              <ChevronLeft size={26} strokeWidth={2.2} />
+            <button type="button" className="app-icon-btn" aria-label={IMMERSIVE.includes(pathname) ? 'Close' : 'Back'} onClick={() => { tap(); navigate(-1); }}>
+              {IMMERSIVE.includes(pathname) ? <X size={24} strokeWidth={2.2} /> : <ChevronLeft size={26} strokeWidth={2.2} />}
             </button>
           )}
           {root && pathname === '/' && <img src="/logo.png" alt="Nothi" className="app-bar-logo" />}
@@ -252,7 +260,7 @@ export default function AppShell() {
             </button>
           )}
           {pathname === '/me' && isAuthenticated && (
-            <Link to="/dashboard/settings" className="app-icon-btn" aria-label="Settings" onClick={() => tap()}><Settings size={21} /></Link>
+            <Link to="/menu" className="app-icon-btn" aria-label="Settings" onClick={() => tap()}><Settings size={21} /></Link>
           )}
         </div>
       </header>
@@ -302,7 +310,20 @@ export default function AppShell() {
 
       {/* ── tab bar */}
       <nav className="app-tabs" aria-label="Main">
-        {TABS.map(({ to, label, icon: Icon, exact, auth }) => {
+        {TABS.map(({ to, label, icon: Icon, exact, auth, center }) => {
+          if (center) {
+            return (
+              <Link
+                key={to}
+                to={isAuthenticated ? to : '/login'}
+                className="app-tab app-tab-center"
+                aria-label={label}
+                onClick={() => tap('MEDIUM')}
+              >
+                <span className="app-tab-plus"><Icon size={26} strokeWidth={2.4} /></span>
+              </Link>
+            );
+          }
           const active = exact ? pathname === to : pathname === to || pathname.startsWith(to + '/');
           // A kept tab reopens exactly where you left it (e.g. Explore with its category)
           const keptLoc = kept.tabs[to]?.location;
