@@ -27,7 +27,7 @@ html.is-app .selectable { user-select: text; -webkit-user-select: text; }
   position: fixed; top: 0; left: 0; right: 0; z-index: 900;
   height: calc(var(--app-bar-h) + var(--app-safe-top));
   padding: var(--app-safe-top) 6px 0;
-  display: grid; grid-template-columns: 76px 1fr 76px; align-items: center;
+  display: grid; grid-template-columns: 96px 1fr 96px; align-items: center;
   background: transparent;
   border-bottom: 1px solid transparent;
   transition: background .2s ease, border-color .2s ease;
@@ -236,3 +236,10 @@ html.platform-android .app-tabs { background: var(--color-bg-secondary); }
 .app-shell .rewards-page h1.bg-clip-text { display: none; }
 .app-shell .rewards-page { padding-left: 16px; padding-right: 16px; }
 .app-shell .settings-app-section .settings-content { padding: 0 4px; }
+
+/* Theme flip: circular reveal from the top-right button (View Transitions) */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html.theme-flip::view-transition-new(root) { animation: theme-reveal .55s cubic-bezier(.22, 1, .36, 1) both; }
+@keyframes theme-reveal { from { clip-path: circle(0% at calc(100% - 60px) 70px); } to { clip-path: circle(150% at calc(100% - 60px) 70px); } }
+/* Fallback without View Transitions: colours glide instead of snapping */
+html.is-app body, html.is-app .app-bar, html.is-app .app-tabs { transition: background-color .3s ease, color .3s ease; }

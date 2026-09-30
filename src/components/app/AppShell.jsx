@@ -3,8 +3,9 @@ import {
   Link, useLocation, useNavigate, useNavigationType, useOutlet, matchPath,
   UNSAFE_LocationContext as LocationContext,
 } from 'react-router';
-import { ChevronLeft, Compass, Search, MessageCircle, User, Bell, Settings, RefreshCw, Share2, Plus, X } from 'lucide-react';
+import { ChevronLeft, Compass, Search, MessageCircle, User, Bell, Settings, RefreshCw, Share2, Plus, X, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { invalidateProductCache } from '../../api/productApi';
 import { tap, platform, shareLink, enablePush } from '../../lib/native';
 import { supabase } from '../../lib/supabase';
@@ -72,6 +73,19 @@ export default function AppShell() {
   const outlet = useOutlet();
   const { user, isAuthenticated, isLoading, profile, isMockMode } = useAuth();
   const chat = useChat();
+  const { theme, setTheme } = useTheme();
+  const isDark = theme !== 'light';
+  // Light/dark in one tap, with a soft crossfade (View Transitions where the WebView has them)
+  const flipTheme = () => {
+    tap('MEDIUM');
+    const next = isDark ? 'light' : 'dark';
+    const apply = () => setTheme(next);
+    if (document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.classList.add('theme-flip');
+      const t = document.startViewTransition(apply);
+      t.finished.finally(() => document.documentElement.classList.remove('theme-flip'));
+    } else apply();
+  };
   const unread = chat.conversations.reduce((n, c) => n + (c.unread || 0), 0);
   const { pathname } = location;
 
@@ -253,6 +267,11 @@ export default function AppShell() {
         </div>
         <div className={`app-bar-title ${!root || scrolled ? 'show' : ''}`}>{title}</div>
         <div className="app-bar-side right">
+          {root && (
+            <button type="button" className="app-icon-btn" aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'} onClick={flipTheme}>
+              {isDark ? <Sun size={21} /> : <Moon size={20} />}
+            </button>
+          )}
           {pathname === '/' && isAuthenticated && (
             <Link to="/notifications" className="app-icon-btn" aria-label="Notifications" onClick={() => tap()}><Bell size={21} /></Link>
           )}
