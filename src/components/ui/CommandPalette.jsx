@@ -26,7 +26,7 @@ export default function CommandPalette({ isOpen, setIsOpen }) {
   const links = [
     { name: 'Home', path: '/' },
     { name: 'Marketplace', path: '/marketplace' },
-    { name: 'Best Sellers', path: '/best-sellers' },
+    { name: 'Top Creators', path: '/best-sellers' },
     { name: 'Pricing', path: '/pricing' },
     { name: 'Rewards', path: '/rewards' },
     { name: 'Dashboard', path: '/dashboard' },

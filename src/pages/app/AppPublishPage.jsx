@@ -246,7 +246,7 @@ export default function AppPublishPage() {
         <div className="pub-intro-glow" aria-hidden="true" />
         <p className="pub-eyebrow">Become a creator</p>
         <h1 className="pub-hero-title">Turn your presets into income.</h1>
-        <p className="pub-hero-text">Thousands of editors are looking for the assets you already use. List one in two minutes.</p>
+        <p className="pub-hero-text">Editors are looking for the assets you already use. List one in two minutes.</p>
         <ul className="pub-benefits">
           <li><span><CircleDollarSign size={20} /></span><div><b>You keep ~93%</b><small>5% Nothi fee + payment costs. No monthly fee.</small></div></li>
           <li><span><Wallet size={20} /></span><div><b>Paid straight to your bank</b><small>Secure payouts through Stripe.</small></div></li>

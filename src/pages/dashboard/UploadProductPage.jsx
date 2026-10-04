@@ -27,7 +27,7 @@ import { isNativeApp } from '../../lib/native';
 
 import {
   formatEur, MIN_SALE_PRICE, toDateInputValue, todayInputValue,
-  validatePromo, promoPayload, BOOST_PLANS, ALLOWED_EXTENSIONS,
+  validatePromo, promoPayload, BOOST_PLANS, ALLOWED_EXTENSIONS, fileFacts,
 } from '../../lib/productPublishing';
 
 export default function UploadProductPage() {
@@ -290,6 +290,7 @@ export default function UploadProductPage() {
           setFileUploadProgress(100);
           
           productPayload.file_path = filePath;
+          Object.assign(productPayload, fileFacts(productFile));
           setIsFileUploading(false);
         }
         
@@ -329,7 +330,7 @@ export default function UploadProductPage() {
         setFileUploadProgress(100);
         
         // Publish it
-        await updateProduct(res.id, { file_path: filePath, status: 'published' });
+        await updateProduct(res.id, { file_path: filePath, ...fileFacts(productFile), status: 'published' });
         setIsFileUploading(false);
         
         // Refresh XP gamification state

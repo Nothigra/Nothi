@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Search, Gift, Settings, User, Trophy, ChevronUp } from 'lucide-react';
+import { Home, Search, Gift, Settings, User, Trophy, ChevronUp, Library as LibraryIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useGamification } from '../../context/GamificationContext';
 import { useUnreadMessages } from '../../hooks/useUnreadMessages';
@@ -68,7 +68,7 @@ export default function MobileBottomNav() {
 
   const profileTarget = isAuthenticated ? '/dashboard' : '/login';
   const settingsTarget = isAuthenticated ? '/dashboard/settings' : '/login';
-  const isMoreActive = isActive('/dashboard/settings') || isActive('/best-sellers');
+  const isMoreActive = isActive('/dashboard/settings') || isActive('/best-sellers') || isActive('/rewards');
 
   return (
     <nav className={`mobile-bottom-nav ${isCompact ? 'compact' : ''}`} aria-label="Primary">
@@ -107,15 +107,12 @@ export default function MobileBottomNav() {
       </Link>
 
       <Link
-        to="/rewards"
-        className={`mbn-item ${isActive('/rewards') ? 'active' : ''}`}
-        aria-label="Rewards"
+        to={isAuthenticated ? '/dashboard/purchases' : '/login'}
+        className={`mbn-item ${isActive('/dashboard/purchases') ? 'active' : ''}`}
+        aria-label="Library"
       >
-        <span className="mbn-icon-wrapper">
-          <Gift size={21} strokeWidth={isActive('/rewards') ? 2.4 : 2} />
-          {(hasUnclaimedReward || hasNewXp) && <span className="mbn-badge-dot" />}
-        </span>
-        <span>Rewards</span>
+        <LibraryIcon size={21} strokeWidth={isActive('/dashboard/purchases') ? 2.4 : 2} />
+        <span>Library</span>
       </Link>
 
       <div className="mbn-more-wrapper" ref={moreRef}>
@@ -131,8 +128,11 @@ export default function MobileBottomNav() {
               <Link to={settingsTarget} className="mbn-popover-item" onClick={() => setIsMoreOpen(false)}>
                 <Settings size={17} /> Settings
               </Link>
+              <Link to="/rewards" className="mbn-popover-item" onClick={() => setIsMoreOpen(false)}>
+                <span className="mbn-icon-wrapper"><Gift size={17} />{(hasUnclaimedReward || hasNewXp) && <span className="mbn-badge-dot" />}</span> Rewards
+              </Link>
               <Link to="/best-sellers" className="mbn-popover-item" onClick={() => setIsMoreOpen(false)}>
-                <Trophy size={17} /> Best Sellers
+                <Trophy size={17} /> Top Creators
               </Link>
             </motion.div>
           )}

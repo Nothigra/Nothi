@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, SlidersHorizontal, Star } from 'lucide-react';
+import { Search, SlidersHorizontal } from 'lucide-react';
 import TrustBar from './TestimonialsSection';
 import { useTranslation } from 'react-i18next';
 import { useUnifiedSearch } from '../../hooks/useUnifiedSearch';
@@ -138,34 +138,6 @@ function MouseLight() {
   return <div ref={lightRef} className="hero-mouse-light" style={{ opacity: 0 }} />;
 }
 
-/* ─────────────── Social Proof ─────────────── */
-function SocialProof() {
-  return (
-    <div className="hero-social-proof">
-      <div className="social-avatars">
-        {['#3B3B3B', '#565656', '#717171', '#8C8C8C', '#A6A6A6'].map((color, i) => (
-          <div
-            key={i}
-            className="social-avatar"
-            style={{ background: color, zIndex: 5 - i }}
-          >
-            <span>{String.fromCharCode(65 + i)}</span>
-          </div>
-        ))}
-      </div>
-      <div className="social-info">
-        <div className="social-stars">
-          {[...Array(5)].map((_, i) => (
-            <Star key={i} size={14} fill="currentColor" />
-          ))}
-          <span className="social-rating">4.9/5</span>
-        </div>
-        <span className="social-text">Loved by editors worldwide</span>
-      </div>
-    </div>
-  );
-}
-
 /* ─────────────── Typewriter Animation ─────────────── */
 const typewriterContainer = {
   hidden: { opacity: 1 },
@@ -244,7 +216,7 @@ export default function Hero() {
             initial="visible"
             animate="visible"
           >
-            <TypewriterText text="The N°1 Marketplace" />
+            <TypewriterText text="The Marketplace" />
             <br />
             <TypewriterText text="for Editors." className="headline-italic" />
           </motion.h1>
@@ -276,7 +248,6 @@ export default function Hero() {
           </div>
 
           {/* Social Proof — replaces CTA buttons */}
-          <SocialProof />
         </div>
       </div>
 

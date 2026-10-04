@@ -1,7 +1,7 @@
 {
   "nav": {
     "marketplace": "Mercado",
-    "bestSellers": "Más Vendidos",
+    "bestSellers": "Top creadores",
     "rewards": "Recompensas",
     "pricing": "Precios",
     "signIn": "Iniciar Sesión",
@@ -15,7 +15,7 @@
     "notifications": "Notificaciones"
   },
   "hero": {
-    "headlinePrefix": "El N°1 ",
+    "headlinePrefix": "El ",
     "headlineHighlight": "Marketplace",
     "headlineSuffix": "para Editores",
     "subheadline": "Empieza a vender tu trabajo hoy gratis.",
@@ -24,7 +24,7 @@
     "searchOverlays": "Buscar overlays...",
     "searchProjectFiles": "Buscar archivos de proyecto...",
     "trustedBy": "Confiado por más de {{count}} Editores",
-    "headline": "El mercado n°1 para editores de video.",
+    "headline": "El mercado para editores de video.",
     "startSelling": "Comenzar a Vender",
     "browseMarketplace": "Explorar el Mercado",
     "newSale": "Nueva Venta",
@@ -350,7 +350,7 @@
     "productApproved": "Producto aprobado"
   },
   "footer": {
-    "description": "El mercado n°1 para editores de video. Compra y vende activos digitales premium.",
+    "description": "El mercado para editores de video. Compra y vende activos digitales premium.",
     "product": "Producto",
     "company": "Empresa",
     "resources": "Recursos",

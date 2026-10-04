@@ -107,3 +107,17 @@
     justify-content: center;
   }
 }
+
+/* Compact: a small card in the corner, never over the page's main content */
+.cookie-banner-wrapper { justify-content: flex-start; bottom: var(--space-lg); padding: 0 var(--space-lg); }
+.cookie-banner-content { max-width: 380px; padding: 14px 16px; gap: 8px; border-radius: 16px; }
+.cookie-banner-title { font-size: 0.9375rem; }
+.cookie-banner-body { font-size: 0.8125rem; line-height: 1.45; }
+.cookie-banner-body p + p { font-size: 0.75rem; }
+.cookie-banner-actions { margin-top: 2px; }
+@media (max-width: 640px) {
+  .cookie-banner-wrapper { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); padding: 0 12px; }
+  .cookie-banner-content { max-width: none; padding: 12px 14px; }
+  .cookie-banner-actions { flex-direction: row; align-items: center; gap: 12px; }
+  .cookie-banner-link { justify-content: flex-start; }
+}

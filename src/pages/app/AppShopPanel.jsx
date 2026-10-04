@@ -90,7 +90,7 @@ export default function AppShopPanel() {
       <div className="app-empty-card shop">
         <span className="app-empty-icon"><Package size={26} /></span>
         <h3>Open your shop</h3>
-        <p>Sell your presets, LUTs, transitions and project files to thousands of editors — or share them for free.</p>
+        <p>Sell your presets, LUTs, transitions and project files to other editors — or share them for free.</p>
         <Link to="/publish" className="app-pill-btn primary" onClick={() => tap('MEDIUM')}><Plus size={18} /> Publish your first product</Link>
       </div>
     );

@@ -61,6 +61,7 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(!initialProduct);
   const [isDownloading, setIsDownloading] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
+  const [creatorStats, setCreatorStats] = useState({ products: null, rating: null });
 
   useEffect(() => {
     async function loadProduct() {
@@ -78,6 +79,17 @@ export default function ProductPage() {
       }
       
       const allProds = await getPublicProducts(isMockMode);
+      // Real creator numbers, from their published products
+      const sellerId = data?.seller_id || data?.creator_id || initialProduct?.seller_id || initialProduct?.creator_id;
+      if (sellerId) {
+        const theirs = allProds.filter(p => (p.seller_id || p.creator_id) === sellerId);
+        const rated = theirs.filter(p => Number(p.reviews_count ?? p.reviews ?? 0) > 0 && Number(p.rating) > 0);
+        const totalReviews = rated.reduce((n, p) => n + Number(p.reviews_count ?? p.reviews ?? 0), 0);
+        setCreatorStats({
+          products: theirs.length,
+          rating: totalReviews ? rated.reduce((n, p) => n + Number(p.rating) * Number(p.reviews_count ?? p.reviews ?? 0), 0) / totalReviews : null,
+        });
+      }
       if (data || initialProduct) {
         const cat = data?.category || initialProduct?.category;
         setRelatedProducts(
@@ -431,6 +443,26 @@ export default function ProductPage() {
               )}
             </div>
 
+            {/* What a buyer checks before paying: does it work with my software, what do I get */}
+            {(product.software?.length > 0 || product.format || product.file_size) && (
+              <div className="product-facts">
+                {product.software?.length > 0 && (
+                  <div className="product-facts-row">
+                    <span className="product-facts-label">Works with</span>
+                    <div className="product-facts-chips">
+                      {product.software.map(sw => <span key={sw} className="product-facts-chip">{sw}</span>)}
+                    </div>
+                  </div>
+                )}
+                {(product.format || product.file_size) && (
+                  <div className="product-facts-row">
+                    <span className="product-facts-label">You get</span>
+                    <span className="product-facts-value">{[product.format && `${product.format} file`, product.file_size].filter(Boolean).join(' · ')}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="product-features p-md rounded-xl bg-secondary">
               <div className="feature-item text-sm font-medium mb-sm flex gap-sm items-center">
                 <Download size={16} className="text-accent" />
@@ -438,11 +470,11 @@ export default function ProductPage() {
               </div>
               <div className="feature-item text-sm font-medium mb-sm flex gap-sm items-center">
                 <ShieldCheck size={16} className="text-success" />
-                <span>100% Secure Payment</span>
+                <span>Secure payment by Stripe</span>
               </div>
               <div className="feature-item text-sm font-medium flex gap-sm items-center">
                 <RefreshCw size={16} className="text-primary" />
-                <span>Free Lifetime Updates</span>
+                <span>Re-download anytime from your library</span>
               </div>
             </div>
           </div>
@@ -474,21 +506,50 @@ export default function ProductPage() {
                 <div className="description-content prose prose-lg max-w-none text-secondary">
                   <p className="text-lg leading-relaxed mb-xl">{getLocalizedString(product.description, baseLang)}</p>
                   
-                  <h3 className="text-xl font-bold text-primary mt-xl mb-md">What's Included?</h3>
-                  <ul className="list-disc pl-lg mb-xl space-y-sm">
-                    <li>High quality assets optimized for production</li>
-                    <li>Compatible with all major editing software</li>
-                    <li>Detailed installation guide included (PDF + Video)</li>
-                    <li>Royalty-free commercial license</li>
-                  </ul>
+                  {product.software?.length > 0 && (
+                    <>
+                      <h3 className="text-xl font-bold text-primary mt-xl mb-md">Compatibility</h3>
+                      <div className="flex gap-sm flex-wrap mb-xl">
+                        {product.software.map(sw => (
+                          <span key={sw} className="px-md py-sm bg-secondary rounded-md text-sm font-medium">{sw}</span>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {product.style?.length > 0 && (
+                    <>
+                      <h3 className="text-xl font-bold text-primary mt-xl mb-md">Style</h3>
+                      <div className="flex gap-sm flex-wrap mb-xl">
+                        {product.style.map(st => (
+                          <span key={st} className="px-md py-sm bg-secondary rounded-md text-sm font-medium">{st}</span>
+                        ))}
+                      </div>
+                    </>
+                  )}
 
-                  <h3 className="text-xl font-bold text-primary mt-xl mb-md">Compatibility</h3>
-                  <div className="flex gap-sm flex-wrap mb-xl">
-                    <span className="px-md py-sm bg-secondary rounded-md text-sm font-medium">Premiere Pro</span>
-                    <span className="px-md py-sm bg-secondary rounded-md text-sm font-medium">After Effects</span>
-                    <span className="px-md py-sm bg-secondary rounded-md text-sm font-medium">DaVinci Resolve</span>
-                    <span className="px-md py-sm bg-secondary rounded-md text-sm font-medium">Final Cut Pro</span>
-                  </div>
+                  {/* Latest reviews, without having to switch tabs */}
+                  {realReviews.length > 0 && (
+                    <div className="mt-xl">
+                      <div className="flex items-center justify-between mb-md">
+                        <h3 className="text-xl font-bold text-primary">What buyers say</h3>
+                        <button type="button" className="text-sm font-medium text-secondary hover:text-primary" onClick={() => setActiveTab('reviews')}>
+                          See all {realReviews.length} review{realReviews.length === 1 ? '' : 's'}
+                        </button>
+                      </div>
+                      <div className="flex flex-col gap-md">
+                        {realReviews.filter(r => r.comment).slice(0, 2).map(r => (
+                          <div key={r.id} className="p-lg bg-secondary rounded-xl">
+                            <div className="flex text-warning mb-xs">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} size={14} fill={i < r.rating ? 'currentColor' : 'none'} color={i < r.rating ? 'currentColor' : 'var(--color-border)'} />
+                              ))}
+                            </div>
+                            <p className="text-secondary leading-relaxed">{r.comment}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -619,19 +680,27 @@ export default function ProductPage() {
           {/* Sidebar */}
           <div className="product-sidebar">
             <div className="creator-card glass-card p-xl flex flex-col items-center text-center">
-              <img src={`https://ui-avatars.com/api/?name=${product.creatorName}&background=random`} alt={product.creatorName} className="w-24 h-24 rounded-full border-4 border-bg mb-md shadow-md" />
+              {product.creator_avatar ? (
+                <img src={product.creator_avatar} alt={product.creatorName} className="w-24 h-24 rounded-full border-4 border-bg mb-md shadow-md object-cover" />
+              ) : (
+                <div className="w-24 h-24 rounded-full border-4 border-bg mb-md shadow-md bg-secondary flex-center text-3xl font-bold">
+                  {(product.creatorName || '?').charAt(0).toUpperCase()}
+                </div>
+              )}
               <h3 className="font-bold text-xl flex items-center justify-center gap-xs mb-xs">
                 {product.creatorName} {product.creator_is_pro && <ProBadge />}
               </h3>
-              <p className="text-sm text-muted mb-lg">Top Rated Seller • Joined 2024</p>
+              <p className="text-sm text-muted mb-lg" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                {product.creator_bio || 'Creator on Nothi'}
+              </p>
               
               <div className="w-full flex justify-around mb-lg pb-lg border-b border-border">
                 <div className="text-center">
-                  <div className="font-bold text-lg">4.9</div>
+                  <div className="font-bold text-lg">{creatorStats.rating ? creatorStats.rating.toFixed(1) : '—'}</div>
                   <div className="text-xs text-muted">Rating</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-bold text-lg">24</div>
+                  <div className="font-bold text-lg">{creatorStats.products ?? '—'}</div>
                   <div className="text-xs text-muted">Products</div>
                 </div>
               </div>
@@ -683,11 +752,16 @@ export default function ProductPage() {
             <div className="glass-card p-xl mt-lg">
               <h4 className="font-bold mb-md">Product Details</h4>
               <ul className="space-y-sm text-sm">
-                <li className="flex justify-between border-b border-border pb-sm"><span className="text-muted">Published</span> <span className="font-medium">Oct 12, 2026</span></li>
-                <li className="flex justify-between border-b border-border pb-sm"><span className="text-muted">File Size</span> <span className="font-medium">245 MB</span></li>
-                <li className="flex justify-between border-b border-border pb-sm"><span className="text-muted">Format</span> <span className="font-medium">ZIP / .cube</span></li>
-                <li className="flex justify-between border-b border-border pb-sm"><span className="text-muted">License</span> <span className="font-medium underline cursor-pointer">Standard</span></li>
-                <li className="flex justify-between"><span className="text-muted">Version</span> <span className="font-medium">1.2.0</span></li>
+{[
+                  ['Published', product.created_at ? new Date(product.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : null],
+                  ['Updated', product.updated_at && product.created_at && new Date(product.updated_at) - new Date(product.created_at) > 86400000
+                    ? new Date(product.updated_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : null],
+                  ['Category', product.category ? t(`categories.${product.category}`, { defaultValue: product.category }) : null],
+                  ['Format', product.format || null],
+                  ['File size', product.file_size || null],
+                ].filter(([, v]) => v).map(([label, value]) => (
+                  <li key={label} className="flex justify-between border-b border-border pb-sm"><span className="text-muted">{label}</span> <span className="font-medium">{value}</span></li>
+                ))}
               </ul>
               <button 
                 className="mt-lg w-full text-sm text-secondary hover:text-red-500 transition-colors flex items-center justify-center gap-xs py-sm border border-transparent hover:bg-bg-secondary hover:border-border rounded-lg"

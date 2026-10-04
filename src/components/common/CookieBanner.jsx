@@ -71,11 +71,9 @@ export default function CookieBanner() {
 
   // Don't render anything until client-side hydration is complete
   if (!mounted) {
-    console.log('CookieBanner: Not mounted yet');
     return null;
   }
   
-  console.log('CookieBanner: Rendering with isVisible=', isVisible);
 
   return (
     <AnimatePresence>

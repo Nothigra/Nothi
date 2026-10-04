@@ -334,6 +334,21 @@ export default function MarketplacePage() {
       </div>
 
 
+      {/* Categories, always one tap away */}
+      <div className="marketplace-cats" role="tablist" aria-label="Categories">
+        {[{ id: 'all', name: t('marketplace.allCategories', 'All') }, ...categories].map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            role="tab"
+            aria-selected={selectedCategory === c.id}
+            className={`marketplace-cat ${selectedCategory === c.id ? 'active' : ''}`}
+            onClick={() => handleCategoryChange(c.id)}
+          >
+            {c.id === 'all' ? c.name : t(`categories.${c.id}`, { defaultValue: c.name })}
+          </button>
+        ))}
+      </div>
 
       <div className="marketplace-toolbar">
         <button 

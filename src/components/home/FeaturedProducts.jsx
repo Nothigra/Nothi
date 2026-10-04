@@ -9,67 +9,68 @@ import './FeaturedProducts.css';
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.15 }
-  }
+  show: { opacity: 1, transition: { staggerChildren: 0.06 } }
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 30, filter: 'blur(10px)' },
-  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] } }
 };
 
-export default function FeaturedProducts() {
+/**
+ * A row of real products on the home page.
+ *   sort: 'popular' (popular_rank) | 'new' (most recent)
+ */
+export default function FeaturedProducts({ sort = 'popular', title, description, compact = false }) {
   const { t } = useTranslation();
   const [popularProducts, setPopularProducts] = useState([]);
   
   useEffect(() => {
     if (isMockMode) {
-      // Mirror real popular_rank ordering using mock sales_count, top 4
-      const sorted = [...MOCK_PRODUCTS].sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0)).slice(0, 4);
+      const sorted = [...MOCK_PRODUCTS].sort((a, b) => sort === 'new'
+        ? new Date(b.created_at || 0) - new Date(a.created_at || 0) || String(b.id).localeCompare(String(a.id))
+        : (b.sales_count || 0) - (a.sales_count || 0)).slice(0, 4);
       setPopularProducts(sorted);
       return;
     }
-    supabase.from('public_products')
-      .select('*')
-      .order('popular_rank', { ascending: true }) // Rank 1 is best
+    let alive = true;
+    const query = supabase.from('public_products').select('*');
+    (sort === 'new' ? query.order('created_at', { ascending: false }) : query.order('popular_rank', { ascending: true }))
       .limit(4)
-      .then(({ data }) => {
-        if (data) setPopularProducts(data);
-      })
+      .then(({ data }) => { if (alive && data) setPopularProducts(data); })
       .catch(console.error);
-  }, []);
+    return () => { alive = false; };
+  }, [sort]);
+
+  // Nothing to show yet: no empty heading on the page
+  if (popularProducts.length === 0) return null;
 
   return (
-      <section className="featured-products section">
+      <section className={`featured-products section ${compact ? 'featured-compact' : ''}`}>
         <div className="container">
-          <div className="section-header" style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto var(--space-12) auto' }}>
-            <h2>{t('sections.mostPopular', 'Most Popular')}</h2>
-            <p className="text-muted">{t('sections.mostPopularDesc', 'Discover our best-selling assets loved by creators.')}</p>
-          </div>
-  
-          {popularProducts.length > 0 && (
-            <motion.div 
-              className="product-grid"
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, margin: "-100px" }}
-            >
-              {popularProducts.map(product => (
-                <motion.div key={product.id} variants={itemVariants}>
-                  <ProductCard product={product} />
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 'var(--space-12)' }}>
-            <Link to="/marketplace" className="btn btn-outline">
+          <div className="featured-header">
+            <div className="section-title-wrapper">
+              <h2 className="featured-title">{title || t('sections.mostPopular', 'Most Popular')}</h2>
+              <p className="section-desc">{description || t('sections.mostPopularDesc', 'What editors are getting right now.')}</p>
+            </div>
+            <Link to={sort === 'new' ? '/marketplace' : '/marketplace'} className="view-all-link">
               {t('sections.viewAll')} →
             </Link>
           </div>
+  
+          <motion.div 
+            className="product-grid products-grid-view"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.05 }}
+          >
+            {popularProducts.map(product => (
+              <motion.div key={product.id} variants={itemVariants}>
+                <ProductCard product={product} />
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
   );

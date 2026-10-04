@@ -2,7 +2,7 @@
   "nav": {
     "home": "Accueil",
     "marketplace": "Marché",
-    "bestSellers": "Meilleures Ventes",
+    "bestSellers": "Top créateurs",
     "rewards": "Récompenses",
     "pricing": "Tarifs",
     "signIn": "Connexion",
@@ -25,7 +25,7 @@
     "searchOverlays": "Rechercher des overlays...",
     "searchProjectFiles": "Rechercher des fichiers de projet...",
     "trustedBy": "Approuvé par plus de {{count}} Monteurs",
-    "headline": "Le marché n°1 pour les monteurs vidéo.",
+    "headline": "La marketplace des monteurs vidéo.",
     "startSelling": "Commencer à Vendre",
     "browseMarketplace": "Parcourir le Marché",
     "newSale": "Nouvelle Vente",
@@ -351,7 +351,7 @@
     "productApproved": "Produit approuvé"
   },
   "footer": {
-    "description": "Le marché n°1 pour les monteurs vidéo. Achetez et vendez des assets numériques premium.",
+    "description": "La marketplace des monteurs vidéo. Achetez et vendez des assets numériques premium.",
     "product": "Produit",
     "company": "Entreprise",
     "resources": "Ressources",

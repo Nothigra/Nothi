@@ -16,7 +16,7 @@ export default function MarketplacePreviewCTA() {
         >
           <div className="cta-content">
             <h2>Ready to elevate your edits?</h2>
-            <p>Join thousands of creators using premium assets to speed up their workflow and produce better videos.</p>
+            <p>Presets, LUTs, transitions and project files made by editors — to speed up your workflow and produce better videos.</p>
             <div className="cta-actions">
               <Link to="/marketplace" className="btn btn-primary btn-lg btn-pill cta-btn">
                 Explore Marketplace <ArrowRight size={20} />

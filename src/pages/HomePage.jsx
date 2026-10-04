@@ -7,8 +7,10 @@ export default function HomePage() {
   return (
     <div className="home-page">
       <Hero />
+      {/* Products first: a marketplace should show what it sells on the first screen */}
+      <FeaturedProducts sort="popular" compact />
       <Categories />
-      <FeaturedProducts />
+      <FeaturedProducts sort="new" title="New arrivals" description="Freshly published by creators." />
     </div>
   );
 }

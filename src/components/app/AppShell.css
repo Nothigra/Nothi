@@ -164,7 +164,7 @@ html.platform-android .app-bar.scrolled, html.platform-android .is-child .app-ba
 html.platform-android .app-tabs { background: var(--color-bg-secondary); }
 
 /* ── Long lists: let the browser skip layout/paint for cards far off-screen */
-.app-shell .product-card { content-visibility: auto; contain-intrinsic-block-size: auto 420px; }
+.app-shell .product-card { content-visibility: auto; contain-intrinsic-block-size: auto 280px; }
 .app-shell .products-grid-view > * { min-width: 0; }
 .app-rail-item .product-card { content-visibility: visible; }
 /* Website hover effects are useless on touch and cost paint time */

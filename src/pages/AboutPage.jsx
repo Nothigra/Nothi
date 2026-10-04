@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { SOCIAL_LINKS } from '../config/links';
 import { User, CheckCircle, Clock, PlayCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -53,19 +54,18 @@ export default function AboutPage() {
         </div>
 
         <div className="about-socials">
-          {/* TODO: replace with real TikTok/YouTube profile URLs */}
-          <a href="#" className="about-social-link" aria-label="YouTube">
+          {SOCIAL_LINKS.youtube && <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="about-social-link" aria-label="YouTube">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 0 0-1.94 2C1 8.13 1 12 1 12s0 3.87.46 5.58a2.78 2.78 0 0 0 1.94 2C5.12 20 12 20 12 20s6.88 0 8.6-.42a2.78 2.78 0 0 0 1.94-2C23 15.87 23 12 23 12s0-3.87-.46-5.58z"></path>
               <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"></polygon>
             </svg>
-          </a>
+          </a>}
           {/* Using a simple custom SVG for TikTok since Lucide doesn't have it built-in */}
-          <a href="#" className="about-social-link" aria-label="TikTok">
+          {SOCIAL_LINKS.tiktok && <a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noopener noreferrer" className="about-social-link" aria-label="TikTok">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path>
             </svg>
-          </a>
+          </a>}
         </div>
 
         <div className="about-text">

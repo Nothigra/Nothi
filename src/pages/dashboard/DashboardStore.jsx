@@ -197,7 +197,7 @@ export default function DashboardStore() {
                   <Check size={32} />
                 </div>
                 <h3 className="wizard-step-title">You're all set!</h3>
-                <p className="wizard-step-desc">Your store is ready. You can now start uploading products and selling to thousands of creators.</p>
+                <p className="wizard-step-desc">Your store is ready. You can now start uploading products and selling to creators.</p>
               </motion.div>
             )}
           </AnimatePresence>

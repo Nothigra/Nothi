@@ -13,8 +13,7 @@ import {
   LayoutTemplate,
   Image as ImageIcon,
   X,
-  Rocket
-} from 'lucide-react';
+  Rocket, Play } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { MOCK_CREATORS } from '../../lib/seed';
 import { getLocalizedString } from '../../utils/i18nHelpers';
@@ -42,6 +41,11 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
   const { formatPrice } = useCurrency();
   const { profile, isMockMode } = useAuth();
   const [imgError, setImgError] = useState(false);
+  // Video preview on hover (mouse devices only — never auto-loads video on phones)
+  const [previewing, setPreviewing] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
+  const previewVideo = (product.media || []).find(m => m.type === 'video' && m.url)?.url || product.video_url || null;
+  const canHover = typeof window !== 'undefined' && window.matchMedia?.('(hover: hover) and (pointer: fine)').matches;
   
   const catKey = product.category.toLowerCase().replace(' ', '-');
   const catStyle = CAT_STYLES[catKey] || { var: '--color-text-secondary', Icon: ImageIcon };
@@ -69,7 +73,12 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
   const thumbnailUrl = getThumbnailUrl(product);
 
   return (
-    <div className="product-card" style={cardStyle}>
+    <div
+      className="product-card"
+      style={cardStyle}
+      onMouseEnter={previewVideo && canHover ? () => setPreviewing(true) : undefined}
+      onMouseLeave={previewVideo && canHover ? () => { setPreviewing(false); setVideoReady(false); } : undefined}
+    >
       <Link 
         to={`/product/${product.id}`} 
         state={{ product: product }}
@@ -112,6 +121,21 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
           <div className="thumbnail-fallback">
             <CategoryIcon size={40} className="fallback-icon" />
           </div>
+        )}
+        {previewing && (
+          <video
+            className={`thumbnail-video ${videoReady ? 'ready' : ''}`}
+            src={previewVideo}
+            muted
+            loop
+            playsInline
+            autoPlay
+            preload="metadata"
+            onPlaying={() => setVideoReady(true)}
+          />
+        )}
+        {previewVideo && !previewing && (
+          <span className="video-badge" aria-label="Has a video preview"><Play size={11} fill="currentColor" /></span>
         )}
         <div className="category-badge">
           {t(`categories.${catKey}`, { defaultValue: product.category })}
@@ -164,11 +188,15 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
               <span className="price-current">{formatPrice(product.price)}</span>
             )}
           </div>
-          <div className="product-rating">
-            <Star size={12} fill="currentColor" className="star-icon" />
-            <span>{product.rating}</span>
-            <span className="review-count">({reviewCount})</span>
-          </div>
+          {reviewCount > 0 ? (
+            <div className="product-rating">
+              <Star size={12} fill="currentColor" className="star-icon" />
+              <span>{Number(product.rating).toFixed(1)}</span>
+              <span className="review-count">({reviewCount})</span>
+            </div>
+          ) : (
+            <span className="product-new">New</span>
+          )}
         </div>
       </div>
     </div>

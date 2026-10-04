@@ -466,8 +466,10 @@
 @media (max-width: 640px) {
   .products-grid-view,
   .marketplace-layout.filters-open .products-grid-view {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
   }
+  .products-grid-view > * { min-width: 0; }
 }
 
 /* Category/Software/Style: flat list on desktop/tablet (room for everything
@@ -547,3 +549,15 @@
 .filter-back-btn:active {
   opacity: 0.6;
 }
+
+/* Category pills above the grid */
+.marketplace-cats { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 0 var(--space-4); padding-bottom: 2px; }
+.marketplace-cats::-webkit-scrollbar { display: none; }
+.marketplace-cat {
+  flex: none; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--color-border);
+  background: var(--color-bg-card); color: var(--color-text-secondary); font: 600 13.5px var(--font-sans); cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.marketplace-cat:hover { color: var(--color-text-primary); border-color: var(--color-border-strong, var(--color-text-tertiary)); }
+.marketplace-cat.active { background: var(--color-text-primary); color: var(--color-bg); border-color: var(--color-text-primary); }
+@media (max-width: 640px) { .marketplace-cats { margin-left: calc(-1 * var(--space-4)); margin-right: calc(-1 * var(--space-4)); padding-left: var(--space-4); padding-right: var(--space-4); } }

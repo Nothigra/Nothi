@@ -2,7 +2,7 @@
   "nav": {
     "home": "Home",
     "marketplace": "Marketplace",
-    "bestSellers": "Best Sellers",
+    "bestSellers": "Top Creators",
     "rewards": "Rewards",
     "pricing": "Pricing",
     "signIn": "Sign In",
@@ -16,7 +16,7 @@
     "notifications": "Notifications"
   },
   "hero": {
-    "headlinePrefix": "The N°1 ",
+    "headlinePrefix": "The ",
     "headlineHighlight": "Marketplace",
     "headlineSuffix": "for Editors",
     "subheadline": "Start selling your work today for free.",
@@ -25,7 +25,7 @@
     "searchOverlays": "Search overlays...",
     "searchProjectFiles": "Search project files...",
     "trustedBy": "Trusted by {{count}}+ Editors",
-    "headline": "#1 marketplace for video editors.",
+    "headline": "The marketplace for video editors.",
     "startSelling": "Start Selling",
     "browseMarketplace": "Browse Marketplace",
     "newSale": "New Sale",
@@ -352,7 +352,7 @@
     "productApproved": "Product approved"
   },
   "footer": {
-    "description": "The #1 marketplace for video editors. Buy and sell premium digital assets.",
+    "description": "The The marketplace for video editors. Buy and sell premium digital assets.",
     "product": "Product",
     "company": "Company",
     "resources": "Resources",

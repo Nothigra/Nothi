@@ -212,3 +212,33 @@
   font-weight: 700;
   color: var(--card-price-color, var(--color-text-primary));
 }
+
+/* Video preview on hover */
+.thumbnail-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .25s ease; pointer-events: none; }
+.thumbnail-video.ready { opacity: 1; }
+.video-badge {
+  position: absolute; right: 12px; bottom: 12px; width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; padding-left: 1px;
+  background: color-mix(in srgb, var(--color-bg) 70%, transparent); color: var(--color-text-primary); backdrop-filter: blur(4px);
+}
+.product-new { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--color-text-tertiary); }
+
+/* Phones: two compact cards per row in product grids */
+@media (max-width: 640px) {
+  .products-grid-view .product-card { border-radius: 16px; }
+  .products-grid-view .product-content { padding: 10px 11px 12px; }
+  .products-grid-view .product-description,
+  .products-grid-view .product-software { display: none; }
+  .products-grid-view .product-title { font-size: 14.5px; line-height: 1.3; margin-bottom: 0; }
+  .products-grid-view .product-creator { margin-bottom: 5px; gap: 5px; }
+  .products-grid-view .product-creator .avatar-frame-container { transform: scale(.8); transform-origin: left center; margin-right: -4px; }
+  .products-grid-view .creator-name { font-size: 12px; margin-left: 0; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .products-grid-view .product-footer { margin-top: 8px; gap: 4px; }
+  .products-grid-view .price-current { font-size: 15px; }
+  .products-grid-view .price-old { font-size: 11.5px; }
+  .products-grid-view .product-price-wrap { gap: 5px; flex-wrap: wrap; }
+  .products-grid-view .product-rating { font-size: 11.5px; }
+  .products-grid-view .review-count { display: none; }
+  .products-grid-view .category-badge { top: 8px; left: 8px; padding: 3px 7px; font-size: 9.5px; }
+  .products-grid-view .video-badge { right: 8px; bottom: 8px; }
+}

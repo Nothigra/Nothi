@@ -87,6 +87,15 @@ export function checkProductFile(file, { maxFileSizeMB, isProPlan }) {
   return '';
 }
 
+/** What the product page shows about the file: { file_size: '245 MB', format: 'ZIP' } */
+export function fileFacts(file) {
+  if (!file) return {};
+  const mb = file.size / (1024 * 1024);
+  const size = mb >= 1024 ? `${(mb / 1024).toFixed(1)} GB` : mb >= 10 ? `${Math.round(mb)} MB` : mb >= 1 ? `${mb.toFixed(1)} MB` : `${Math.max(1, Math.round(file.size / 1024))} KB`;
+  const ext = (file.name.split('.').pop() || '').toUpperCase();
+  return { file_size: size, format: ext || null };
+}
+
 /** PUT to a signed URL with real progress (fetch can't report upload progress). */
 export function uploadWithProgress(url, file, onProgress) {
   return new Promise((resolve, reject) => {
@@ -126,6 +135,7 @@ export async function saveProduct({ editingId, draftId, sellerId, payload, produ
     if (productFile) {
       onPhase?.('uploading');
       updates.file_path = await uploadProductFile(editingId, productFile, onProgress);
+      Object.assign(updates, fileFacts(productFile));
     }
     onPhase?.('publishing');
     const updated = await updateProduct(editingId, updates);
@@ -150,7 +160,7 @@ export async function saveProduct({ editingId, draftId, sellerId, payload, produ
   onPhase?.('uploading');
   const filePath = await uploadProductFile(id, productFile, onProgress);
   onPhase?.('publishing');
-  const published = await updateProduct(id, { ...payload, file_path: filePath, status: 'published' });
+  const published = await updateProduct(id, { ...payload, file_path: filePath, ...fileFacts(productFile), status: 'published' });
   if (!published) throw new Error('Your file is uploaded but the product could not be published. Please try again.');
   return id;
 }
