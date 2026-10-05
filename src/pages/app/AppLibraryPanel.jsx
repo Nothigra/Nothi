@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router';
 import { Download, Loader2, MessageCircle, MoreHorizontal, Package, ShoppingBag, Star, X, ExternalLink } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
+import { useScreenFocus } from '../../lib/screenFocus';
 import { getUserPurchases, requestDownloadUrl } from '../../api/productApi';
 import { getThumbnailUrl } from '../../utils/mediaHelpers';
 import { getLocalizedString } from '../../utils/i18nHelpers';
@@ -33,6 +34,7 @@ export default function AppLibraryPanel() {
   const [downloading, setDownloading] = useState(null);
   const [error, setError] = useState('');
   const [menu, setMenu] = useState(null);
+  const { visit } = useScreenFocus(); // refreshed each time you come back to the tab
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -43,7 +45,7 @@ export default function AppLibraryPanel() {
       else setItems((cur) => cur || []);
     });
     return () => { alive = false; };
-  }, [profile?.id, isMockMode, key]);
+  }, [profile?.id, isMockMode, key, visit]);
 
   const download = async (p) => {
     tap();

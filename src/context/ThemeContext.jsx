@@ -34,6 +34,8 @@ export function ThemeProvider({ children }) {
 
   // Apply theme to DOM
   useEffect(() => {
+    // Remembered for the next launch: index.html applies it before the first paint
+    try { localStorage.setItem('nothi-last-theme', theme === 'light' ? 'light' : 'dark'); } catch { /* ignore */ }
     document.documentElement.setAttribute('data-theme', theme);
     document.documentElement.classList.remove('dark', 'dim');
     if (theme === 'dark') {

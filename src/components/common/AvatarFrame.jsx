@@ -23,7 +23,7 @@ export default function AvatarFrame({ tier = 'bronze', imageUrl, size = 'md', an
 
   const renderAvatar = () => {
     if (imageUrl) {
-      return <img src={imageUrl} alt="Avatar" className="avatar-frame-img" />;
+      return <img src={imageUrl} alt="Avatar" className="avatar-frame-img" loading="lazy" decoding="async" />;
     }
     // Generic fallback if no image provided to protect privacy
     return (

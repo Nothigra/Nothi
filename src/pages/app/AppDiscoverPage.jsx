@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { CATEGORIES } from '../../lib/seed';
 import ProductCard from '../../components/product/ProductCard';
 import { tap } from '../../lib/native';
+import { useScreenFocus } from '../../lib/screenFocus';
 import './AppPages.css';
 
 const ICONS = { Package, Sparkles, FolderArchive, Contrast, Volume2, ArrowRightLeft, LayoutTemplate, TerminalSquare, Layers };
@@ -32,11 +33,12 @@ export default function AppDiscoverPage() {
   const navigate = useNavigate();
   const [products, setProducts] = useState(() => peekPublicProducts(isMockMode));
 
+  const { visit } = useScreenFocus();
   useEffect(() => {
     let alive = true;
     getPublicProducts(isMockMode).then((data) => { if (alive) setProducts(data || []); });
     return () => { alive = false; };
-  }, [isMockMode]);
+  }, [isMockMode, visit]); // refreshed each time you come back to the tab
 
   const { trending, fresh, onSale, creators } = useMemo(() => {
     const list = products || [];

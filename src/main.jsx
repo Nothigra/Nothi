@@ -9,6 +9,7 @@ import { WishlistProvider } from './context/WishlistContext.jsx';
 import { CurrencyProvider } from './context/CurrencyContext.jsx';
 import { GamificationProvider } from './context/GamificationContext.jsx';
 import './config/i18n.js';
+import './fonts.css';
 import './index.css';
 import { isNativeApp, platform, startNativeApp } from './lib/native';
 import { supabase } from './lib/supabase';
@@ -24,7 +25,7 @@ createRoot(document.getElementById('root')).render(
           <WishlistProvider>
             <CurrencyProvider>
               <GamificationProvider>
-                <Suspense fallback={<div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="loader spin"></div></div>}>
+                <Suspense fallback={isNativeApp ? null : <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="loader spin"></div></div>}>
                   <RouterProvider router={router} />
                 </Suspense>
               </GamificationProvider>

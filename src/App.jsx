@@ -105,7 +105,7 @@ function AppRoot() {
       <Outlet />
       {!isNativeApp && <CookieBanner />}
       <XPGainPopup />
-      <CommandPalette isOpen={isCommandPaletteOpen} setIsOpen={setIsCommandPaletteOpen} />
+      {!isNativeApp && <CommandPalette isOpen={isCommandPaletteOpen} setIsOpen={setIsCommandPaletteOpen} />}
     </>
   );
 }

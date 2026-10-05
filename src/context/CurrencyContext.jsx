@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import * as store from '../lib/accountStore';
 
@@ -21,6 +21,16 @@ const CURRENCY_SYMBOLS = {
   AUD: 'A$', CHF: 'CHF', BRL: 'R$', INR: '₹', MXN: '$',
   SGD: 'S$', AED: 'د.إ', KRW: '₩', ZAR: 'R'
 };
+
+// Building an Intl.NumberFormat is slow (it was the top cost when a list of
+// cards rendered), so each one is built once and reused.
+const EUR_FORMAT = new Intl.NumberFormat('fr-BE', { style: 'currency', currency: BASE_CURRENCY });
+const formatters = new Map();
+function currencyFormatter(currency) {
+  let f = formatters.get(currency);
+  if (!f) { f = new Intl.NumberFormat('en-US', { style: 'currency', currency }); formatters.set(currency, f); }
+  return f;
+}
 
 export function CurrencyProvider({ children }) {
   const { profile, isAuthenticated, isMockMode } = useAuth();
@@ -90,25 +100,26 @@ export function CurrencyProvider({ children }) {
 
   // Always shows the real EUR amount, whatever currency the viewer picked.
   // Use it wherever the exact charged/earned figure matters.
-  const formatEur = useCallback((eurAmount) => new Intl.NumberFormat('fr-BE', {
-    style: 'currency', currency: BASE_CURRENCY,
-  }).format(Number(eurAmount) || 0), []);
+  const formatEur = useCallback((eurAmount) => EUR_FORMAT.format(Number(eurAmount) || 0), []);
 
   const isConverted = currency !== BASE_CURRENCY;
 
   const formatPrice = useCallback((eurAmount) => {
     const converted = convertPrice(eurAmount);
-    const parts = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency
-    }).formatToParts(converted);
-    
+    const parts = currencyFormatter(currency).formatToParts(converted);
+
     const customSymbol = CURRENCY_SYMBOLS[currency] || currency;
     return parts.map(p => p.type === 'currency' ? customSymbol : p.value).join('');
   }, [currency, convertPrice]);
 
+  // One stable object: screens that read prices only re-render when the currency or rates change
+  const value = useMemo(
+    () => ({ currency, changeCurrency, convertPrice, formatPrice, formatEur, isConverted, rates, CURRENCY_SYMBOLS }),
+    [currency, changeCurrency, convertPrice, formatPrice, formatEur, isConverted, rates],
+  );
+
   return (
-    <CurrencyContext.Provider value={{ currency, changeCurrency, convertPrice, formatPrice, formatEur, isConverted, rates, CURRENCY_SYMBOLS }}>
+    <CurrencyContext.Provider value={value}>
       {children}
     </CurrencyContext.Provider>
   );

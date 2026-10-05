@@ -1,4 +1,4 @@
-import { Activity, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Link, useLocation, useNavigate, useNavigationType, useOutlet, matchPath,
   UNSAFE_LocationContext as LocationContext,
@@ -6,7 +6,9 @@ import {
 import { ChevronLeft, Compass, Search, MessageCircle, User, Bell, Settings, RefreshCw, Share2, Plus, X, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { invalidateProductCache } from '../../api/productApi';
+import { invalidateProductCache, getPublicProducts } from '../../api/productApi';
+import { hideSplash } from '../../lib/splash';
+import { ScreenFocus } from '../../lib/screenFocus';
 import { tap, platform, shareLink, enablePush } from '../../lib/native';
 import { supabase } from '../../lib/supabase';
 import PageFallback from '../common/PageFallback';
@@ -18,8 +20,10 @@ import './AppShell.css';
  * AppShell — the mobile app's chrome (Capacitor build only).
  *
  * Performance model (what makes it feel native):
- *  - The five tabs are KEPT ALIVE: each one stays mounted inside a React
- *    <Activity> and is only hidden when you leave it. Coming back is instant,
+ *  - The main tabs are KEPT ALIVE: each one stays mounted and is only put to
+ *    sleep when you leave it (content-visibility: hidden — the browser keeps
+ *    its computed styles and layout, so waking it costs a few ms; display:none
+ *    made it restyle ~1,600 elements on every return). Coming back is instant,
  *    with its scroll position, filters and loaded data intact.
  *    A hidden tab sees a frozen copy of the location it was last shown with,
  *    so it never reacts to other screens' URLs.
@@ -66,11 +70,17 @@ const AUTH_PREFIXES = ['/dashboard', '/library', '/publish'];
 // Android has its own system back gesture (handled in native.js).
 const EDGE_SWIPE = platform !== 'android';
 
+// Tells a kept-alive tab whether it is on display and how many times it was shown
+function FocusScope({ active, visit, children }) {
+  const value = useMemo(() => ({ active, visit }), [active, visit]);
+  return <ScreenFocus.Provider value={value}>{children}</ScreenFocus.Provider>;
+}
+
 export default function AppShell() {
   const location = useLocation();
   const navType = useNavigationType();
   const navigate = useNavigate();
-  const outlet = useOutlet();
+  const liveOutlet = useOutlet();
   const { user, isAuthenticated, isLoading, profile, isMockMode } = useAuth();
   const chat = useChat();
   const { theme, setTheme } = useTheme();
@@ -88,6 +98,10 @@ export default function AppShell() {
   };
   const unread = chat.conversations.reduce((n, c) => n + (c.unread || 0), 0);
   const { pathname } = location;
+  // useOutlet() hands back a new element on every render of this shell, which
+  // re-rendered the whole screen each time the bar, the badge or the scroll
+  // state changed. One element per location: the screen renders once.
+  const outlet = useMemo(() => liveOutlet, [location]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const root = isRoot(pathname);
   const dynamicTitle = useScreenTitleFor(pathname);
@@ -102,6 +116,18 @@ export default function AppShell() {
       navigate('/onboarding', { replace: true });
     }
   }, [isLoading, needsAuth, isAuthenticated, profile, pathname, navigate]);
+
+  // ── launch screen: leaves once the session is known and the catalogue is in
+  // (it is instant from the second launch on: the last catalogue is kept on the phone)
+  useEffect(() => {
+    if (isLoading) return;
+    let live = true;
+    Promise.race([
+      getPublicProducts(isMockMode).catch(() => null),
+      new Promise((r) => setTimeout(r, 2500)),
+    ]).then(() => { if (live) hideSplash(); });
+    return () => { live = false; };
+  }, [isLoading, isMockMode]);
 
   // ── messages: one live copy shared by the Messages tab and chat screens
   useEffect(() => { if (!isLoading) startChat(user?.id ?? null, isMockMode); }, [user?.id, isLoading, isMockMode]);
@@ -129,12 +155,14 @@ export default function AppShell() {
 
   // ── transition direction, derived from the previous path during render
   const [nav, setNav] = useState({ path: pathname, dir: 'none', swiped: false });
+  const [visits, setVisits] = useState({}); // { [tabPath]: times shown }
   if (nav.path !== pathname) {
     let dir;
     if (isRoot(pathname)) dir = navType === 'POP' && !isRoot(nav.path) ? 'back' : 'fade'; // tab jump = crossfade
     else dir = navType === 'POP' ? 'back' : 'push';
     if (nav.swiped) dir = 'none'; // the finger already did the animation
     setNav({ path: pathname, dir, swiped: false });
+    if (isRoot(pathname)) setVisits((v) => ({ ...v, [pathname]: (v[pathname] || 1) + 1 }));
   }
   const enterClass = nav.dir === 'none' ? '' : `app-enter-${nav.dir}`;
 
@@ -263,7 +291,7 @@ export default function AppShell() {
               {IMMERSIVE.includes(pathname) ? <X size={24} strokeWidth={2.2} /> : <ChevronLeft size={26} strokeWidth={2.2} />}
             </button>
           )}
-          {root && pathname === '/' && <img src="/logo.png" alt="Nothi" className="app-bar-logo" />}
+          {root && pathname === '/' && <span className="app-logo-mark app-bar-logo" role="img" aria-label="Nothi" />}
         </div>
         <div className={`app-bar-title ${!root || scrolled ? 'show' : ''}`}>{title}</div>
         <div className="app-bar-side right">
@@ -317,16 +345,16 @@ export default function AppShell() {
           const loc = active ? location : entry?.location;
           const tabTitle = titleFor(p);
           return (
-            <Activity key={p} mode={active ? 'visible' : 'hidden'}>
-              <div className={`app-screen ${active ? enterClass : ''}`}>
-                {tabTitle && <h1 className="app-large-title">{tabTitle}</h1>}
-                <LocationContext.Provider value={{ location: loc, navigationType: active ? navType : 'POP' }}>
+            <div key={p} className={`app-screen ${active ? enterClass : 'is-asleep'}`} aria-hidden={!active || undefined}>
+              {tabTitle && <h1 className="app-large-title">{tabTitle}</h1>}
+              <LocationContext.Provider value={{ location: loc, navigationType: active ? navType : 'POP' }}>
+                <FocusScope active={active} visit={visits[p] || 1}>
                   <Suspense fallback={<PageFallback />}>
                     <div key={refreshKeys[p] || 0} style={{ display: 'contents' }}>{element}</div>
                   </Suspense>
-                </LocationContext.Provider>
-              </div>
-            </Activity>
+                </FocusScope>
+              </LocationContext.Provider>
+            </div>
           );
         })}
 
@@ -372,7 +400,7 @@ export default function AppShell() {
             >
               <span className="app-tab-icon">
                 {to === '/me' && isAuthenticated && profile?.avatar_url
-                  ? <img src={profile.avatar_url} alt="" className={`app-tab-avatar ${active ? 'active' : ''}`} />
+                  ? <img src={profile.avatar_url} alt="" decoding="async" className={`app-tab-avatar ${active ? 'active' : ''}`} />
                   : <Icon size={22} strokeWidth={active ? 2.4 : 1.9} />}
                 {to === '/dashboard/messages' && unread > 0 && <span className="app-tab-badge">{unread > 9 ? '9+' : unread}</span>}
               </span>

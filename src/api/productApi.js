@@ -1,9 +1,43 @@
 import { supabase, withTimeoutSafety, invokeFunction } from '../lib/supabase';
 import { MOCK_PRODUCTS } from '../lib/seed';
 
+import { isNativeApp } from '../lib/native';
+
 let publicProductsCache = null;
 let publicProductsCacheTime = 0;
 const CACHE_TTL = 300000; // 5 minutes
+
+// App: the last catalogue is kept on the phone, so the first screen shows
+// products immediately on launch and refreshes quietly in the background.
+const CATALOG_KEY = 'nothi-catalog';
+if (isNativeApp) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CATALOG_KEY) || 'null');
+    if (Array.isArray(saved)) publicProductsCache = saved; // time stays 0 → refreshed on first read
+  } catch { /* ignore */ }
+}
+function saveCatalog(list) {
+  if (!isNativeApp) return;
+  try {
+    const json = JSON.stringify(list);
+    if (json.length < 600000) localStorage.setItem(CATALOG_KEY, json);
+  } catch { /* storage full or unavailable */ }
+}
+
+// A refresh that brings back the same products keeps the SAME objects (and
+// the same array when nothing moved), so lists do not re-render for nothing.
+function shareUnchanged(next, prev) {
+  if (!prev) return next;
+  const before = new Map(prev.map((p) => [p.id, p]));
+  let same = next.length === prev.length;
+  const out = next.map((p, i) => {
+    const old = before.get(p.id);
+    const kept = old && JSON.stringify(old) === JSON.stringify(p) ? old : p;
+    if (kept !== prev[i]) same = false;
+    return kept;
+  });
+  return same ? prev : out;
+}
 
 export async function getPublicProducts(isMockMode, forceFresh = false) {
   if (isMockMode) {
@@ -25,9 +59,11 @@ export async function getPublicProducts(isMockMode, forceFresh = false) {
     return [];
   }
   
-  publicProductsCache = data;
+  const list = shareUnchanged(data || [], publicProductsCache);
+  if (list !== publicProductsCache) saveCatalog(list);
+  publicProductsCache = list;
   publicProductsCacheTime = Date.now();
-  return data;
+  return list;
 }
 
 /** Last loaded catalogue, even if stale — lets screens paint instantly and refresh in the background. */
@@ -36,8 +72,9 @@ export function peekPublicProducts(isMockMode) {
   return publicProductsCache;
 }
 
+// Marks the catalogue as stale. The last copy stays visible while the fresh
+// one loads (no blank screen, no skeleton flash on pull-to-refresh).
 export function invalidateProductCache() {
-  publicProductsCache = null;
   publicProductsCacheTime = 0;
 }
 

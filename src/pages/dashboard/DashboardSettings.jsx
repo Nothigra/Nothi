@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { shrinkImage } from '../../utils/mediaHelpers';
 import { User, Palette, DollarSign, Monitor, Layers, Check, CheckCircle2, Loader2, XCircle, Sun, Moon, AlertTriangle, Camera } from 'lucide-react';
 import { applyCustomTheme, clearCustomTheme, getLuminance, hexToRGB, getContrastRatio } from '../../utils/themeUtils';
 import CustomColorPicker from '../../components/common/CustomColorPicker';
@@ -125,15 +126,16 @@ export default function DashboardSettings() {
   }, [profile?.username, profile?.id]);
 
   const handleAvatarChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      let safeType = file.type || 'image/jpeg';
-      if (!['image/jpeg', 'image/png', 'image/webp'].includes(safeType)) {
-        safeType = 'image/jpeg';
-      }
-
+    const picked = e.target.files?.[0];
+    if (picked) {
       const uploadAvatar = async () => {
         try {
+          // A profile photo is never shown larger than ~160px: upload a small copy
+          const file = await shrinkImage(picked, 512);
+          let safeType = file.type || 'image/jpeg';
+          if (!['image/jpeg', 'image/png', 'image/webp'].includes(safeType)) {
+            safeType = 'image/jpeg';
+          }
           if (isMockMode) {
             // No real upload target in mock mode — just preview the local file
             await new Promise(r => setTimeout(r, 400));

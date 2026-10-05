@@ -27,10 +27,18 @@ export function lazyPage(load) {
 }
 
 export function preloadPages() {
-  const run = () => {
-    Promise.allSettled(loaders.map((l, i) => new Promise((r) => setTimeout(() => l().then(r, r), i * 40))))
-      .then(() => { try { sessionStorage.removeItem('nothi-chunk-reload'); } catch { /* ignore */ } });
+  // One page at a time, and only while the phone has nothing else to do.
+  // (They used to arrive every 40 ms right after launch — about two seconds of
+  // parsing in the background, exactly while you start scrolling.)
+  const idle = (fn) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 4000 }) : setTimeout(fn, 300));
+  let i = 0;
+  const next = () => {
+    if (i >= loaders.length) {
+      try { sessionStorage.removeItem('nothi-chunk-reload'); } catch { /* ignore */ }
+      return;
+    }
+    const load = loaders[i++];
+    load().then(() => idle(next), () => idle(next));
   };
-  if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 2500 });
-  else setTimeout(run, 1200);
+  setTimeout(() => idle(next), 3000);
 }

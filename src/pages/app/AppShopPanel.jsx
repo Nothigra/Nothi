@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
+import { useScreenFocus } from '../../lib/screenFocus';
 import { useCurrency } from '../../context/CurrencyContext';
 import { supabase, withTimeoutSafety } from '../../lib/supabase';
 import { getMyProducts } from '../../api/productApi';
@@ -45,6 +46,7 @@ export default function AppShopPanel() {
   const [boostProduct, setBoostProduct] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [reload, setReload] = useState(0);
+  const { visit } = useScreenFocus(); // refreshed each time you come back to the tab
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -66,7 +68,7 @@ export default function AppShopPanel() {
       setSales(recent);
     });
     return () => { alive = false; };
-  }, [profile?.id, isMockMode, reload]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [profile?.id, isMockMode, reload, visit]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const remove = async (p) => {
     setConfirmDelete(null);

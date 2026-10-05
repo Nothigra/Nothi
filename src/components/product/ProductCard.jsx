@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Link } from 'react-router';
 import { 
   Star, 
@@ -36,7 +36,11 @@ const CAT_STYLES = {
   'templates': { var: '--cat-templates', Icon: LayoutTemplate }
 };
 
-export default function ProductCard({ product, cardStyle = {}, onRemove }) {
+// Asked once: only mouse devices get the hover video preview
+const CAN_HOVER = typeof window !== 'undefined' && !!window.matchMedia?.('(hover: hover) and (pointer: fine)').matches;
+const NO_STYLE = {};
+
+function ProductCard({ product, cardStyle = NO_STYLE, onRemove }) {
   const { t, i18n } = useTranslation();
   const { formatPrice } = useCurrency();
   const { profile, isMockMode } = useAuth();
@@ -45,7 +49,7 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
   const [previewing, setPreviewing] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
   const previewVideo = (product.media || []).find(m => m.type === 'video' && m.url)?.url || product.video_url || null;
-  const canHover = typeof window !== 'undefined' && window.matchMedia?.('(hover: hover) and (pointer: fine)').matches;
+  const canHover = CAN_HOVER;
   
   const catKey = product.category.toLowerCase().replace(' ', '-');
   const catStyle = CAT_STYLES[catKey] || { var: '--color-text-secondary', Icon: ImageIcon };
@@ -203,3 +207,5 @@ export default function ProductCard({ product, cardStyle = {}, onRemove }) {
   );
 }
 
+// Cards are re-used as-is while their product has not changed (long lists stay cheap)
+export default memo(ProductCard);

@@ -52,7 +52,7 @@ export default function AppProfilePage() {
     return (
       <div className="app-page">
         <div className="app-hero-card guest">
-          <img src="/logo.png" alt="" className="app-profile-logo" />
+          <span className="app-logo-mark app-profile-logo" aria-hidden="true" />
           <h2>Join Nothi</h2>
           <p>Get your assets on every device, follow creators — and open your own shop.</p>
           <Link to="/login" className="btn btn-primary app-hero-btn" onClick={() => tap()}>Sign in or create an account</Link>

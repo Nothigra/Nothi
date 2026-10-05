@@ -8,6 +8,7 @@ import ProductCard from '../components/product/ProductCard';
 import { getLocalizedString } from '../utils/i18nHelpers';
 import { useAuth } from '../context/AuthContext';
 import { isNativeApp } from '../lib/native';
+import { useScreenFocus } from '../lib/screenFocus';
 import { peekPublicProducts, getPublicProducts } from '../api/productApi';
 import { MOCK_CREATORS, CATEGORIES as categories, SOFTWARE_LIST as softwareList, STYLE_LIST as styleList } from '../lib/seed';
 import Input from '../components/ui/Input';
@@ -97,7 +98,8 @@ export default function MarketplacePage() {
     if (!isFiltersOpen) setFilterView('main');
   }, [isFiltersOpen]);
   // The filter sheet is portaled: close it when this screen is hidden (app tabs stay mounted)
-  useEffect(() => () => setIsFiltersOpen(false), []);
+  const { active: screenActive } = useScreenFocus();
+  useEffect(() => { if (!screenActive) setIsFiltersOpen(false); }, [screenActive]);
   const [hasInitializedFilters, setHasInitializedFilters] = useState(!!savedFilters || !!profile?.software);
 
   // Coming from the mobile header's search icon: jump straight into the search field
@@ -131,7 +133,7 @@ export default function MarketplacePage() {
       if (!peekPublicProducts(isMockMode)) setLoading(true); // spinner only on a cold start
       const data = await getPublicProducts(isMockMode, true);
       if (isMounted) {
-        setProducts(data);
+        setProducts(data); // same array when nothing changed → no re-render
         setLoading(false);
       }
     }
@@ -235,39 +237,20 @@ export default function MarketplacePage() {
       );
     }
 
-    result.sort((a, b) => {
-      // Dedicated ranking score keeping metrics independent
-      const getRankingScore = (p) => {
-        if (!isMockMode) {
-          return p.popular_rank || 0;
-        }
-        const salesWeight = p.sales_count || 0;
-        const boostWeight = p.boost && new Date(p.boost.endDate) > new Date() ? 10000 : 0;
-        return salesWeight + boostWeight;
-      };
-
-      const priceA = a.salePrice || a.sale_price || a.price;
-      const priceB = b.salePrice || b.sale_price || b.price;
-      
-      switch (sortBy) {
-        case 'newest': 
-          if (!isMockMode) {
-            return new Date(b.created_at) - new Date(a.created_at);
-          }
-          const idA = parseInt(a.id.replace(/\D/g, '') || 0) + (a.boost && new Date(a.boost.endDate) > new Date() ? 10000 : 0);
-          const idB = parseInt(b.id.replace(/\D/g, '') || 0) + (b.boost && new Date(b.boost.endDate) > new Date() ? 10000 : 0);
-          return idB - idA;
-        case 'popular': 
-          if (!isMockMode) {
-            // popular_rank is ASCENDING (1 is best)
-            return getRankingScore(a) - getRankingScore(b);
-          }
-          return getRankingScore(b) - getRankingScore(a);
-        case 'priceLow': return priceA - priceB;
-        case 'priceHigh': return priceB - priceA;
-        default: return 0;
-      }
-    });
+    // Dates are read once per product, not once per comparison
+    const now = Date.now();
+    const boosted = (p) => (p.boost && new Date(p.boost.endDate).getTime() > now ? 10000 : 0);
+    const key = new Map();
+    for (const p of result) {
+      const price = p.salePrice || p.sale_price || p.price;
+      let k;
+      if (sortBy === 'newest') k = isMockMode ? parseInt(String(p.id).replace(/\D/g, '') || 0) + boosted(p) : Date.parse(p.created_at) || 0;
+      else if (sortBy === 'popular') k = isMockMode ? (p.sales_count || 0) + boosted(p) : -(p.popular_rank || 0); // rank 1 is best
+      else k = price;
+      key.set(p, k);
+    }
+    if (sortBy === 'priceLow') result.sort((a, b) => key.get(a) - key.get(b));
+    else if (sortBy === 'newest' || sortBy === 'popular' || sortBy === 'priceHigh') result.sort((a, b) => key.get(b) - key.get(a));
 
     return result;
   }, [products, searchTerm, selectedCategory, selectedPrice, selectedRating, selectedSoftware, selectedStyle, showPaid, showFree, sortBy]);

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { shrinkImage } from '../utils/mediaHelpers';
 import { createPortal } from 'react-dom';
 import { useParams, Link, useNavigate, useBlocker } from 'react-router';
 import { Star, CheckCircle2, LayoutDashboard, Edit2, Camera, Upload, Check, X, GripVertical, Plus, Settings, Eye, EyeOff, Loader2, ArrowLeft, UserPlus, Flag, Palette } from 'lucide-react';
@@ -291,7 +292,9 @@ export default function CreatorProfilePage() {
       if (isOwner) {
         let finalSettings = { ...shopSettings };
 
-        const uploadImage = async (file, folder) => {
+        const uploadImage = async (original, folder) => {
+          // Small copies: 512px for the profile photo, 1920px for the banner
+          const file = await shrinkImage(original, folder === 'avatars' ? 512 : 1920);
           let safeType = file.type || 'image/jpeg';
           if (!['image/jpeg', 'image/png', 'image/webp'].includes(safeType)) {
             safeType = 'image/jpeg';
