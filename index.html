@@ -290,14 +290,14 @@ footer .legal { flex-basis: 100%; }
     <div class="grid-bg"></div>
     <div class="wrap">
       <div class="hero-top">
-        <span class="pill-note a1"><b>NEW</b>Toolkit 1.4 · Sequence clips &amp; fit animations</span>
+        <span class="pill-note a1"><b>NEW</b>Toolkit 1.5 · Curve editor &amp; independent precomps</span>
         <h1><span class="ln"><span class="a2">Six tools.</span></span><span class="ln"><em class="a3">One small panel.</em></span></h1>
         <p class="lead a4">Nothi Toolkit is the first free tool from Nothi Labs. It docks next to your timeline and handles the repetitive parts of an edit: beat markers, eases, anchor points, precomps, style copy and your favorite effects.</p>
         <div class="cta-row a5">
           <a class="btn primary" id="dlWin" href="downloads/NothiToolkit_Windows.zip" download><svg><use href="#i-win"/></svg>Download for Windows</a>
           <a class="btn" id="dlMac" href="downloads/NothiToolkit_Mac.zip" download><svg><use href="#i-mac"/></svg>Download for macOS</a>
         </div>
-        <div class="meta-row a6"><span>Version 1.4</span><span>125 KB</span><span>No account</span><span><a href="#install" style="color:inherit">How to install</a></span></div>
+        <div class="meta-row a6"><span>Version 1.5</span><span>130 KB</span><span>No account</span><span><a href="#install" style="color:inherit">How to install</a></span></div>
       </div>
     </div>
   </section>
@@ -334,9 +334,9 @@ footer .legal { flex-basis: 100%; }
       <div class="sec-head"><span class="eyebrow">What's inside</span><h2>Built for the clicks you make a hundred times a day.</h2><p class="lead">One icon per tool at the top of the panel. Everything is one undo step.</p></div>
       <div class="tools">
         <a class="tool" href="#g-create"><span class="ico"><svg><use href="#i-create"/></svg></span><h3>Create</h3><p>Text, adjustment, solid, null, shape, camera or light in one click, matched to the selected layer.</p><span class="go">Guide →</span></a>
-        <a class="tool" href="#g-curves"><span class="ico"><svg><use href="#i-curves"/></svg></span><h3>Curves</h3><p>Eight eases ready to apply on your keyframes. Save the ones you tweak and reuse them anywhere.</p><span class="go">Guide →</span></a>
+        <a class="tool" href="#g-curves"><span class="ico"><svg><use href="#i-curves"/></svg></span><h3>Curves</h3><p>Shape your ease by dragging handles on a graph, or pick one of ten presets. Save your own and reuse them anywhere.</p><span class="go">Guide →</span></a>
         <a class="tool" href="#g-beat"><span class="ico"><svg><use href="#i-beat"/></svg></span><h3>Beat</h3><p>Drop a song from the timeline. Get markers on every beat, then snap or sequence your clips on them.</p><span class="go">Guide →</span></a>
-        <a class="tool" href="#g-layers"><span class="ico"><svg><use href="#i-layers"/></svg></span><h3>Layers</h3><p>Put your clips one after another in one click. Move the anchor point without moving the layer. Precompose, decompose, rename.</p><span class="go">Guide →</span></a>
+        <a class="tool" href="#g-layers"><span class="ico"><svg><use href="#i-layers"/></svg></span><h3>Layers</h3><p>Duplicate a precomp without linking it to the original. Sequence clips, move the anchor point, precompose, decompose, rename.</p><span class="go">Guide →</span></a>
         <a class="tool" href="#g-style"><span class="ico"><svg><use href="#i-style"/></svg></span><h3>Style</h3><p>Copy the effects and animation of one clip. Paste them on others, with the animation fitted to each clip’s length.</p><span class="go">Guide →</span></a>
         <a class="tool" href="#g-effects"><span class="ico"><svg><use href="#i-effects"/></svg></span><h3>Effects</h3><p>Your favorite effects one click away. Alt+click drops them on a new adjustment layer.</p><span class="go">Guide →</span></a>
       </div>
@@ -444,15 +444,24 @@ footer .legal { flex-basis: 100%; }
       </article>
 
       <article class="howto" id="g-curves">
-        <figure><img src="img/tool-curves.webp" alt="Curves tab: Save tile and eight presets drawn as curves" width="680" height="680" loading="lazy"><figcaption>Curves tab, with a dot running along each ease</figcaption></figure>
+        <figure><img src="img/tool-curves.webp" alt="Curves tab: a graph with two draggable handles, the values 0.446, 0.906, 0.67, 1, Apply, Read and Save buttons, and the curve library below" width="680" height="680" loading="lazy">
+          <div class="thumbs"><img src="img/tool-curves-opt.webp" alt="Curves options: Apply while editing" width="680" height="680" loading="lazy"></div>
+          <figcaption>The graph editor, and its options</figcaption></figure>
         <div class="howto-text">
           <h3><span class="ico"><svg><use href="#i-curves"/></svg></span>Curves</h3>
-          <p>Speed curves you can apply in one click, and keep.</p>
+          <p>Draw your ease on a graph, apply it, keep it.</p>
           <ol>
             <li><span>Select <strong>two keyframes or more</strong> in the timeline.</span></li>
-            <li><span>Click a curve: <strong>Easy Ease, Smooth, Silk, Expo Out, Expo In, Punch, Snap Out</strong> or <strong>Glide</strong>.</span></li>
-            <li><span>To keep your own: select two keyframes with an ease you like, click <strong>Save</strong>. It appears as “My curve 1”.</span></li>
+            <li><span><strong>Drag the two white handles</strong> in the graph. The green dot shows how the motion will feel.</span></li>
+            <li><span>Click <strong>Apply</strong>. Or pick a curve from the library below: it loads in the graph and applies right away.</span></li>
+            <li><span>Like it? Click <strong>+</strong> to save it in your library as “My curve 1”.</span></li>
           </ol>
+          <div class="opts"><h4>In the graph</h4><dl>
+            <dt>Shift + drag</dt><dd>Keeps the handle flat, like a classic ease.</dd>
+            <dt>Double-click</dt><dd>Resets to linear.</dd>
+            <dt>The numbers</dt><dd>Click them to type exact values, like 0.33, 0, 0.67, 1.</dd>
+            <dt>Read</dt><dd>The copy icon loads the ease of the selected keyframes into the graph, to tweak it.</dd>
+            <dt>Apply while editing</dt><dd>In the options: applies each time you release a handle.</dd></dl></div>
           <div class="opts"><h4>Your curves</h4><dl>
             <dt>Rename</dt><dd>Double-click the tile.</dd>
             <dt>Delete</dt><dd>Hover the tile and click the ×.</dd>
@@ -487,8 +496,8 @@ footer .legal { flex-basis: 100%; }
       </article>
 
       <article class="howto" id="g-layers">
-        <figure><img src="img/tool-layers.webp" alt="Layers tab: 9-point anchor grid, Precompose, Decompose, Sequence and Rename buttons" width="680" height="680" loading="lazy">
-          <div class="thumbs"><img src="img/tool-layers-opt.webp" alt="Layers options: sequence order, start and gap between clips" width="680" height="680" loading="lazy"><img src="img/tool-tip.webp" alt="Tooltip on Decompose explaining what it does" width="680" height="680" loading="lazy"></div>
+        <figure><img src="img/tool-layers.webp" alt="Layers tab: 9-point anchor grid, Precompose, Decompose, Duplicate, Sequence and Rename buttons" width="680" height="680" loading="lazy">
+          <div class="thumbs"><img src="img/tool-layers-opt.webp" alt="Layers options: duplicate mode, nested precomps, sequence order" width="680" height="680" loading="lazy"><img src="img/tool-tip.webp" alt="Tooltip on Decompose explaining what it does" width="680" height="680" loading="lazy"></div>
           <figcaption>Layers tab, its options, and a tooltip</figcaption></figure>
         <div class="howto-text">
           <h3><span class="ico"><svg><use href="#i-layers"/></svg></span>Layers</h3>
@@ -497,10 +506,12 @@ footer .legal { flex-basis: 100%; }
             <li><span><strong>Anchor point:</strong> select layers, click one of the 9 points. The layer doesn't move on screen, even if it's scaled or rotated.</span></li>
             <li><span><strong>Precompose:</strong> puts the selected layers in a new comp, trimmed to their length.</span></li>
             <li><span><strong>Decompose:</strong> select a precomp layer to bring its layers back into the current comp, with their timing. The status bar tells you if something couldn't be kept (time remap, effects on the precomp…).</span></li>
+            <li><span><strong>Duplicate:</strong> select a precomp layer and click. You get a real copy of the precomp: go inside it, change anything, <strong>the original doesn’t move</strong>. In After Effects, a plain Ctrl+D keeps both layers linked to the same comp.</span></li>
             <li><span><strong>Sequence:</strong> select all your clips and click. They play one after another, no gap, starting where the first one starts. Great after importing a batch of clips.</span></li>
             <li><span><strong>Rename:</strong> renames layers by type and content, like “TXT – Title” or “VID – Clip 04”.</span></li>
           </ol>
           <div class="opts"><h4>Options (sliders icon)</h4><dl>
+            <dt>Duplicate</dt><dd>As a new layer above (default), or switch the selected layer itself to the copy. “Copy nested precomps too” makes precomps inside the copy independent as well.</dd>
             <dt>Sequence order</dt><dd>Timeline order (top layer first) or the order you clicked the clips.</dd>
             <dt>Sequence start</dt><dd>Where the first clip is, or at the playhead.</dd>
             <dt>Gap</dt><dd>Frames between clips. A negative number overlaps them, handy for crossfades.</dd>
@@ -576,7 +587,7 @@ footer .legal { flex-basis: 100%; }
       <div class="faq-cols">
         <div>
           <h3>Nothi Toolkit &amp; Labs</h3>
-          <details><summary>What's new in 1.4?</summary><div class="a"><p><strong>Sequence</strong> in the Layers tab: select your clips, they play one after another. <strong>Fit to clip</strong> in the Style tab: pasted animations adapt to each clip’s length and keep their speed graph. Pasted keyframes now keep their eases too.</p></div></details>
+          <details><summary>What's new?</summary><div class="a"><p><strong>1.5:</strong> a <strong>curve editor</strong> in the Curves tab, drag the handles and apply. <strong>Duplicate</strong> in the Layers tab: a precomp copy that isn’t linked to the original.</p><p><strong>1.4:</strong> <strong>Sequence</strong> in the Layers tab: select your clips, they play one after another. <strong>Fit to clip</strong> in the Style tab: pasted animations adapt to each clip’s length and keep their speed graph. Pasted keyframes now keep their eases too.</p></div></details>
           <details><summary>What is Nothi Labs?</summary><div class="a"><p>The free side of Nothi: tools for editors, made alongside the Nothi marketplace. <strong>Nothi Toolkit</strong> is the first one. New tools will show up on this site.</p></div></details>
           <details><summary>Is it really free?</summary><div class="a"><p>Yes. No account, no trial, no watermark, no ads in the panel.</p></div></details>
           <details><summary>Which versions of After Effects work?</summary><div class="a"><p><strong>After Effects 2022 (version 22) and newer</strong>, on Windows and on macOS (Intel and Apple Silicon).</p></div></details>
@@ -618,7 +629,7 @@ footer .legal { flex-basis: 100%; }
   <div class="wrap">
     <a class="brand" href="#top"><img src="img/logo-mark.png" alt="" width="30" height="23">Nothi <span>Labs</span></a>
     <nav aria-label="Footer"><a href="#install">Install</a><a href="#guide">Guide</a><a href="#faq">FAQ</a><a href="#nothi">Nothi</a><a href="legal.html">Legal</a></nav>
-    <p class="legal">Nothi Labs · Nothi Toolkit 1.4 · Made in Belgium · nothicontact@gmail.com · <a href="legal.html">Legal notice, privacy &amp; terms</a>. An independent project, not affiliated with or endorsed by Adobe. After Effects is a trademark of Adobe Inc.</p>
+    <p class="legal">Nothi Labs · Nothi Toolkit 1.5 · Made in Belgium · nothicontact@gmail.com · <a href="legal.html">Legal notice, privacy &amp; terms</a>. An independent project, not affiliated with or endorsed by Adobe. After Effects is a trademark of Adobe Inc.</p>
   </div>
 </footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>

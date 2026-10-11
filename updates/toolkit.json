@@ -1,5 +1,5 @@
 {
-  "version": "1.4",
-  "date": "2026-10-11",
-  "notes": "Sequence clips in one click. Pasted animations fit each clip and keep their speed graph."
+  "version": "1.5",
+  "date": "2026-10-12",
+  "notes": "Curve editor: drag the handles on a graph. Duplicate a precomp without linking it to the original."
 }
