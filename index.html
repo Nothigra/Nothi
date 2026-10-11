@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Nothi Toolkit: a free After Effects panel with beat markers, eases, anchor points, precompose/decompose, style copy and favorite effects. Windows and macOS.">
+<meta property="og:title" content="Nothi Toolkit, free panel for After Effects">
+<meta property="og:description" content="Six tools in one small panel: Create, Curves, Beat, Layers, Style, Effects.">
+<meta property="og:image" content="img/hero-panel.webp">
+<meta name="theme-color" content="#0A0A0A">
+<link rel="icon" href="img/logo-mark.png">
+<link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<title>Nothi Toolkit</title>
+<style>
+/* Layout: one 1120px column on the Nothi black grid; hero with the real panel, then install, guide, Nothi teaser, FAQ. */
+@font-face { font-family: 'Jakarta'; src: url(fonts/plus-jakarta-sans-latin-wght-normal.woff2) format('woff2'); font-weight: 200 800; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url(fonts/inter-latin-wght-normal.woff2) format('woff2'); font-weight: 100 900; font-display: swap; }
+:root {
+  --bg: #0A0A0A;
+  --surface: #121215;
+  --surface-2: #17171B;
+  --line: #222226;
+  --line-2: #2E2E34;
+  --fg: #F4F4F6;
+  --muted: #8A8A93;
+  --dim: #5E5E66;
+  --ok: #6FD49A;
+  --disp: 'Jakarta', 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  --body: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 400 16px/1.6 var(--body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+img { max-width: 100%; height: auto; display: block; }
+a { color: inherit; }
+h1, h2, h3, h4 { font-family: var(--disp); font-weight: 800; letter-spacing: -0.04em; line-height: 1.05; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; animation: none !important; } }
+
+.wrap { width: 100%; max-width: 1152px; margin: 0 auto; padding-inline: 16px; }
+@media (min-width: 640px) { .wrap { padding-inline: 32px; } }
+.eyebrow { font: 700 12px/1 var(--disp); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.lead { color: var(--muted); font-size: 18px; line-height: 1.6; max-width: 60ch; }
+section { position: relative; }
+.sec { padding-block: 96px; border-top: 1px solid var(--line); }
+.sec-head { display: grid; gap: 14px; margin-bottom: 48px; max-width: 720px; }
+.sec-head h2 { font-size: clamp(34px, 5vw, 52px); }
+
+/* grid backdrop, like nothi's site */
+.grid-bg { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px); background-size: 72px 72px; -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 20%, transparent 75%); mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 20%, transparent 75%); }
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 48px; padding: 0 22px; border-radius: 999px; font: 700 15px var(--disp); letter-spacing: -0.01em; text-decoration: none; border: 1px solid var(--line-2); color: var(--fg); background: transparent; cursor: pointer; transition: background .15s, border-color .15s, transform .15s; white-space: nowrap; }
+.btn svg { width: 18px; height: 18px; flex: none; }
+.btn:hover { background: var(--surface-2); border-color: #44444C; }
+.btn.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.btn.primary:hover { background: #DCDCE0; border-color: #DCDCE0; }
+.btn.sm { height: 38px; padding: 0 16px; font-size: 13.5px; }
+.btn small { font: 500 12px var(--body); opacity: .6; }
+
+/* nav */
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: rgba(10,10,10,.78); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid transparent; transition: border-color .2s; }
+.nav.scrolled { border-bottom-color: var(--line); }
+.nav .wrap { display: flex; align-items: center; gap: 24px; height: 68px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font: 800 17px var(--disp); letter-spacing: -0.03em; }
+.brand img { width: 30px; height: auto; }
+.brand span { color: var(--muted); font-weight: 600; }
+.nav-links { display: flex; gap: 4px; margin-left: auto; }
+.nav-links a { text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 500; padding: 8px 12px; border-radius: 999px; transition: color .15s, background .15s; }
+.nav-links a:hover { color: var(--fg); background: var(--surface-2); }
+@media (max-width: 860px) { .nav-links { display: none; } .nav .btn { margin-left: auto; } }
+
+/* hero */
+.hero { padding-block: 72px 88px; overflow: hidden; }
+.hero-top { position: relative; display: grid; gap: 28px; max-width: 820px; }
+.hero h1 { font-size: clamp(46px, 7vw, 84px); letter-spacing: -0.045em; line-height: .98; }
+.hero h1 em { font-style: normal; color: var(--muted); }
+.pill-note { display: inline-flex; align-items: center; gap: 8px; width: fit-content; padding: 6px 14px 6px 6px; border-radius: 999px; border: 1px solid var(--line-2); font-size: 13px; color: var(--muted); }
+.pill-note b { font: 700 11px var(--disp); letter-spacing: .04em; color: var(--bg); background: var(--fg); padding: 3px 9px; border-radius: 999px; }
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.meta-row { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--dim); font-size: 13.5px; }
+.meta-row span { display: inline-flex; align-items: center; gap: 7px; }
+.meta-row span::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--dim); }
+.meta-row span:first-child::before { display: none; }
+
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 56px; align-items: center; }
+.hero-panel { position: relative; margin: 0; border-radius: 20px; border: 1px solid #3A3A42; overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,.75), 0 0 0 10px rgba(255,255,255,.025); }
+.hero-panel figcaption { position: absolute; left: 14px; bottom: 14px; }
+@media (max-width: 960px) { .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 40px; } .hero-panel { max-width: 520px; } }
+.frame { border-radius: 16px; border: 1px solid var(--line-2); background: var(--surface); overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,.65); }
+.frame-bar { display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px; border-bottom: 1px solid var(--line); color: var(--dim); font-size: 12px; }
+.frame-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--line-2); }
+.frame-bar span { margin-left: 8px; }
+.float-label { display: inline-block; font: 700 12px var(--disp); background: var(--fg); color: var(--bg); padding: 6px 12px; border-radius: 999px; }
+
+/* tool overview */
+.tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
+.tool { background: var(--bg); padding: 28px; display: grid; gap: 12px; align-content: start; text-decoration: none; transition: background .15s; }
+.tool:hover { background: var(--surface); }
+.tool .ico { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line-2); display: flex; align-items: center; justify-content: center; }
+.tool .ico svg { width: 18px; height: 18px; }
+.tool h3 { font-size: 22px; letter-spacing: -0.03em; }
+.tool p { color: var(--muted); font-size: 15px; }
+.tool .go { color: var(--dim); font-size: 13px; font-weight: 600; }
+.tool:hover .go { color: var(--fg); }
+.extras { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-2); font-size: 14px; color: var(--muted); }
+.chip b { color: var(--fg); font-weight: 600; }
+kbd { font: 600 12px var(--body); color: var(--fg); padding: 2px 7px; border-radius: 6px; border: 1px solid var(--line-2); background: var(--surface-2); white-space: nowrap; }
+@media (max-width: 900px) { .tools { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .tools { grid-template-columns: minmax(0, 1fr); } }
+
+/* install */
+.seg { display: inline-flex; padding: 4px; gap: 4px; border: 1px solid var(--line-2); border-radius: 999px; margin-bottom: 40px; }
+.seg button { height: 40px; padding: 0 20px; border-radius: 999px; border: 0; background: transparent; color: var(--muted); font: 700 14px var(--disp); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.seg button svg { width: 16px; height: 16px; }
+.seg button[aria-selected="true"] { background: var(--fg); color: var(--bg); }
+.steps { display: grid; gap: 20px; counter-reset: step; }
+.step { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; align-items: center; padding: 28px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); }
+.step-text { display: grid; gap: 12px; min-width: 0; }
+.num { width: 34px; height: 34px; border-radius: 50%; background: var(--fg); color: var(--bg); font: 800 15px var(--disp); display: flex; align-items: center; justify-content: center; }
+.step h3 { font-size: 26px; letter-spacing: -0.03em; }
+.step p, .step li { color: var(--muted); font-size: 15.5px; }
+.step p strong, .step li strong { color: var(--fg); font-weight: 600; }
+.step img { border-radius: 12px; border: 1px solid var(--line-2); }
+.step ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.note { font-size: 14px; color: var(--muted); border-left: 2px solid var(--line-2); padding: 2px 0 2px 14px; }
+.code { position: relative; display: flex; align-items: flex-start; gap: 10px; background: #0E0E10; border: 1px solid var(--line-2); border-radius: 12px; padding: 12px 12px 12px 16px; font: 13px/1.55 var(--mono); color: #D6D6DA; overflow-x: auto; }
+.code code { flex: 1; min-width: 0; white-space: pre-wrap; word-break: break-word; }
+.copy { flex: none; height: 28px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface-2); color: var(--fg); font: 600 12px var(--body); cursor: pointer; }
+.copy:hover { background: var(--fg); color: var(--bg); }
+.sub-h { display: flex; align-items: baseline; gap: 14px; margin: 56px 0 20px; }
+.sub-h h3 { font-size: 28px; }
+.sub-h p { color: var(--muted); }
+@media (max-width: 860px) { .step { grid-template-columns: minmax(0, 1fr); gap: 22px; padding: 20px; } }
+
+/* usage guide */
+.guide-nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 68px); z-index: 10; display: flex; gap: 6px; overflow-x: auto; padding: 10px 0; margin-bottom: 28px; background: var(--bg); scrollbar-width: none; }
+.guide-nav::-webkit-scrollbar { display: none; }
+.guide-nav a { flex: none; text-decoration: none; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); font: 700 13.5px var(--disp); transition: background .15s, color .15s; }
+.guide-nav a:hover { color: var(--fg); }
+.guide-nav a.on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.howto { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 56px; padding-block: 56px; border-top: 1px solid var(--line); }
+.howto:first-of-type { border-top: 0; padding-top: 16px; }
+.howto figure { margin: 0; display: grid; gap: 12px; align-content: start; position: sticky; top: 150px; }
+.howto figure img { border-radius: 16px; border: 1px solid var(--line-2); box-shadow: 0 24px 60px rgba(0,0,0,.5); }
+.howto figcaption { color: var(--dim); font-size: 13px; }
+.thumbs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.thumbs img { box-shadow: none; border-radius: 12px; }
+.howto-text { display: grid; gap: 18px; align-content: start; min-width: 0; }
+.howto-text h3 { font-size: clamp(30px, 4vw, 40px); display: flex; align-items: center; gap: 14px; }
+.howto-text h3 .ico { width: 44px; height: 44px; border-radius: 14px; background: var(--fg); color: var(--bg); display: flex; align-items: center; justify-content: center; flex: none; }
+.howto-text h3 .ico svg { width: 20px; height: 20px; }
+.howto-text > p { color: var(--muted); font-size: 17px; max-width: 58ch; }
+.howto ol { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 14px; }
+.howto ol li { counter-increment: s; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; color: var(--muted); }
+.howto ol li::before { content: counter(s); width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line-2); color: var(--fg); font: 700 12.5px var(--disp); display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+.howto ol li strong { color: var(--fg); font-weight: 600; }
+.opts { display: grid; gap: 8px; padding: 18px 20px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); }
+.opts h4 { font: 700 12px var(--disp); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+.opts dl { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; font-size: 14.5px; }
+.opts dt { color: var(--fg); font-weight: 600; }
+.opts dd { margin: 0; color: var(--muted); }
+.tip-line { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; color: var(--muted); }
+.tip-line b { flex: none; font: 700 11px var(--disp); letter-spacing: .06em; text-transform: uppercase; color: var(--bg); background: var(--fg); padding: 3px 8px; border-radius: 999px; margin-top: 2px; }
+@media (max-width: 900px) { .howto { grid-template-columns: minmax(0, 1fr); gap: 28px; } .howto figure { position: static; max-width: 440px; } }
+@media (max-width: 520px) { .opts dl { grid-template-columns: minmax(0, 1fr); gap: 2px; } .opts dd { margin-bottom: 8px; } }
+
+/* nothi teaser */
+.nothi { overflow: hidden; }
+.nothi-card { position: relative; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 48px 48px; align-items: center; padding: 56px; border-radius: 28px; border: 1px solid var(--line-2); background: radial-gradient(ellipse 80% 90% at 100% 0%, #1A1A1F, var(--surface) 60%); overflow: hidden; }
+.nothi-card .txt { display: grid; gap: 20px; min-width: 0; position: relative; }
+.nothi-card h2 { font-size: clamp(36px, 5vw, 56px); }
+.nothi-card h2 em { font-style: italic; font-weight: 300; letter-spacing: -0.03em; }
+.cats { display: flex; flex-wrap: wrap; gap: 6px; }
+.cats span { font-size: 13px; padding: 5px 12px; border-radius: 999px; background: #1E1E23; color: #C8C8CE; }
+.wip { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.wip::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 4px rgba(111,212,154,.15); }
+.nothi-shot { position: relative; min-width: 0; }
+.chev { transition: transform .2s; }
+#moreBtn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.more { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line-2); border: 1px solid var(--line-2); border-radius: 20px; overflow: hidden; animation: open .3s ease-out; }
+.more-col { background: #0F0F12; padding: 24px; display: grid; gap: 10px; align-content: start; }
+.more-col h3 { font-size: 18px; letter-spacing: -0.02em; }
+.more-col p { color: var(--muted); font-size: 14.5px; line-height: 1.6; }
+.more-col p strong { color: var(--fg); font-weight: 600; }
+.more-col.status h3::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); margin-right: 10px; vertical-align: middle; box-shadow: 0 0 0 4px rgba(111,212,154,.15); }
+@keyframes open { from { opacity: 0; transform: translateY(-6px); } }
+@media (max-width: 1000px) { .more { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .more { grid-template-columns: minmax(0, 1fr); } }
+.nothi-shot .frame { transform: perspective(1400px) rotateY(-8deg) rotateX(3deg); transform-origin: left center; }
+.nothi-shot figcaption { margin-top: 14px; color: var(--dim); font-size: 12.5px; }
+@media (max-width: 900px) { .nothi-card { grid-template-columns: minmax(0, 1fr); padding: 28px 20px; gap: 32px; } .nothi-shot .frame { transform: none; } }
+
+/* faq */
+.faq-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; }
+.faq-cols h3 { font-size: 22px; letter-spacing: -0.03em; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+.faq-cols h3 img { width: 24px; }
+details { border-bottom: 1px solid var(--line); }
+summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 16px; padding: 18px 0; font: 700 16.5px/1.35 var(--disp); letter-spacing: -0.015em; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: '+'; flex: none; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line-2); display: flex; align-items: center; justify-content: center; font: 400 16px var(--body); color: var(--muted); transition: transform .2s; }
+details[open] summary::after { transform: rotate(45deg); color: var(--fg); }
+details .a { padding: 0 0 20px; color: var(--muted); font-size: 15.5px; display: grid; gap: 10px; max-width: 62ch; }
+details .a strong { color: var(--fg); font-weight: 600; }
+@media (max-width: 860px) { .faq-cols { grid-template-columns: minmax(0, 1fr); gap: 40px; } }
+
+/* final cta + footer */
+.final { text-align: left; display: grid; gap: 24px; justify-items: start; }
+.final h2 { font-size: clamp(38px, 6vw, 68px); max-width: 14ch; }
+footer { border-top: 1px solid var(--line); padding-block: 40px 56px; color: var(--dim); font-size: 13.5px; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: center; }
+footer .brand { color: var(--fg); }
+footer nav { display: flex; gap: 20px; flex-wrap: wrap; }
+footer nav a { text-decoration: none; color: var(--muted); }
+footer nav a:hover { color: var(--fg); }
+footer .legal { flex-basis: 100%; }
+
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0; z-index: 50; background: var(--fg); color: var(--bg); padding: 12px 20px; border-radius: 999px; font: 700 14px var(--disp); transition: opacity .2s, transform .2s; pointer-events: none; max-width: calc(100% - 32px); text-align: center; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+</style>
+</head>
+<body>
+
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-win" viewBox="0 0 24 24"><path fill="currentColor" d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.5 1.2L21 21v-8.5h-9.5zm0-15.4v7.2H21V3z"/></symbol>
+    <symbol id="i-mac" viewBox="0 0 24 24"><path fill="currentColor" d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7a4.6 4.6 0 0 0-3.6-1.9c-1.5-.2-3 .9-3.7.9-.8 0-2-.9-3.2-.9a4.8 4.8 0 0 0-4.1 2.5c-1.8 3-.5 7.6 1.3 10 .8 1.2 1.8 2.6 3.1 2.5 1.3 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.4a10 10 0 0 0 1.4-2.8 4.2 4.2 0 0 1-2.7-4.2zM14 5.5A4.2 4.2 0 0 0 15 2.4a4.4 4.4 0 0 0-2.9 1.5 4 4 0 0 0-1 3 3.6 3.6 0 0 0 2.9-1.4z"/></symbol>
+    <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-create" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+    <symbol id="i-curves" viewBox="0 0 24 24"><path d="M4 19C10 19 9 5 20 5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+    <symbol id="i-beat" viewBox="0 0 24 24"><path d="M4 10v4M8 6v12M12 9v6M16 4v16M20 10v4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></g></symbol>
+    <symbol id="i-style" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M14 4l6 6-9 9H5v-6z"/><path d="M12 6l6 6"/></g></symbol>
+    <symbol id="i-effects" viewBox="0 0 24 24"><path d="M12 4v4M12 16v4M4 12h4M16 12h4M6.5 6.5l2.5 2.5M15 15l2.5 2.5M6.5 17.5 9 15M15 9l2.5-2.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></g></symbol>
+  </defs>
+</svg>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="img/logo-mark.png" alt="" width="30" height="23">Nothi <span>Toolkit</span></a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#nothi">Nothi</a><a href="#tools">Tools</a><a href="#install">Install</a><a href="#guide">Guide</a><a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn primary sm dl-auto" href="#download"><svg><use href="#i-dl"/></svg>Download</a>
+  </div>
+</header>
+
+<main id="top">
+  <!-- HERO -->
+  <section class="hero" id="download">
+    <div class="grid-bg"></div>
+    <div class="wrap hero-grid">
+      <div class="hero-top">
+        <span class="pill-note"><b>FREE</b>For After Effects 2022 and newer</span>
+        <h1>Six tools.<br><em>One small panel.</em></h1>
+        <p class="lead">Nothi Toolkit docks next to your timeline and handles the repetitive parts of an edit: beat markers, eases, anchor points, precomps, style copy and your favorite effects.</p>
+        <div class="cta-row">
+          <a class="btn primary" id="dlWin" href="downloads/NothiToolkit_Windows.zip" download><svg><use href="#i-win"/></svg>Download for Windows</a>
+          <a class="btn" id="dlMac" href="downloads/NothiToolkit_Mac.zip" download><svg><use href="#i-mac"/></svg>Download for macOS</a>
+        </div>
+        <div class="meta-row"><span>Version 1.2</span><span>110 KB</span><span>No account</span><span><a href="#install" style="color:inherit">How to install</a></span></div>
+      </div>
+      <figure class="hero-panel">
+        <img src="img/hero-panel.webp" alt="The Nothi Toolkit panel, Beat tab: waveform with beat lines, 19 beats at 129 BPM, Add 19 markers, Snap and Sequence" width="780" height="648">
+      </figure>
+    </div>
+  </section>
+
+  <!-- NOTHI -->
+  <section class="sec nothi" id="nothi" style="border-top:0;padding-top:0">
+    <div class="wrap">
+      <div class="nothi-card">
+        <div class="txt">
+          <span class="wip">What I'm building next</span>
+          <h2>Nothi, the marketplace <em>for editors.</em></h2>
+          <p class="lead" style="font-size:17px">The toolkit is a side project. The main one is Nothi: a place where editors buy and sell the assets they actually use, made by other editors.</p>
+          <div class="cats"><span>Packs</span><span>Effects</span><span>Project files</span><span>LUTs</span><span>SFX</span><span>Transitions</span><span>Templates</span><span>Scripts</span><span>Overlays</span></div>
+          <p style="color:var(--muted);font-size:15px">For After Effects, Premiere Pro, DaVinci Resolve, CapCut, Alight Motion, Final Cut Pro and more. Creators set their own prices and get a profile, badges and a sales dashboard.</p>
+          <div class="cta-row"><button class="btn primary" id="moreBtn" aria-expanded="false" aria-controls="moreInfo">More info<svg class="chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+        </div>
+        <figure class="nothi-shot" style="margin:0">
+          <div class="frame"><div class="frame-bar"><i></i><i></i><i></i><span>Nothi</span></div><img src="img/nothi-home.webp" alt="Nothi home page: The Marketplace for Editors, with a search bar and Browse Marketplace and Start Selling buttons" width="1600" height="1000" loading="lazy"></div>
+          <figcaption>Work in progress. Listings shown during testing are sample content.</figcaption>
+        </figure>
+        <div class="more" id="moreInfo" hidden>
+          <div class="more-col"><h3>What it is</h3><p>A marketplace made only for video editing. Every product is an asset you drop into your timeline: packs, LUTs, sound effects, transitions, templates, scripts, project files.</p><p>Each listing says which software it works with, what's inside the download and how big it is.</p></div>
+          <div class="more-col"><h3>For editors</h3><p>Search by category and by software, preview before you buy, pay once, download right away. Everything you buy stays in your library so you can download it again later.</p></div>
+          <div class="more-col"><h3>For creators</h3><p>Open a creator profile, upload your packs and set your own prices. A dashboard shows your sales, and badges and levels reward the creators who publish and sell.</p></div>
+          <div class="more-col status"><h3>Where it's at</h3><p><strong>Not open yet.</strong> Nothi is being built and tested right now, so nobody can buy or sell on it yet. It will be announced on this page when it opens.</p><p>Meanwhile, the toolkit is the first free tool from Nothi.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOLS -->
+  <section class="sec" id="tools">
+    <div class="wrap">
+      <div class="sec-head"><span class="eyebrow">What's inside</span><h2>Built for the clicks you make a hundred times a day.</h2><p class="lead">One icon per tool at the top of the panel. Everything is one undo step.</p></div>
+      <div class="tools">
+        <a class="tool" href="#g-create"><span class="ico"><svg><use href="#i-create"/></svg></span><h3>Create</h3><p>Text, adjustment, solid, null, shape, camera or light in one click, matched to the selected layer.</p><span class="go">Guide →</span></a>
+        <a class="tool" href="#g-curves"><span class="ico"><svg><use href="#i-curves"/></svg></span><h3>Curves</h3><p>Eight eases ready to apply on your keyframes. Save the ones you tweak and reuse them anywhere.</p><span class="go">Guide →</span></a>
+        <a class="tool" href="#g-beat"><span class="ico"><svg><use href="#i-beat"/></svg></span><h3>Beat</h3><p>Drop a song from the timeline. Get markers on every beat, then snap or sequence your clips on them.</p><span class="go">Guide →</span></a>
+        <a class="tool" href="#g-layers"><span class="ico"><svg><use href="#i-layers"/></svg></span><h3>Layers</h3><p>Move the anchor point without moving the layer. Precompose, decompose and rename in one click.</p><span class="go">Guide →</span></a>
+        <a class="tool" href="#g-style"><span class="ico"><svg><use href="#i-style"/></svg></span><h3>Style</h3><p>Copy the effects and look of one layer, paste them on as many layers as you want.</p><span class="go">Guide →</span></a>
+        <a class="tool" href="#g-effects"><span class="ico"><svg><use href="#i-effects"/></svg></span><h3>Effects</h3><p>Your favorite effects one click away. Alt+click drops them on a new adjustment layer.</p><span class="go">Guide →</span></a>
+      </div>
+      <div class="extras">
+        <span class="chip"><b>Search everything</b><kbd class="k-mod">Ctrl</kbd><kbd>K</kbd></span>
+        <span class="chip"><b>Undo</b> after every action</span>
+        <span class="chip"><b>Tooltips</b> on every button</span>
+        <span class="chip"><b>Fits</b> a small docked window</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- INSTALL -->
+  <section class="sec" id="install">
+    <div class="wrap">
+      <div class="sec-head"><span class="eyebrow">Install</span><h2>Two minutes, then it's always there.</h2><p class="lead">Pick your system. The installer copies the panel into Adobe's extensions folder and allows After Effects to load it.</p></div>
+      <div class="seg" role="tablist" aria-label="Operating system">
+        <button role="tab" id="tabWin" aria-selected="true" aria-controls="osWin"><svg><use href="#i-win"/></svg>Windows</button>
+        <button role="tab" id="tabMac" aria-selected="false" aria-controls="osMac"><svg><use href="#i-mac"/></svg>macOS</button>
+      </div>
+
+      <div class="steps" id="osWin" role="tabpanel" aria-labelledby="tabWin">
+        <div class="step">
+          <div class="step-text"><span class="num">1</span><h3>Download and extract</h3>
+            <p>Download <strong>NothiToolkit_Windows.zip</strong>. In your Downloads folder, right-click it and choose <strong>Extract All…</strong></p>
+            <p class="note">The installer can't run from inside the zip, so this step matters.</p>
+            <a class="btn sm" href="downloads/NothiToolkit_Windows.zip" download style="width:fit-content"><svg><use href="#i-dl"/></svg>NothiToolkit_Windows.zip</a></div>
+          <img src="img/step-win-extract.webp" alt="Downloads folder with the zip selected and the Extract All option highlighted in the right-click menu" width="1760" height="1120" loading="lazy">
+        </div>
+        <div class="step">
+          <div class="step-text"><span class="num">2</span><h3>Run the installer</h3>
+            <p>Open the extracted folder and double-click <strong>Install Nothi Toolkit.bat</strong>. A small window confirms when it's done.</p>
+            <p>If Windows shows <strong>“Windows protected your PC”</strong>, click <strong>More info</strong>, then <strong>Run anyway</strong>. It appears because the installer isn't signed yet.</p></div>
+          <img src="img/step-win-run.webp" alt="Extracted folder with Install Nothi Toolkit.bat selected, and the SmartScreen dialog with Run anyway highlighted" width="1760" height="1120" loading="lazy">
+        </div>
+      </div>
+
+      <div class="steps" id="osMac" role="tabpanel" aria-labelledby="tabMac" hidden>
+        <div class="step">
+          <div class="step-text"><span class="num">1</span><h3>Download, unzip, open</h3>
+            <p>Download <strong>NothiToolkit_Mac.zip</strong> and double-click it to unzip. In the folder, <strong>right-click Install Nothi Toolkit.command › Open</strong>, then confirm with <strong>Open</strong>.</p>
+            <p>A Terminal window runs for a second and says <strong>Done</strong>. You can close it.</p>
+            <a class="btn sm" href="downloads/NothiToolkit_Mac.zip" download style="width:fit-content"><svg><use href="#i-dl"/></svg>NothiToolkit_Mac.zip</a></div>
+          <img src="img/step-mac-open.webp" alt="Finder window with Install Nothi Toolkit.command selected and Open highlighted in the right-click menu, and the Terminal confirmation below" width="1760" height="1120" loading="lazy">
+        </div>
+        <div class="step">
+          <div class="step-text"><span class="num">2</span><h3>If macOS blocks it</h3>
+            <p>Open <strong>System Settings › Privacy &amp; Security</strong>, scroll down to Security and click <strong>Open Anyway</strong> next to the installer's name. Then open it again.</p>
+            <p>Still stuck? Do it by hand: paste this in Terminal, then drag the <strong>com.nothi.toolkit</strong> folder into <strong>~/Library/Application Support/Adobe/CEP/extensions/</strong></p>
+            <div class="code"><code id="macCmd">for v in 9 10 11 12 13; do defaults write com.adobe.CSXS.$v PlayerDebugMode 1; done</code><button class="copy" data-copy="macCmd">Copy</button></div></div>
+          <img src="img/step-mac-allow.webp" alt="System Settings, Privacy and Security, with the Open Anyway button highlighted" width="1760" height="1120" loading="lazy">
+        </div>
+      </div>
+
+      <div class="sub-h"><h3>Then, in After Effects</h3><p>Same on Windows and Mac.</p></div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-text"><span class="num">3</span><h3>Open the panel</h3>
+            <p>Restart After Effects, then go to <strong>Window › Extensions › Nothi Toolkit</strong>.</p>
+            <p class="note">In some recent versions the menu is called <strong>Extensions (Legacy)</strong>. Same thing.</p></div>
+          <img src="img/step-ae-menu.webp" alt="After Effects Window menu open on Extensions, with Nothi Toolkit highlighted" width="1760" height="1120" loading="lazy">
+        </div>
+        <div class="step">
+          <div class="step-text"><span class="num">4</span><h3>Dock it and keep it</h3>
+            <p>Drag the panel by its tab next to your other panels. Any size works: it switches to icons only in narrow spaces.</p>
+            <p>Then <strong>Window › Workspace › Save as New Workspace</strong>. The panel now opens with After Effects every time.</p>
+            <p class="note">On first launch, a 3-step guide shows you around. You can reopen it from the <strong>···</strong> menu.</p></div>
+          <img src="img/step-ae-workspace.webp" alt="Nothi Toolkit docked on the left, and the Window, Workspace, Save as New Workspace menu" width="1760" height="1120" loading="lazy">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GUIDE -->
+  <section class="sec" id="guide">
+    <div class="wrap">
+      <div class="sec-head"><span class="eyebrow">Guide</span><h2>How each tool works.</h2><p class="lead">Every screenshot below is the real panel. Hover any button in After Effects to get the same tips.</p></div>
+      <nav class="guide-nav" id="gnav" aria-label="Tools">
+        <a href="#g-create">Create</a><a href="#g-curves">Curves</a><a href="#g-beat">Beat</a><a href="#g-layers">Layers</a><a href="#g-style">Style</a><a href="#g-effects">Effects</a><a href="#g-search">Search &amp; undo</a>
+      </nav>
+
+      <article class="howto" id="g-create">
+        <figure><img src="img/tool-create.webp" alt="Create tab: tiles for Text, Adjust, Solid, Null, Shape, Camera and Light" width="680" height="680" loading="lazy"><figcaption>Create tab</figcaption></figure>
+        <div class="howto-text">
+          <h3><span class="ico"><svg><use href="#i-create"/></svg></span>Create</h3>
+          <p>New layers without going through menus and dialogs.</p>
+          <ol>
+            <li><span>Select a layer in your timeline (optional).</span></li>
+            <li><span>Click a tile: <strong>Text, Adjust, Solid, Null, Shape, Camera</strong> or <strong>Light</strong>.</span></li>
+            <li><span>The new layer lands right above the selected one, with the same start and end.</span></li>
+          </ol>
+          <div class="opts"><h4>Options (sliders icon)</h4><dl>
+            <dt>Name</dt><dd>Give new layers a name instead of the default.</dd>
+            <dt>Color</dt><dd>Color used for solids and shapes.</dd>
+            <dt>Match selected layer</dt><dd>Same timing and position in the stack as the selection. Turn off to use the full comp.</dd></dl></div>
+          <p class="tip-line"><b>Tip</b><span>A null is the quickest way to animate several layers together: create it, then parent the layers to it.</span></p>
+        </div>
+      </article>
+
+      <article class="howto" id="g-curves">
+        <figure><img src="img/tool-curves.webp" alt="Curves tab: Save tile and eight presets drawn as curves" width="680" height="680" loading="lazy"><figcaption>Curves tab, with a dot running along each ease</figcaption></figure>
+        <div class="howto-text">
+          <h3><span class="ico"><svg><use href="#i-curves"/></svg></span>Curves</h3>
+          <p>Speed curves you can apply in one click, and keep.</p>
+          <ol>
+            <li><span>Select <strong>two keyframes or more</strong> in the timeline.</span></li>
+            <li><span>Click a curve: <strong>Easy Ease, Smooth, Silk, Expo Out, Expo In, Punch, Snap Out</strong> or <strong>Glide</strong>.</span></li>
+            <li><span>To keep your own: select two keyframes with an ease you like, click <strong>Save</strong>. It appears as “My curve 1”.</span></li>
+          </ol>
+          <div class="opts"><h4>Your curves</h4><dl>
+            <dt>Rename</dt><dd>Double-click the tile.</dd>
+            <dt>Delete</dt><dd>Hover the tile and click the ×.</dd>
+            <dt>Use anywhere</dt><dd>Your curves also show up in the search.</dd></dl></div>
+        </div>
+      </article>
+
+      <article class="howto" id="g-beat">
+        <figure><img src="img/tool-beat.webp" alt="Beat tab: waveform of Phonk_Edit.wav with 19 beats at 129 BPM, Add 19 markers button, Snap and Sequence" width="680" height="680" loading="lazy">
+          <div class="thumbs"><img src="img/tool-beat0.webp" alt="Empty drop zone reading Drop an audio layer" width="680" height="680" loading="lazy"><img src="img/tool-beat-opt.webp" alt="Beat options menu" width="680" height="680" loading="lazy"></div>
+          <figcaption>Beat tab: before, after, and its options</figcaption></figure>
+        <div class="howto-text">
+          <h3><span class="ico"><svg><use href="#i-beat"/></svg></span>Beat</h3>
+          <p>Markers on the beat of your song, only on the part you actually use.</p>
+          <ol>
+            <li><span><strong>Drag your audio layer</strong> from the timeline onto the drop zone. Or select it and click the zone.</span></li>
+            <li><span>The panel listens to the part of the layer that's on the timeline (its trimmed in and out), shows the beats and the BPM.</span></li>
+            <li><span>Move <strong>Sens.</strong> to the left for only the big hits, to the right for every beat.</span></li>
+            <li><span>Click the waveform to <strong>listen from there</strong> and check the beats.</span></li>
+            <li><span>Click <strong>Add markers</strong>. Done.</span></li>
+          </ol>
+          <div class="opts"><h4>Put your clips on the beat</h4><dl>
+            <dt>Snap</dt><dd>Each selected layer moves to start on the nearest beat.</dd>
+            <dt>Sequence</dt><dd>Selected layers play one after another, one per beat, each trimmed to the next beat.</dd></dl></div>
+          <div class="opts"><h4>Options (sliders icon)</h4><dl>
+            <dt>Listen to</dt><dd>Full mix, or kick &amp; bass only for heavy drops.</dd>
+            <dt>Markers on</dt><dd>The audio layer, or the composition.</dd>
+            <dt>Work area only</dt><dd>Limits the beats to your work area.</dd>
+            <dt>Replace, number</dt><dd>Clear previous markers first; number the markers.</dd></dl></div>
+          <p class="tip-line"><b>Tip</b><span>Use WAV, MP3 or AIFF. If the audio sits inside a video file, export the audio first.</span></p>
+        </div>
+      </article>
+
+      <article class="howto" id="g-layers">
+        <figure><img src="img/tool-layers.webp" alt="Layers tab: 9-point anchor grid, Precompose, Decompose and Rename buttons" width="680" height="680" loading="lazy">
+          <div class="thumbs"><img src="img/tool-tip.webp" alt="Tooltip on Decompose explaining what it does" width="680" height="680" loading="lazy"></div>
+          <figcaption>Layers tab, and a tooltip</figcaption></figure>
+        <div class="howto-text">
+          <h3><span class="ico"><svg><use href="#i-layers"/></svg></span>Layers</h3>
+          <p>The layer chores, in one place.</p>
+          <ol>
+            <li><span><strong>Anchor point:</strong> select layers, click one of the 9 points. The layer doesn't move on screen, even if it's scaled or rotated.</span></li>
+            <li><span><strong>Precompose:</strong> puts the selected layers in a new comp, trimmed to their length.</span></li>
+            <li><span><strong>Decompose:</strong> select a precomp layer to bring its layers back into the current comp, with their timing. The status bar tells you if something couldn't be kept (time remap, effects on the precomp…).</span></li>
+            <li><span><strong>Rename:</strong> renames layers by type and content, like “TXT – Title” or “VID – Clip 04”.</span></li>
+          </ol>
+          <div class="opts"><h4>Options (sliders icon)</h4><dl>
+            <dt>Trim to the layers</dt><dd>The precomp starts and ends with its layers.</dd>
+            <dt>Delete the precomp</dt><dd>After decomposing, only if it isn't used anywhere else.</dd>
+            <dt>Rename scope</dt><dd>Selected layers or the whole comp, with or without type tags.</dd></dl></div>
+        </div>
+      </article>
+
+      <article class="howto" id="g-style">
+        <figure><img src="img/tool-style.webp" alt="Style tab: Copy and Paste buttons, with the copied layer Title Glow and its effects" width="680" height="680" loading="lazy"><figcaption>Style tab after copying “Title Glow”</figcaption></figure>
+        <div class="howto-text">
+          <h3><span class="ico"><svg><use href="#i-style"/></svg></span>Style</h3>
+          <p>Like a format painter for layers.</p>
+          <ol>
+            <li><span>Select the layer whose look you like and click <strong>Copy</strong>. The panel lists what it copied.</span></li>
+            <li><span>Select one or more layers and click <strong>Paste</strong>.</span></li>
+          </ol>
+          <div class="opts"><h4>Options (sliders icon)</h4><dl>
+            <dt>Include animation</dt><dd>Keyframes too, shifted to each layer's start.</dd>
+            <dt>Effects</dt><dd>Paste the effects, added to or replacing existing ones.</dd>
+            <dt>Blend</dt><dd>Blend mode, opacity and motion blur.</dd>
+            <dt>Scale &amp; rotation</dt><dd>Off by default, so layers keep their framing.</dd></dl></div>
+        </div>
+      </article>
+
+      <article class="howto" id="g-effects">
+        <figure><img src="img/tool-effects.webp" alt="Effects tab: search field and a list of favorite effects" width="680" height="680" loading="lazy"><figcaption>Effects tab with the default favorites</figcaption></figure>
+        <div class="howto-text">
+          <h3><span class="ico"><svg><use href="#i-effects"/></svg></span>Effects</h3>
+          <p>Your go-to effects without digging through Effects &amp; Presets.</p>
+          <ol>
+            <li><span>Select layers, click an effect in the list to apply it.</span></li>
+            <li><span><strong>Alt+click</strong> puts the effect on a new adjustment layer instead.</span></li>
+            <li><span>Type in the search field to find any installed effect, plugins included. Click the <strong>star</strong> to add it to your favorites.</span></li>
+          </ol>
+        </div>
+      </article>
+
+      <article class="howto" id="g-search">
+        <figure><img src="img/tool-pal-recent.webp" alt="Search window listing recent actions, then all actions" width="680" height="680" loading="lazy">
+          <div class="thumbs"><img src="img/tool-pal.webp" alt="Search for anc showing the anchor point actions" width="680" height="680" loading="lazy"><img src="img/tool-guide1.webp" alt="First-run guide, step 1 of 3" width="680" height="680" loading="lazy"></div>
+          <figcaption>Search, with your recent actions on top</figcaption></figure>
+        <div class="howto-text">
+          <h3><span class="ico"><svg><use href="#i-search"/></svg></span>Search &amp; undo</h3>
+          <p>Every action of every tab, from the keyboard.</p>
+          <ol>
+            <li><span>Click on the panel once, then press <kbd class="k-mod">Ctrl</kbd> <kbd>K</kbd>.</span></li>
+            <li><span>Type a few letters (“anc”, “glow”, “null”), pick with the arrows, press <strong>Enter</strong>.</span></li>
+            <li><span>Your last 5 actions are always at the top.</span></li>
+          </ol>
+          <div class="opts"><h4>Good to know</h4><dl>
+            <dt>Change the shortcut</dt><dd>··· menu › Open the search, then press your keys.</dd>
+            <dt>Undo</dt><dd>After each action, an <strong>Undo</strong> button appears in the status bar. Ctrl/Cmd+Z works too.</dd>
+            <dt>Status bar</dt><dd>Shows what just happened, or what's missing (“Select a precomp layer”).</dd></dl></div>
+          <p class="tip-line"><b>Tip</b><span>After Effects keeps the keyboard for itself unless the panel is focused, so click the panel first.</span></p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="sec" id="faq">
+    <div class="wrap">
+      <div class="sec-head"><span class="eyebrow">FAQ</span><h2>Questions.</h2></div>
+      <div class="faq-cols">
+        <div>
+          <h3>Nothi Toolkit</h3>
+          <details><summary>Is it really free?</summary><div class="a"><p>Yes. No account, no trial, no watermark, no ads in the panel.</p></div></details>
+          <details><summary>Which versions of After Effects work?</summary><div class="a"><p><strong>After Effects 2022 (version 22) and newer</strong>, on Windows and on macOS (Intel and Apple Silicon).</p></div></details>
+          <details><summary>Why does Windows or macOS warn me about the installer?</summary><div class="a"><p>The installer isn't signed yet, and both systems warn about unsigned scripts from the internet. It does two things only: it copies the <strong>com.nothi.toolkit</strong> folder into Adobe's extensions folder, and it tells After Effects to accept extensions that aren't signed. Open it in a text editor to read it, it's a few lines.</p></div></details>
+          <details><summary>I don't see it in Window › Extensions.</summary><div class="a"><p>Quit After Effects completely and open it again. If it's still missing, run the installer once more, then check that this folder exists:</p><p><strong>Windows:</strong> %APPDATA%\Adobe\CEP\extensions\com.nothi.toolkit<br><strong>Mac:</strong> ~/Library/Application Support/Adobe/CEP/extensions/com.nothi.toolkit</p><p>In some versions the menu is named <strong>Extensions (Legacy)</strong>.</p></div></details>
+          <details><summary>The search shortcut does nothing.</summary><div class="a"><p>After Effects only sends keys to a panel that has focus. Click anywhere on the panel, then press the shortcut. You can also click the magnifier icon.</p></div></details>
+          <details><summary>Beat can't read my audio.</summary><div class="a"><p>Use a <strong>WAV, MP3 or AIFF</strong> layer. Audio inside a video file (MP4, MOV) may not be readable by the panel: export the audio, import it, and drop that layer instead.</p></div></details>
+          <details><summary>Can it break my project?</summary><div class="a"><p>Every action is a single undo step, and an <strong>Undo</strong> button appears after each one. Saving your project before big changes is still a good habit.</p></div></details>
+          <details><summary>Does it collect any data?</summary><div class="a"><p>No. It works offline. Your settings (favorites, curves, shortcut) are stored inside the panel on your computer.</p></div></details>
+          <details><summary>How do I uninstall it?</summary><div class="a"><p>Run <strong>Uninstall.bat</strong> (Windows) or <strong>Uninstall.command</strong> (Mac) from the zip, or delete the com.nothi.toolkit folder listed above.</p></div></details>
+        </div>
+        <div id="faq-nothi">
+          <h3><img src="img/logo-mark.png" alt="" width="24" height="18">Nothi marketplace</h3>
+          <details><summary>What is Nothi?</summary><div class="a"><p>A marketplace made only for video editing: packs, effects, LUTs, sound effects, transitions, templates, scripts and project files, sold by the editors who make them.</p></div></details>
+          <details><summary>Is it open?</summary><div class="a"><p>Not yet. Nothi is still being built and tested, so it isn't open to the public. It will be announced on this page when it opens.</p></div></details>
+          <details><summary>Can I sell my own packs?</summary><div class="a"><p>Yes, that's the idea. Creators get a seller account, set their own prices, and follow their sales from a dashboard.</p></div></details>
+          <details><summary>Which software are the assets for?</summary><div class="a"><p>After Effects, Premiere Pro, DaVinci Resolve, CapCut, Alight Motion, Final Cut Pro, Blender, Cinema 4D and others. Each product says what it works with.</p></div></details>
+          <details><summary>Will the toolkit stay free?</summary><div class="a"><p>Yes. The toolkit is free and stays free.</p></div></details>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap final">
+      <h2>Install it once. Use it every edit.</h2>
+      <div class="cta-row">
+        <a class="btn primary" href="downloads/NothiToolkit_Windows.zip" download><svg><use href="#i-win"/></svg>Windows</a>
+        <a class="btn" href="downloads/NothiToolkit_Mac.zip" download><svg><use href="#i-mac"/></svg>macOS</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="img/logo-mark.png" alt="" width="30" height="23">Nothi <span>Toolkit 1.2</span></a>
+    <nav aria-label="Footer"><a href="#install">Install</a><a href="#guide">Guide</a><a href="#faq">FAQ</a><a href="#nothi">Nothi</a></nav>
+    <p class="legal">Made in Belgium. Nothi Toolkit is an independent project, not affiliated with or endorsed by Adobe. After Effects is a trademark of Adobe Inc.</p>
+  </div>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  const isMac = /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent);
+  const $ = (s) => document.querySelector(s);
+
+  // Put the visitor's system first.
+  if (isMac) {
+    const w = $('#dlWin'), m = $('#dlMac');
+    w.classList.remove('primary'); m.classList.add('primary'); m.parentNode.insertBefore(m, w);
+    document.querySelectorAll('.k-mod').forEach((k) => { k.textContent = '⌘'; });
+  }
+  const auto = $('.dl-auto');
+  auto.href = isMac ? 'downloads/NothiToolkit_Mac.zip' : 'downloads/NothiToolkit_Windows.zip';
+  auto.setAttribute('download', '');
+  auto.lastChild.textContent = isMac ? 'Download for Mac' : 'Download';
+
+  // OS tabs in the install guide
+  const tabs = { win: [$('#tabWin'), $('#osWin')], mac: [$('#tabMac'), $('#osMac')] };
+  function show(os) { Object.entries(tabs).forEach(([k, [t, p]]) => { t.setAttribute('aria-selected', String(k === os)); p.hidden = k !== os; }); }
+  tabs.win[0].addEventListener('click', () => show('win'));
+  tabs.mac[0].addEventListener('click', () => show('mac'));
+  show(isMac ? 'mac' : 'win');
+
+  // Nothi "More info"
+  const more = $('#moreBtn'), info = $('#moreInfo');
+  more.addEventListener('click', () => { const open = info.hidden; info.hidden = !open; more.setAttribute('aria-expanded', String(open)); more.firstChild.textContent = open ? 'Less info' : 'More info'; });
+
+  // copy buttons
+  const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 1800); };
+  document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => {
+    const el = document.getElementById(b.dataset.copy);
+    const done = () => { b.textContent = 'Copied'; setTimeout(() => { b.textContent = 'Copy'; }, 1500); };
+    const fallback = () => { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Selected. Press Ctrl/Cmd+C to copy'); };
+    try { navigator.clipboard.writeText(el.textContent).then(done, fallback); } catch (e) { fallback(); }
+  }));
+
+  // nav border on scroll, active chip in the guide
+  const nav = $('#nav');
+  const links = [...document.querySelectorAll('#gnav a')];
+  const arts = links.map((a) => document.querySelector(a.getAttribute('href')));
+  const onScroll = () => {
+    nav.classList.toggle('scrolled', scrollY > 8);
+    let cur = -1; arts.forEach((a, i) => { if (a && a.getBoundingClientRect().top < 200) cur = i; });
+    links.forEach((l, i) => l.classList.toggle('on', i === cur));
+    const on = links[cur]; if (on && on.dataset.seen !== '1') { links.forEach((l) => { l.dataset.seen = ''; }); on.dataset.seen = '1'; const g = $('#gnav'); g.scrollTo({ left: Math.max(0, on.offsetLeft - g.offsetLeft - 16), behavior: 'smooth' }); }
+  };
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+})();
+</script>
+
+</body>
+</html>
