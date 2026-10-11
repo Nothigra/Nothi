@@ -265,7 +265,7 @@ footer .legal { flex-basis: 100%; }
           <a class="btn primary" id="dlWin" href="downloads/NothiToolkit_Windows.zip" download><svg><use href="#i-win"/></svg>Download for Windows</a>
           <a class="btn" id="dlMac" href="downloads/NothiToolkit_Mac.zip" download><svg><use href="#i-mac"/></svg>Download for macOS</a>
         </div>
-        <div class="meta-row"><span>Version 1.2</span><span>110 KB</span><span>No account</span><span><a href="#install" style="color:inherit">How to install</a></span></div>
+        <div class="meta-row"><span>Version 1.3</span><span>115 KB</span><span>No account</span><span><a href="#install" style="color:inherit">How to install</a></span></div>
       </div>
       <figure class="hero-panel">
         <img src="img/hero-panel.webp" alt="The Nothi Toolkit panel, Beat tab: waveform with beat lines, 19 beats at 129 BPM, Add 19 markers, Snap and Sequence" width="780" height="648">
@@ -338,10 +338,17 @@ footer .legal { flex-basis: 100%; }
           <img src="img/step-win-extract.webp" alt="Downloads folder with the zip selected and the Extract All option highlighted in the right-click menu" width="1760" height="1120" loading="lazy">
         </div>
         <div class="step">
-          <div class="step-text"><span class="num">2</span><h3>Run the installer</h3>
-            <p>Open the extracted folder and double-click <strong>Install Nothi Toolkit.bat</strong>. A small window confirms when it's done.</p>
-            <p>If Windows shows <strong>“Windows protected your PC”</strong>, click <strong>More info</strong>, then <strong>Run anyway</strong>. It appears because the installer isn't signed yet.</p></div>
+          <div class="step-text"><span class="num">2</span><h3>Double-click the installer</h3>
+            <p>Open the extracted folder and double-click <strong>Install Nothi Toolkit</strong>. Windows may hide the “.bat” and list it as a <strong>Windows Batch File</strong>: that's the one.</p>
+            <p class="note">If Windows shows <strong>“Windows protected your PC”</strong>, click <strong>More info</strong>, then <strong>Run anyway</strong>. It appears because the installer isn't signed yet.</p></div>
           <img src="img/step-win-run.webp" alt="Extracted folder with Install Nothi Toolkit.bat selected, and the SmartScreen dialog with Run anyway highlighted" width="1760" height="1120" loading="lazy">
+        </div>
+        <div class="step">
+          <div class="step-text"><span class="num">3</span><h3>Press any key</h3>
+            <p>A black <strong>command window</strong> opens. That's the installer: don't close it and don't type anything in it.</p>
+            <p>When it says <strong>Press any key to continue</strong>, press any key (Enter, Space…). The installer finishes on its own and the window closes.</p>
+            <p class="note">On a French Windows, the line reads “Appuyez sur une touche pour continuer”.</p></div>
+          <img src="img/step-win-cmd.webp" alt="Black command window with the installer's messages and the line Press any key to continue highlighted" width="1760" height="1120" loading="lazy">
         </div>
       </div>
 
@@ -365,13 +372,13 @@ footer .legal { flex-basis: 100%; }
       <div class="sub-h"><h3>Then, in After Effects</h3><p>Same on Windows and Mac.</p></div>
       <div class="steps">
         <div class="step">
-          <div class="step-text"><span class="num">3</span><h3>Open the panel</h3>
+          <div class="step-text"><span class="num ae-num" data-n="1">4</span><h3>Open the panel</h3>
             <p>Restart After Effects, then go to <strong>Window › Extensions › Nothi Toolkit</strong>.</p>
             <p class="note">In some recent versions the menu is called <strong>Extensions (Legacy)</strong>. Same thing.</p></div>
           <img src="img/step-ae-menu.webp" alt="After Effects Window menu open on Extensions, with Nothi Toolkit highlighted" width="1760" height="1120" loading="lazy">
         </div>
         <div class="step">
-          <div class="step-text"><span class="num">4</span><h3>Dock it and keep it</h3>
+          <div class="step-text"><span class="num ae-num" data-n="2">5</span><h3>Dock it and keep it</h3>
             <p>Drag the panel by its tab next to your other panels. Any size works: it switches to icons only in narrow spaces.</p>
             <p>Then <strong>Window › Workspace › Save as New Workspace</strong>. The panel now opens with After Effects every time.</p>
             <p class="note">On first launch, a 3-step guide shows you around. You can reopen it from the <strong>···</strong> menu.</p></div>
@@ -515,6 +522,7 @@ footer .legal { flex-basis: 100%; }
           <div class="opts"><h4>Good to know</h4><dl>
             <dt>Change the shortcut</dt><dd>··· menu › Open the search, then press your keys.</dd>
             <dt>Undo</dt><dd>After each action, an <strong>Undo</strong> button appears in the status bar. Ctrl/Cmd+Z works too.</dd>
+            <dt>Icon size</dt><dd>··· menu › Small, Medium or Large.</dd>
             <dt>Status bar</dt><dd>Shows what just happened, or what's missing (“Select a precomp layer”).</dd></dl></div>
           <p class="tip-line"><b>Tip</b><span>After Effects keeps the keyboard for itself unless the panel is focused, so click the panel first.</span></p>
         </div>
@@ -537,6 +545,8 @@ footer .legal { flex-basis: 100%; }
           <details><summary>Beat can't read my audio.</summary><div class="a"><p>Use a <strong>WAV, MP3 or AIFF</strong> layer. Audio inside a video file (MP4, MOV) may not be readable by the panel: export the audio, import it, and drop that layer instead.</p></div></details>
           <details><summary>Can it break my project?</summary><div class="a"><p>Every action is a single undo step, and an <strong>Undo</strong> button appears after each one. Saving your project before big changes is still a good habit.</p></div></details>
           <details><summary>Does it collect any data?</summary><div class="a"><p>No. It works offline. Your settings (favorites, curves, shortcut) are stored inside the panel on your computer.</p></div></details>
+          <details><summary>How do I update to a new version?</summary><div class="a"><p>When a new version is out, the panel tells you: an <strong>Update</strong> button appears at the bottom of the panel, and in the <strong>···</strong> menu.</p><p>Download the new zip from this page, close After Effects, and run the installer again. It replaces the old version by itself, no need to uninstall first. Your favorites, curves and shortcut are normally kept.</p></div></details>
+          <details><summary>The icons are too small (or too big).</summary><div class="a"><p>Open the <strong>···</strong> menu and pick an <strong>Icon size</strong>: Small, Medium or Large. The panel remembers it.</p></div></details>
           <details><summary>How do I uninstall it?</summary><div class="a"><p>Run <strong>Uninstall.bat</strong> (Windows) or <strong>Uninstall.command</strong> (Mac) from the zip, or delete the com.nothi.toolkit folder listed above.</p></div></details>
         </div>
         <div id="faq-nothi">
@@ -564,7 +574,7 @@ footer .legal { flex-basis: 100%; }
 
 <footer>
   <div class="wrap">
-    <a class="brand" href="#top"><img src="img/logo-mark.png" alt="" width="30" height="23">Nothi <span>Toolkit 1.2</span></a>
+    <a class="brand" href="#top"><img src="img/logo-mark.png" alt="" width="30" height="23">Nothi <span>Toolkit 1.3</span></a>
     <nav aria-label="Footer"><a href="#install">Install</a><a href="#guide">Guide</a><a href="#faq">FAQ</a><a href="#nothi">Nothi</a></nav>
     <p class="legal">Made in Belgium. Nothi Toolkit is an independent project, not affiliated with or endorsed by Adobe. After Effects is a trademark of Adobe Inc.</p>
   </div>
@@ -589,7 +599,8 @@ footer .legal { flex-basis: 100%; }
 
   // OS tabs in the install guide
   const tabs = { win: [$('#tabWin'), $('#osWin')], mac: [$('#tabMac'), $('#osMac')] };
-  function show(os) { Object.entries(tabs).forEach(([k, [t, p]]) => { t.setAttribute('aria-selected', String(k === os)); p.hidden = k !== os; }); }
+  function show(os) { Object.entries(tabs).forEach(([k, [t, p]]) => { t.setAttribute('aria-selected', String(k === os)); p.hidden = k !== os; });
+    const base = os === 'win' ? 3 : 2; document.querySelectorAll('.ae-num').forEach((n) => { n.textContent = String(base + Number(n.dataset.n)); }); }
   tabs.win[0].addEventListener('click', () => show('win'));
   tabs.mac[0].addEventListener('click', () => show('mac'));
   show(isMac ? 'mac' : 'win');
