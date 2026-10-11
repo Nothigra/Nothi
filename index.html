@@ -6,13 +6,13 @@
 <meta name="description" content="Nothi Toolkit: a free After Effects panel with beat markers, eases, anchor points, precompose/decompose, style copy and favorite effects. Windows and macOS.">
 <meta property="og:title" content="Nothi Toolkit, free panel for After Effects">
 <meta property="og:description" content="Six tools in one small panel: Create, Curves, Beat, Layers, Style, Effects.">
-<meta property="og:image" content="img/hero-panel.webp">
+<meta property="og:image" content="img/tool-beat.webp">
 <meta name="theme-color" content="#0A0A0A">
 <link rel="icon" href="img/logo-mark.png">
 <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <title>Nothi Toolkit</title>
 <style>
-/* Layout: one 1120px column on the Nothi black grid; hero with the real panel, then install, guide, Nothi teaser, FAQ. */
+/* Layout: one 1120px column on the Nothi black grid; centered hero over a live beat timeline, then Nothi, tools, install, guide, FAQ. */
 @font-face { font-family: 'Jakarta'; src: url(fonts/plus-jakarta-sans-latin-wght-normal.woff2) format('woff2'); font-weight: 200 800; font-display: swap; }
 @font-face { font-family: 'Inter'; src: url(fonts/inter-latin-wght-normal.woff2) format('woff2'); font-weight: 100 900; font-display: swap; }
 :root {
@@ -75,9 +75,13 @@ section { position: relative; }
 @media (max-width: 860px) { .nav-links { display: none; } .nav .btn { margin-left: auto; } }
 
 /* hero */
-.hero { padding-block: 72px 88px; overflow: hidden; }
-.hero-top { position: relative; display: grid; gap: 28px; max-width: 820px; }
-.hero h1 { font-size: clamp(46px, 7vw, 84px); letter-spacing: -0.045em; line-height: .98; }
+.hero { padding-block: 88px 72px; overflow: hidden; }
+.hero-top { position: relative; display: grid; gap: 28px; max-width: 900px; margin: 0 auto; justify-items: center; text-align: center; }
+.hero-top .lead { margin: 0 auto; }
+.hero-top .cta-row, .hero-top .meta-row { justify-content: center; }
+.hero h1 { font-size: clamp(48px, 9vw, 112px); letter-spacing: -0.05em; line-height: .96; }
+.hero h1 .ln { display: block; overflow: hidden; padding-bottom: .06em; }
+.hero h1 .ln > * { display: inline-block; }
 .hero h1 em { font-style: normal; color: var(--muted); }
 .pill-note { display: inline-flex; align-items: center; gap: 8px; width: fit-content; padding: 6px 14px 6px 6px; border-radius: 999px; border: 1px solid var(--line-2); font-size: 13px; color: var(--muted); }
 .pill-note b { font: 700 11px var(--disp); letter-spacing: .04em; color: var(--bg); background: var(--fg); padding: 3px 9px; border-radius: 999px; }
@@ -87,10 +91,42 @@ section { position: relative; }
 .meta-row span::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--dim); }
 .meta-row span:first-child::before { display: none; }
 
-.hero-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 56px; align-items: center; }
-.hero-panel { position: relative; margin: 0; border-radius: 20px; border: 1px solid #3A3A42; overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,.75), 0 0 0 10px rgba(255,255,255,.025); }
-.hero-panel figcaption { position: absolute; left: 14px; bottom: 14px; }
-@media (max-width: 960px) { .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 40px; } .hero-panel { max-width: 520px; } }
+/* live beat timeline under the hero */
+.wave { position: relative; margin-top: 72px; border: 1px solid var(--line); border-radius: 18px; background: linear-gradient(180deg, #0E0E11, #0A0A0A); padding: 14px 16px 10px; }
+.wave-head { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; color: var(--muted); margin-bottom: 6px; }
+.wave-head b { font: 800 13px var(--disp); color: var(--fg); font-variant-numeric: tabular-nums; }
+.wave canvas { display: block; width: 100%; height: 132px; }
+@media (max-width: 640px) { .wave canvas { height: 96px; } .wave { margin-top: 48px; } }
+
+/* page-load sequence */
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } }
+@keyframes lineUp { from { transform: translateY(105%); } }
+.a1 { animation: rise .7s cubic-bezier(.2,.8,.2,1) .05s both; }
+.a2 { animation: lineUp .9s cubic-bezier(.16,1,.3,1) .12s both; }
+.a3 { animation: lineUp .9s cubic-bezier(.16,1,.3,1) .24s both; }
+.a4 { animation: rise .8s cubic-bezier(.2,.8,.2,1) .42s both; }
+.a5 { animation: rise .8s cubic-bezier(.2,.8,.2,1) .52s both; }
+.a6 { animation: rise .8s cubic-bezier(.2,.8,.2,1) .62s both; }
+.a7 { animation: rise 1s cubic-bezier(.2,.8,.2,1) .7s both; }
+
+/* scroll reveal (added by script only for content below the fold, so nothing stays hidden without it) */
+.rv { opacity: 0; transform: translateY(26px); transition: opacity .7s cubic-bezier(.2,.8,.2,1), transform .7s cubic-bezier(.2,.8,.2,1); transition-delay: var(--d, 0s); }
+.rv.in { opacity: 1; transform: none; }
+
+/* micro-interactions */
+.btn svg { transition: transform .25s cubic-bezier(.2,.8,.2,1); }
+.btn:hover svg { transform: translateY(2px); }
+.btn:active { transform: scale(.97); }
+.tool .ico { transition: transform .35s cubic-bezier(.2,.8,.2,1), background .2s, color .2s, border-color .2s; }
+.tool:hover .ico { transform: translateY(-3px) rotate(-6deg); background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.tool .go { transition: transform .25s, color .2s; display: inline-block; }
+.tool:hover .go { transform: translateX(4px); }
+.step img, .howto figure img { transition: transform .5s cubic-bezier(.2,.8,.2,1); }
+.step:hover img { transform: scale(1.015); }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 4px rgba(111,212,154,.15); } 50% { box-shadow: 0 0 0 8px rgba(111,212,154,.04); } }
+.wip::before { animation: pulse 2.2s ease-in-out infinite; }
+.seg button { transition: background .25s, color .25s; }
+details .a { animation: rise .35s ease-out; }
 .frame { border-radius: 16px; border: 1px solid var(--line-2); background: var(--surface); overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,.65); }
 .frame-bar { display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px; border-bottom: 1px solid var(--line); color: var(--dim); font-size: 12px; }
 .frame-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--line-2); }
@@ -256,20 +292,21 @@ footer .legal { flex-basis: 100%; }
   <!-- HERO -->
   <section class="hero" id="download">
     <div class="grid-bg"></div>
-    <div class="wrap hero-grid">
+    <div class="wrap">
       <div class="hero-top">
-        <span class="pill-note"><b>FREE</b>For After Effects 2022 and newer</span>
-        <h1>Six tools.<br><em>One small panel.</em></h1>
-        <p class="lead">Nothi Toolkit docks next to your timeline and handles the repetitive parts of an edit: beat markers, eases, anchor points, precomps, style copy and your favorite effects.</p>
-        <div class="cta-row">
+        <span class="pill-note a1"><b>FREE</b>For After Effects 2022 and newer</span>
+        <h1><span class="ln"><span class="a2">Six tools.</span></span><span class="ln"><em class="a3">One small panel.</em></span></h1>
+        <p class="lead a4">Nothi Toolkit docks next to your timeline and handles the repetitive parts of an edit: beat markers, eases, anchor points, precomps, style copy and your favorite effects.</p>
+        <div class="cta-row a5">
           <a class="btn primary" id="dlWin" href="downloads/NothiToolkit_Windows.zip" download><svg><use href="#i-win"/></svg>Download for Windows</a>
           <a class="btn" id="dlMac" href="downloads/NothiToolkit_Mac.zip" download><svg><use href="#i-mac"/></svg>Download for macOS</a>
         </div>
-        <div class="meta-row"><span>Version 1.3</span><span>115 KB</span><span>No account</span><span><a href="#install" style="color:inherit">How to install</a></span></div>
+        <div class="meta-row a6"><span>Version 1.3</span><span>115 KB</span><span>No account</span><span><a href="#install" style="color:inherit">How to install</a></span></div>
       </div>
-      <figure class="hero-panel">
-        <img src="img/hero-panel.webp" alt="The Nothi Toolkit panel, Beat tab: waveform with beat lines, 19 beats at 129 BPM, Add 19 markers, Snap and Sequence" width="780" height="648">
-      </figure>
+      <div class="wave a7" aria-hidden="true">
+        <div class="wave-head"><span>Phonk_Edit.wav</span><span><b id="wBeats">0</b> markers · <b>129</b> BPM</span></div>
+        <canvas id="wave"></canvas>
+      </div>
     </div>
   </section>
 
@@ -604,6 +641,60 @@ footer .legal { flex-basis: 100%; }
   tabs.win[0].addEventListener('click', () => show('win'));
   tabs.mac[0].addEventListener('click', () => show('mac'));
   show(isMac ? 'mac' : 'win');
+
+  // ── hero: a song scrolling under a playhead, markers dropping on each beat (129 BPM)
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cv = $('#wave'), g = cv.getContext('2d');
+  const BPM = 129, SPB = 60 / BPM, SPAN = 9; // seconds visible
+  const rnd = (i) => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+  const amp = (t) => {
+    const ph = (t % SPB) / SPB, bar = Math.floor(t / SPB);
+    const kick = Math.exp(-ph * 7) * (bar % 4 === 0 ? 1 : 0.82);
+    const off = Math.exp(-Math.abs(ph - 0.5) * 18) * 0.38;
+    const tex = 0.16 + 0.12 * rnd(Math.floor(t * 40));
+    const swell = 0.75 + 0.25 * Math.sin(t * 0.7);
+    return Math.min(1, (kick + off + tex) * swell);
+  };
+  let W = 0, H = 0, dpr = 1, t0 = performance.now(), dropped = 0;
+  function size() { dpr = Math.min(2, devicePixelRatio || 1); W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; }
+  function frame(now) {
+    const t = (reduce ? 0 : (now - t0) / 1000) + 7;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+    const px = W * 0.62, start = t - (px / W) * SPAN, step = 4, mid = H * 0.58, top = 22;
+    for (let x = 0; x < W; x += step) {
+      const tt = start + (x / W) * SPAN; if (tt < 0) continue;
+      const a = amp(tt), h = Math.max(1.5, a * (H - top - 8) * 0.9);
+      g.fillStyle = x < px ? 'rgba(255,255,255,.55)' : 'rgba(255,255,255,.16)';
+      g.fillRect(x, mid - h / 2 + 6, step - 1.5, h);
+    }
+    // markers: already passed beats get a pin, the newest one pops
+    const firstBeat = Math.ceil(Math.max(0, start) / SPB);
+    for (let b = firstBeat; b * SPB <= start + SPAN; b++) {
+      const bt = b * SPB, x = ((bt - start) / SPAN) * W;
+      if (bt > t) continue;
+      const age = t - bt, s = Math.min(1, age / 0.18), pop = 1 + 0.35 * Math.max(0, 1 - age / 0.25);
+      g.globalAlpha = s; g.fillStyle = '#fff';
+      g.save(); g.translate(x, top - 6); g.scale(pop, pop);
+      g.beginPath(); g.moveTo(-4, -6); g.lineTo(4, -6); g.lineTo(4, 1); g.lineTo(0, 6); g.lineTo(-4, 1); g.closePath(); g.fill(); g.restore();
+      g.globalAlpha = s * 0.22; g.fillRect(x - 0.5, top + 2, 1, H - top - 4); g.globalAlpha = 1;
+    }
+    // playhead
+    g.fillStyle = '#fff'; g.fillRect(px - 1, 4, 2, H - 8);
+    g.beginPath(); g.arc(px, 6, 4, 0, Math.PI * 2); g.fill();
+    const n = Math.floor(t / SPB) + 1; if (n !== dropped) { dropped = n; $('#wBeats').textContent = n; }
+    if (!reduce) requestAnimationFrame(frame);
+  }
+  size(); addEventListener('resize', size); requestAnimationFrame(frame);
+
+  // ── reveal what's below the fold as it scrolls in
+  if ('IntersectionObserver' in window && !reduce) {
+    const targets = document.querySelectorAll('.sec-head, .nothi-card, .tools, .extras, .seg, .step, .sub-h, .howto, .faq-cols > div, .final');
+    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+    targets.forEach((el) => {
+      if (el.getBoundingClientRect().top < innerHeight * 0.92) return;
+      el.classList.add('rv'); io.observe(el);
+    });
+  }
 
   // Nothi "More info"
   const more = $('#moreBtn'), info = $('#moreInfo');
