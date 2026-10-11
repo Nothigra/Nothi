@@ -1,5 +1,5 @@
 {
-  "version": "1.5",
+  "version": "1.6",
   "date": "2026-10-12",
-  "notes": "Curve editor: drag the handles on a graph. Duplicate a precomp without linking it to the original."
+  "notes": "Everything for layers in one tab. Solids ask for a color. Sequence: bottom layer first, with Invert. Beat works with MP4/MOV and loads the selected layer."
 }

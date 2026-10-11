@@ -290,14 +290,14 @@ footer .legal { flex-basis: 100%; }
     <div class="grid-bg"></div>
     <div class="wrap">
       <div class="hero-top">
-        <span class="pill-note a1"><b>NEW</b>Toolkit 1.5 · Curve editor &amp; independent precomps</span>
+        <span class="pill-note a1"><b>NEW</b>Toolkit 1.6 · Everything for layers in one tab</span>
         <h1><span class="ln"><span class="a2">Six tools.</span></span><span class="ln"><em class="a3">One small panel.</em></span></h1>
-        <p class="lead a4">Nothi Toolkit is the first free tool from Nothi Labs. It docks next to your timeline and handles the repetitive parts of an edit: beat markers, eases, anchor points, precomps, style copy and your favorite effects.</p>
+        <p class="lead a4">Nothi Toolkit is the first free tool from Nothi Labs. It docks next to your timeline and handles the repetitive parts of an edit: new layers, precomps, clip sequences, anchor points, style copy, eases and beat markers.</p>
         <div class="cta-row a5">
           <a class="btn primary" id="dlWin" href="downloads/NothiToolkit_Windows.zip" download><svg><use href="#i-win"/></svg>Download for Windows</a>
           <a class="btn" id="dlMac" href="downloads/NothiToolkit_Mac.zip" download><svg><use href="#i-mac"/></svg>Download for macOS</a>
         </div>
-        <div class="meta-row a6"><span>Version 1.5</span><span>130 KB</span><span>No account</span><span><a href="#install" style="color:inherit">How to install</a></span></div>
+        <div class="meta-row a6"><span>Version 1.6</span><span>130 KB</span><span>No account</span><span><a href="#install" style="color:inherit">How to install</a></span></div>
       </div>
     </div>
   </section>
@@ -331,14 +331,14 @@ footer .legal { flex-basis: 100%; }
   <!-- TOOLS -->
   <section class="sec" id="tools">
     <div class="wrap">
-      <div class="sec-head"><span class="eyebrow">What's inside</span><h2>Built for the clicks you make a hundred times a day.</h2><p class="lead">One icon per tool at the top of the panel. Everything is one undo step.</p></div>
+      <div class="sec-head"><span class="eyebrow">What's inside</span><h2>Built for the clicks you make a hundred times a day.</h2><p class="lead">Three tabs: Create (everything for layers), Curves and Beat. Everything is one undo step.</p></div>
       <div class="tools">
-        <a class="tool" href="#g-create"><span class="ico"><svg><use href="#i-create"/></svg></span><h3>Create</h3><p>Text, adjustment, solid, null, shape, camera or light in one click, matched to the selected layer.</p><span class="go">Guide →</span></a>
+        <a class="tool" href="#g-create"><span class="ico"><svg><use href="#i-create"/></svg></span><h3>Create</h3><p>Text, adjustment, null, shape, camera or light in one click. Solids ask for their color first.</p><span class="go">Guide →</span></a>
         <a class="tool" href="#g-curves"><span class="ico"><svg><use href="#i-curves"/></svg></span><h3>Curves</h3><p>Shape your ease by dragging handles on a graph, or pick one of ten presets. Save your own and reuse them anywhere.</p><span class="go">Guide →</span></a>
         <a class="tool" href="#g-beat"><span class="ico"><svg><use href="#i-beat"/></svg></span><h3>Beat</h3><p>Drop a song from the timeline. Get markers on every beat, then snap or sequence your clips on them.</p><span class="go">Guide →</span></a>
         <a class="tool" href="#g-layers"><span class="ico"><svg><use href="#i-layers"/></svg></span><h3>Layers</h3><p>Duplicate a precomp without linking it to the original. Sequence clips, move the anchor point, precompose, decompose, rename.</p><span class="go">Guide →</span></a>
         <a class="tool" href="#g-style"><span class="ico"><svg><use href="#i-style"/></svg></span><h3>Style</h3><p>Copy the effects and animation of one clip. Paste them on others, with the animation fitted to each clip’s length.</p><span class="go">Guide →</span></a>
-        <a class="tool" href="#g-effects"><span class="ico"><svg><use href="#i-effects"/></svg></span><h3>Effects</h3><p>Your favorite effects one click away. Alt+click drops them on a new adjustment layer.</p><span class="go">Guide →</span></a>
+        <a class="tool" href="#g-search"><span class="ico"><svg><use href="#i-search"/></svg></span><h3>Search</h3><p>Every action from the keyboard: press Ctrl+K, type a few letters, Enter. Your recent actions come first.</p><span class="go">Guide →</span></a>
       </div>
       <div class="extras">
         <span class="chip"><b>Search everything</b><kbd class="k-mod">Ctrl</kbd><kbd>K</kbd></span>
@@ -422,30 +422,84 @@ footer .legal { flex-basis: 100%; }
     <div class="wrap">
       <div class="sec-head"><span class="eyebrow">Guide</span><h2>How each tool works.</h2><p class="lead">Every screenshot below is the real panel. Hover any button in After Effects to get the same tips.</p></div>
       <nav class="guide-nav" id="gnav" aria-label="Tools">
-        <a href="#g-create">Create</a><a href="#g-curves">Curves</a><a href="#g-beat">Beat</a><a href="#g-layers">Layers</a><a href="#g-style">Style</a><a href="#g-effects">Effects</a><a href="#g-search">Search &amp; undo</a>
+        <a href="#g-create">Create</a><a href="#g-layers">Layers</a><a href="#g-style">Copy style</a><a href="#g-curves">Curves</a><a href="#g-beat">Beat</a><a href="#g-search">Search &amp; undo</a>
       </nav>
 
       <article class="howto" id="g-create">
-        <figure><img src="img/tool-create.webp" alt="Create tab: tiles for Text, Adjust, Solid, Null, Shape, Camera and Light" width="680" height="680" loading="lazy"><figcaption>Create tab</figcaption></figure>
+        <figure><img src="img/tool-create.webp" alt="Create tab: new layer tiles at the top, the Layers tools in the middle, Copy style at the bottom" width="680" height="840" loading="lazy">
+          <div class="thumbs"><img src="img/tool-solid.webp" alt="New solid: a grid of colors, a hex field and a Create solid button" width="680" height="840" loading="lazy"></div>
+          <figcaption>The Create tab, and the solid color picker</figcaption></figure>
         <div class="howto-text">
           <h3><span class="ico"><svg><use href="#i-create"/></svg></span>Create</h3>
-          <p>New layers without going through menus and dialogs.</p>
+          <p>The first tab holds everything you do with layers: new layers at the top, then the <a href="#g-layers">Layers</a> tools, then <a href="#g-style">Copy style</a>.</p>
           <ol>
             <li><span>Select a layer in your timeline (optional).</span></li>
-            <li><span>Click a tile: <strong>Text, Adjust, Solid, Null, Shape, Camera</strong> or <strong>Light</strong>.</span></li>
-            <li><span>The new layer lands right above the selected one, with the same start and end.</span></li>
+            <li><span>Click a tile: <strong>Text, Adjust, Null, Shape, Camera</strong> or <strong>Light</strong>. The new layer lands right above the selected one, with the same start and end.</span></li>
+            <li><span><strong>Solid</strong> opens a color picker first: pick a swatch, the rainbow square for any color, or type a hex code. Then <strong>Create solid</strong>, or double-click a swatch. The little dot on the tile shows your last color.</span></li>
           </ol>
           <div class="opts"><h4>Options (sliders icon)</h4><dl>
             <dt>Name</dt><dd>Give new layers a name instead of the default.</dd>
-            <dt>Color</dt><dd>Color used for solids and shapes.</dd>
             <dt>Match selected layer</dt><dd>Same timing and position in the stack as the selection. Turn off to use the full comp.</dd></dl></div>
           <p class="tip-line"><b>Tip</b><span>A null is the quickest way to animate several layers together: create it, then parent the layers to it.</span></p>
         </div>
       </article>
 
+
+
+      <article class="howto" id="g-layers">
+        <figure><img src="img/tool-layers.webp" alt="Layers tools in the Create tab: anchor grid, Precomp, Decomp, Duplicate, Rename, Sequence and Invert" width="680" height="840" loading="lazy">
+          <div class="thumbs"><img src="img/tool-layers-opt.webp" alt="Options: sequence order (bottom layer first by default), start, gap" width="680" height="840" loading="lazy"><img src="img/tool-tip.webp" alt="Tooltip on Decompose explaining what it does" width="680" height="840" loading="lazy"></div>
+          <figcaption>Layers tab, its options, and a tooltip</figcaption></figure>
+        <div class="howto-text">
+          <h3><span class="ico"><svg><use href="#i-layers"/></svg></span>Layers</h3>
+          <p>In the Create tab, under the new layers.</p>
+          <ol>
+            <li><span><strong>Anchor point:</strong> select layers, click one of the 9 points. The layer doesn't move on screen, even if it's scaled or rotated.</span></li>
+            <li><span><strong>Precompose:</strong> puts the selected layers in a new comp, trimmed to their length.</span></li>
+            <li><span><strong>Decompose:</strong> select a precomp layer to bring its layers back into the current comp, with their timing. The status bar tells you if something couldn't be kept (time remap, effects on the precomp…).</span></li>
+            <li><span><strong>Duplicate:</strong> select a precomp layer and click. You get a real copy of the precomp: go inside it, change anything, <strong>the original doesn’t move</strong>. In After Effects, a plain Ctrl+D keeps both layers linked to the same comp.</span></li>
+            <li><span><strong>Sequence:</strong> select all your clips and click. They play one after another, no gap. The <strong>bottom layer comes first</strong> (on the left) and the top layer last (on the right), like a stack you read from the bottom.</span></li>
+            <li><span><strong>Invert:</strong> flips the order of the selected clips: the first becomes the last. Click again to flip back.</span></li>
+            <li><span><strong>Rename:</strong> renames layers by type and content, like “TXT – Title” or “VID – Clip 04”.</span></li>
+          </ol>
+          <div class="opts"><h4>Options (sliders icon)</h4><dl>
+            <dt>Duplicate</dt><dd>As a new layer above (default), or switch the selected layer itself to the copy. “Copy nested precomps too” makes precomps inside the copy independent as well.</dd>
+            <dt>Sequence order</dt><dd>Bottom layer first (default), top layer first, or the order you clicked the clips.</dd>
+            <dt>Sequence start</dt><dd>Where the first clip is, or at the playhead.</dd>
+            <dt>Gap</dt><dd>Frames between clips. A negative number overlaps them, handy for crossfades.</dd>
+            <dt>Trim to the layers</dt><dd>The precomp starts and ends with its layers.</dd>
+            <dt>Delete the precomp</dt><dd>After decomposing, only if it isn't used anywhere else.</dd>
+            <dt>Rename scope</dt><dd>Selected layers or the whole comp, with or without type tags.</dd></dl></div>
+        </div>
+      </article>
+
+      <article class="howto" id="g-style">
+        <figure><img src="img/tool-style.webp" alt="Style tab: Copy and Paste, the copied layer Title Glow with 6 keyframes over 2 seconds, and the Animation switch set to Fit to clip" width="680" height="840" loading="lazy">
+          <div class="thumbs"><img src="img/tool-style-tip.webp" alt="Tooltip on Fit to clip" width="680" height="840" loading="lazy"></div>
+          <figcaption>Style tab after copying “Title Glow”</figcaption></figure>
+        <div class="howto-text">
+          <h3><span class="ico"><svg><use href="#i-style"/></svg></span>Copy style</h3>
+          <p>At the bottom of the Create tab. Like a format painter for layers, animation included.</p>
+          <ol>
+            <li><span>Select the clip whose look you like and click <strong>Copy</strong>. The panel shows its effects and how many keyframes they have.</span></li>
+            <li><span>Pick how the animation is pasted with the <strong>Animation</strong> switch.</span></li>
+            <li><span>Select one or more clips and click <strong>Paste</strong>.</span></li>
+          </ol>
+          <div class="opts"><h4>Animation</h4><dl>
+            <dt>Fit to clip</dt><dd>The keyframes stretch or squeeze to each clip’s length. A glow that ramps up over a 2 s clip ramps up over a 5 s clip too, and <strong>the speed graph keeps exactly the same shape</strong>: same eases, same curves.</dd>
+            <dt>Keep</dt><dd>Same timing as the original, starting at each clip’s start.</dd>
+            <dt>Off</dt><dd>Effects only, with their current values.</dd></dl></div>
+          <div class="opts"><h4>Options (sliders icon)</h4><dl>
+            <dt>Effects</dt><dd>Paste the effects, added to or replacing existing ones.</dd>
+            <dt>Blend</dt><dd>Blend mode, opacity and motion blur.</dd>
+            <dt>Scale &amp; rotation</dt><dd>Off by default, so layers keep their framing.</dd></dl></div>
+        </div>
+      </article>
+
+
       <article class="howto" id="g-curves">
-        <figure><img src="img/tool-curves.webp" alt="Curves tab: a graph with two draggable handles, the values 0.446, 0.906, 0.67, 1, Apply, Read and Save buttons, and the curve library below" width="680" height="680" loading="lazy">
-          <div class="thumbs"><img src="img/tool-curves-opt.webp" alt="Curves options: Apply while editing" width="680" height="680" loading="lazy"></div>
+        <figure><img src="img/tool-curves.webp" alt="Curves tab: a graph with two draggable handles, the values 0.446, 0.906, 0.67, 1, Apply, Read and Save buttons, and the curve library below" width="680" height="840" loading="lazy">
+          <div class="thumbs"><img src="img/tool-curves-opt.webp" alt="Curves options: Apply while editing" width="680" height="840" loading="lazy"></div>
           <figcaption>The graph editor, and its options</figcaption></figure>
         <div class="howto-text">
           <h3><span class="ico"><svg><use href="#i-curves"/></svg></span>Curves</h3>
@@ -470,18 +524,19 @@ footer .legal { flex-basis: 100%; }
       </article>
 
       <article class="howto" id="g-beat">
-        <figure><img src="img/tool-beat.webp" alt="Beat tab: waveform of Phonk_Edit.wav with 19 beats at 129 BPM, Add 19 markers button, Snap and Sequence" width="680" height="680" loading="lazy">
-          <div class="thumbs"><img src="img/tool-beat0.webp" alt="Empty drop zone reading Drop an audio layer" width="680" height="680" loading="lazy"><img src="img/tool-beat-opt.webp" alt="Beat options menu" width="680" height="680" loading="lazy"></div>
+        <figure><img src="img/tool-beat.webp" alt="Beat tab: waveform of the visible part of Phonk_Edit.wav with 19 beats at 129 BPM, play and remove buttons, Add 19 markers, Snap and Sequence" width="680" height="840" loading="lazy">
+          <div class="thumbs"><img src="img/tool-beat0.webp" alt="Empty zone reading Select a layer with sound, WAV, MP3, MP4, MOV" width="680" height="840" loading="lazy"><img src="img/tool-beat-opt.webp" alt="Beat options menu" width="680" height="840" loading="lazy"></div>
           <figcaption>Beat tab: before, after, and its options</figcaption></figure>
         <div class="howto-text">
           <h3><span class="ico"><svg><use href="#i-beat"/></svg></span>Beat</h3>
           <p>Markers on the beat of your song, only on the part you actually use.</p>
           <ol>
-            <li><span><strong>Drag your audio layer</strong> from the timeline onto the drop zone. Or select it and click the zone.</span></li>
-            <li><span>The panel listens to the part of the layer that's on the timeline (its trimmed in and out), shows the beats and the BPM.</span></li>
+            <li><span>Open the Beat tab and <strong>select a layer with sound</strong> in the timeline: it loads by itself. A song, a WAV, or a <strong>video (MP4, MOV)</strong>: for videos, After Effects extracts the sound first, which takes a few seconds the first time.</span></li>
+            <li><span>The waveform shows <strong>only the part that's on your timeline</strong> (between the layer's in and out points), with the beats and the BPM. Trim the layer and it updates.</span></li>
             <li><span>Move <strong>Sens.</strong> to the left for only the big hits, to the right for every beat.</span></li>
             <li><span>Click the waveform to <strong>listen from there</strong> and check the beats.</span></li>
             <li><span>Click <strong>Add markers</strong>. Done.</span></li>
+            <li><span>To do another song, click the <strong>✕</strong> on the waveform, then select the other layer.</span></li>
           </ol>
           <div class="opts"><h4>Put your clips on the beat</h4><dl>
             <dt>Snap</dt><dd>Each selected layer moves to start on the nearest beat.</dd>
@@ -491,75 +546,13 @@ footer .legal { flex-basis: 100%; }
             <dt>Markers on</dt><dd>The audio layer, or the composition.</dd>
             <dt>Work area only</dt><dd>Limits the beats to your work area.</dd>
             <dt>Replace, number</dt><dd>Clear previous markers first; number the markers.</dd></dl></div>
-          <p class="tip-line"><b>Tip</b><span>Use WAV, MP3 or AIFF. If the audio sits inside a video file, export the audio first.</span></p>
-        </div>
-      </article>
-
-      <article class="howto" id="g-layers">
-        <figure><img src="img/tool-layers.webp" alt="Layers tab: 9-point anchor grid, Precompose, Decompose, Duplicate, Sequence and Rename buttons" width="680" height="680" loading="lazy">
-          <div class="thumbs"><img src="img/tool-layers-opt.webp" alt="Layers options: duplicate mode, nested precomps, sequence order" width="680" height="680" loading="lazy"><img src="img/tool-tip.webp" alt="Tooltip on Decompose explaining what it does" width="680" height="680" loading="lazy"></div>
-          <figcaption>Layers tab, its options, and a tooltip</figcaption></figure>
-        <div class="howto-text">
-          <h3><span class="ico"><svg><use href="#i-layers"/></svg></span>Layers</h3>
-          <p>The layer chores, in one place.</p>
-          <ol>
-            <li><span><strong>Anchor point:</strong> select layers, click one of the 9 points. The layer doesn't move on screen, even if it's scaled or rotated.</span></li>
-            <li><span><strong>Precompose:</strong> puts the selected layers in a new comp, trimmed to their length.</span></li>
-            <li><span><strong>Decompose:</strong> select a precomp layer to bring its layers back into the current comp, with their timing. The status bar tells you if something couldn't be kept (time remap, effects on the precomp…).</span></li>
-            <li><span><strong>Duplicate:</strong> select a precomp layer and click. You get a real copy of the precomp: go inside it, change anything, <strong>the original doesn’t move</strong>. In After Effects, a plain Ctrl+D keeps both layers linked to the same comp.</span></li>
-            <li><span><strong>Sequence:</strong> select all your clips and click. They play one after another, no gap, starting where the first one starts. Great after importing a batch of clips.</span></li>
-            <li><span><strong>Rename:</strong> renames layers by type and content, like “TXT – Title” or “VID – Clip 04”.</span></li>
-          </ol>
-          <div class="opts"><h4>Options (sliders icon)</h4><dl>
-            <dt>Duplicate</dt><dd>As a new layer above (default), or switch the selected layer itself to the copy. “Copy nested precomps too” makes precomps inside the copy independent as well.</dd>
-            <dt>Sequence order</dt><dd>Timeline order (top layer first) or the order you clicked the clips.</dd>
-            <dt>Sequence start</dt><dd>Where the first clip is, or at the playhead.</dd>
-            <dt>Gap</dt><dd>Frames between clips. A negative number overlaps them, handy for crossfades.</dd>
-            <dt>Trim to the layers</dt><dd>The precomp starts and ends with its layers.</dd>
-            <dt>Delete the precomp</dt><dd>After decomposing, only if it isn't used anywhere else.</dd>
-            <dt>Rename scope</dt><dd>Selected layers or the whole comp, with or without type tags.</dd></dl></div>
-        </div>
-      </article>
-
-      <article class="howto" id="g-style">
-        <figure><img src="img/tool-style.webp" alt="Style tab: Copy and Paste, the copied layer Title Glow with 6 keyframes over 2 seconds, and the Animation switch set to Fit to clip" width="680" height="680" loading="lazy">
-          <div class="thumbs"><img src="img/tool-style-tip.webp" alt="Tooltip on Fit to clip" width="680" height="680" loading="lazy"></div>
-          <figcaption>Style tab after copying “Title Glow”</figcaption></figure>
-        <div class="howto-text">
-          <h3><span class="ico"><svg><use href="#i-style"/></svg></span>Style</h3>
-          <p>Like a format painter for layers, animation included.</p>
-          <ol>
-            <li><span>Select the clip whose look you like and click <strong>Copy</strong>. The panel shows its effects and how many keyframes they have.</span></li>
-            <li><span>Pick how the animation is pasted with the <strong>Animation</strong> switch.</span></li>
-            <li><span>Select one or more clips and click <strong>Paste</strong>.</span></li>
-          </ol>
-          <div class="opts"><h4>Animation</h4><dl>
-            <dt>Fit to clip</dt><dd>The keyframes stretch or squeeze to each clip’s length. A glow that ramps up over a 2 s clip ramps up over a 5 s clip too, and <strong>the speed graph keeps exactly the same shape</strong>: same eases, same curves.</dd>
-            <dt>Keep</dt><dd>Same timing as the original, starting at each clip’s start.</dd>
-            <dt>Off</dt><dd>Effects only, with their current values.</dd></dl></div>
-          <div class="opts"><h4>Options (sliders icon)</h4><dl>
-            <dt>Effects</dt><dd>Paste the effects, added to or replacing existing ones.</dd>
-            <dt>Blend</dt><dd>Blend mode, opacity and motion blur.</dd>
-            <dt>Scale &amp; rotation</dt><dd>Off by default, so layers keep their framing.</dd></dl></div>
-        </div>
-      </article>
-
-      <article class="howto" id="g-effects">
-        <figure><img src="img/tool-effects.webp" alt="Effects tab: search field and a list of favorite effects" width="680" height="680" loading="lazy"><figcaption>Effects tab with the default favorites</figcaption></figure>
-        <div class="howto-text">
-          <h3><span class="ico"><svg><use href="#i-effects"/></svg></span>Effects</h3>
-          <p>Your go-to effects without digging through Effects &amp; Presets.</p>
-          <ol>
-            <li><span>Select layers, click an effect in the list to apply it.</span></li>
-            <li><span><strong>Alt+click</strong> puts the effect on a new adjustment layer instead.</span></li>
-            <li><span>Type in the search field to find any installed effect, plugins included. Click the <strong>star</strong> to add it to your favorites.</span></li>
-          </ol>
+          <p class="tip-line"><b>Tip</b><span>WAV, MP3 and AIFF load instantly. If a video’s sound can’t be read, export it as WAV and use that layer.</span></p>
         </div>
       </article>
 
       <article class="howto" id="g-search">
-        <figure><img src="img/tool-pal-recent.webp" alt="Search window listing recent actions, then all actions" width="680" height="680" loading="lazy">
-          <div class="thumbs"><img src="img/tool-pal.webp" alt="Search for anc showing the anchor point actions" width="680" height="680" loading="lazy"><img src="img/tool-guide1.webp" alt="First-run guide, step 1 of 3" width="680" height="680" loading="lazy"></div>
+        <figure><img src="img/tool-pal-recent.webp" alt="Search window listing recent actions, then all actions" width="680" height="840" loading="lazy">
+          <div class="thumbs"><img src="img/tool-pal.webp" alt="Search for anc showing the anchor point actions" width="680" height="840" loading="lazy"><img src="img/tool-guide1.webp" alt="First-run guide, step 1 of 3" width="680" height="840" loading="lazy"></div>
           <figcaption>Search, with your recent actions on top</figcaption></figure>
         <div class="howto-text">
           <h3><span class="ico"><svg><use href="#i-search"/></svg></span>Search &amp; undo</h3>
@@ -587,7 +580,7 @@ footer .legal { flex-basis: 100%; }
       <div class="faq-cols">
         <div>
           <h3>Nothi Toolkit &amp; Labs</h3>
-          <details><summary>What's new?</summary><div class="a"><p><strong>1.5:</strong> a <strong>curve editor</strong> in the Curves tab, drag the handles and apply. <strong>Duplicate</strong> in the Layers tab: a precomp copy that isn’t linked to the original.</p><p><strong>1.4:</strong> <strong>Sequence</strong> in the Layers tab: select your clips, they play one after another. <strong>Fit to clip</strong> in the Style tab: pasted animations adapt to each clip’s length and keep their speed graph. Pasted keyframes now keep their eases too.</p></div></details>
+          <details><summary>What's new?</summary><div class="a"><p><strong>1.6:</strong> everything for layers in the <strong>Create</strong> tab (new layers, precomps, duplicate, sequence, anchor, copy style). Solids ask for a color. Sequence puts the bottom layer first, with an <strong>Invert</strong> button. Beat loads the selected layer by itself, shows only the visible part, works with MP4 and MOV, and has a remove button. The Effects tab is gone.</p><p><strong>1.5:</strong> a <strong>curve editor</strong> in the Curves tab, drag the handles and apply. <strong>Duplicate</strong> in the Layers tab: a precomp copy that isn’t linked to the original.</p><p><strong>1.4:</strong> <strong>Sequence</strong> in the Layers tab: select your clips, they play one after another. <strong>Fit to clip</strong> in the Style tab: pasted animations adapt to each clip’s length and keep their speed graph. Pasted keyframes now keep their eases too.</p></div></details>
           <details><summary>What is Nothi Labs?</summary><div class="a"><p>The free side of Nothi: tools for editors, made alongside the Nothi marketplace. <strong>Nothi Toolkit</strong> is the first one. New tools will show up on this site.</p></div></details>
           <details><summary>Is it really free?</summary><div class="a"><p>Yes. No account, no trial, no watermark, no ads in the panel.</p></div></details>
           <details><summary>Which versions of After Effects work?</summary><div class="a"><p><strong>After Effects 2022 (version 22) and newer</strong>, on Windows and on macOS (Intel and Apple Silicon).</p></div></details>
@@ -596,9 +589,9 @@ footer .legal { flex-basis: 100%; }
           <details><summary>The search shortcut does nothing.</summary><div class="a"><p>After Effects only sends keys to a panel that has focus. Click anywhere on the panel, then press the shortcut. You can also click the magnifier icon.</p></div></details>
           <details><summary>Beat can't read my audio.</summary><div class="a"><p>Use a <strong>WAV, MP3 or AIFF</strong> layer. Audio inside a video file (MP4, MOV) may not be readable by the panel: export the audio, import it, and drop that layer instead.</p></div></details>
           <details><summary>Can it break my project?</summary><div class="a"><p>Every action is a single undo step, and an <strong>Undo</strong> button appears after each one. Saving your project before big changes is still a good habit.</p></div></details>
-          <details><summary>Does it collect any data?</summary><div class="a"><p>No. Your settings (favorites, curves, shortcut) stay on your computer. The only thing the panel does online is check this site for a newer version. Details on the <a href="legal.html#privacy">Legal page</a>.</p></div></details>
+          <details><summary>Does it collect any data?</summary><div class="a"><p>No. Your settings (curves, colors, shortcut) stay on your computer. The only thing the panel does online is check this site for a newer version. Details on the <a href="legal.html#privacy">Legal page</a>.</p></div></details>
           <details><summary>How can I contact you?</summary><div class="a"><p>Write to <strong>nothicontact@gmail.com</strong> for a bug, an idea for a new tool, or anything else.</p></div></details>
-          <details><summary>How do I update to a new version?</summary><div class="a"><p>When a new version is out, the panel tells you: an <strong>Update</strong> button appears at the bottom of the panel, and in the <strong>···</strong> menu.</p><p>Download the new zip from this page, close After Effects, and run the installer again. It replaces the old version by itself, no need to uninstall first. Your favorites, curves and shortcut are normally kept.</p></div></details>
+          <details><summary>How do I update to a new version?</summary><div class="a"><p>When a new version is out, the panel tells you: an <strong>Update</strong> button appears at the bottom of the panel, and in the <strong>···</strong> menu.</p><p>Download the new zip from this page, close After Effects, and run the installer again. It replaces the old version by itself, no need to uninstall first. Your curves and settings are normally kept.</p></div></details>
           <details><summary>The icons are too small (or too big).</summary><div class="a"><p>Open the <strong>···</strong> menu and pick an <strong>Icon size</strong>: Small, Medium or Large. The panel remembers it.</p></div></details>
           <details><summary>How do I uninstall it?</summary><div class="a"><p>Run <strong>Uninstall.bat</strong> (Windows) or <strong>Uninstall.command</strong> (Mac) from the zip, or delete the com.nothi.toolkit folder listed above.</p></div></details>
         </div>
@@ -629,7 +622,7 @@ footer .legal { flex-basis: 100%; }
   <div class="wrap">
     <a class="brand" href="#top"><img src="img/logo-mark.png" alt="" width="30" height="23">Nothi <span>Labs</span></a>
     <nav aria-label="Footer"><a href="#install">Install</a><a href="#guide">Guide</a><a href="#faq">FAQ</a><a href="#nothi">Nothi</a><a href="legal.html">Legal</a></nav>
-    <p class="legal">Nothi Labs · Nothi Toolkit 1.5 · Made in Belgium · nothicontact@gmail.com · <a href="legal.html">Legal notice, privacy &amp; terms</a>. An independent project, not affiliated with or endorsed by Adobe. After Effects is a trademark of Adobe Inc.</p>
+    <p class="legal">Nothi Labs · Nothi Toolkit 1.6 · Made in Belgium · nothicontact@gmail.com · <a href="legal.html">Legal notice, privacy &amp; terms</a>. An independent project, not affiliated with or endorsed by Adobe. After Effects is a trademark of Adobe Inc.</p>
   </div>
 </footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
