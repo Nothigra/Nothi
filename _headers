@@ -3,7 +3,7 @@
   Content-Disposition: attachment
   Cache-Control: no-cache
 
-/version.json
+/updates/*
   Access-Control-Allow-Origin: *
   Cache-Control: no-cache
 
