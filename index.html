@@ -294,8 +294,8 @@ footer .legal { flex-basis: 100%; }
         <h1><span class="ln"><span class="a2">Six tools.</span></span><span class="ln"><em class="a3">One small panel.</em></span></h1>
         <p class="lead a4">Nothi Toolkit is the first free tool from Nothi Labs. It docks next to your timeline and handles the repetitive parts of an edit: new layers, precomps, clip sequences, anchor points, style copy, eases and beat markers.</p>
         <div class="cta-row a5">
-          <a class="btn primary" id="dlWin" href="downloads/NothiToolkit_Windows.zip" download><svg><use href="#i-win"/></svg>Download for Windows</a>
-          <a class="btn" id="dlMac" href="downloads/NothiToolkit_Mac.zip" download><svg><use href="#i-mac"/></svg>Download for macOS</a>
+          <a class="btn primary" id="dlWin" href="get/windows.html"><svg><use href="#i-win"/></svg>Download for Windows</a>
+          <a class="btn" id="dlMac" href="get/mac.html"><svg><use href="#i-mac"/></svg>Download for macOS</a>
         </div>
         <div class="meta-row a6"><span>Version 1.8</span><span>130 KB</span><span>No account</span><span><a href="#install" style="color:inherit">How to install</a></span></div>
       </div>
@@ -363,7 +363,7 @@ footer .legal { flex-basis: 100%; }
           <div class="step-text"><span class="num">1</span><h3>Download and extract</h3>
             <p>Download <strong>NothiToolkit_Windows.zip</strong>. In your Downloads folder, right-click it and choose <strong>Extract All…</strong></p>
             <p class="note">The installer can't run from inside the zip, so this step matters.</p>
-            <a class="btn sm" href="downloads/NothiToolkit_Windows.zip" download style="width:fit-content"><svg><use href="#i-dl"/></svg>NothiToolkit_Windows.zip</a></div>
+            <a class="btn sm" href="get/windows.html" style="width:fit-content"><svg><use href="#i-dl"/></svg>NothiToolkit_Windows.zip</a></div>
           <img src="img/step-win-extract.webp" alt="Downloads folder with the zip selected and the Extract All option highlighted in the right-click menu" width="1760" height="1120" loading="lazy">
         </div>
         <div class="step">
@@ -386,7 +386,7 @@ footer .legal { flex-basis: 100%; }
           <div class="step-text"><span class="num">1</span><h3>Download, unzip, open</h3>
             <p>Download <strong>NothiToolkit_Mac.zip</strong> and double-click it to unzip. In the folder, <strong>right-click Install Nothi Toolkit.command › Open</strong>, then confirm with <strong>Open</strong>.</p>
             <p>A Terminal window runs for a second and says <strong>Done</strong>. You can close it.</p>
-            <a class="btn sm" href="downloads/NothiToolkit_Mac.zip" download style="width:fit-content"><svg><use href="#i-dl"/></svg>NothiToolkit_Mac.zip</a></div>
+            <a class="btn sm" href="get/mac.html" style="width:fit-content"><svg><use href="#i-dl"/></svg>NothiToolkit_Mac.zip</a></div>
           <img src="img/step-mac-open.webp" alt="Finder window with Install Nothi Toolkit.command selected and Open highlighted in the right-click menu, and the Terminal confirmation below" width="1760" height="1120" loading="lazy">
         </div>
         <div class="step">
@@ -611,8 +611,8 @@ footer .legal { flex-basis: 100%; }
     <div class="wrap final">
       <h2>Install it once. Use it every edit.</h2>
       <div class="cta-row">
-        <a class="btn primary" href="downloads/NothiToolkit_Windows.zip" download><svg><use href="#i-win"/></svg>Windows</a>
-        <a class="btn" href="downloads/NothiToolkit_Mac.zip" download><svg><use href="#i-mac"/></svg>macOS</a>
+        <a class="btn primary" href="get/windows.html"><svg><use href="#i-win"/></svg>Windows</a>
+        <a class="btn" href="get/mac.html"><svg><use href="#i-mac"/></svg>macOS</a>
       </div>
     </div>
   </section>
@@ -639,8 +639,7 @@ footer .legal { flex-basis: 100%; }
     document.querySelectorAll('.k-mod').forEach((k) => { k.textContent = '⌘'; });
   }
   const auto = $('.dl-auto');
-  auto.href = isMac ? 'downloads/NothiToolkit_Mac.zip' : 'downloads/NothiToolkit_Windows.zip';
-  auto.setAttribute('download', '');
+  auto.href = isMac ? 'get/mac.html' : 'get/windows.html';
   auto.lastChild.textContent = isMac ? 'Download for Mac' : 'Download';
 
   // OS tabs in the install guide

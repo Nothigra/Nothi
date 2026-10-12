@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /updates/
+Disallow: /get/
 
 Sitemap: https://nothilabs.com/sitemap.xml
