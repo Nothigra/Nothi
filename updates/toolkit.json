@@ -1,5 +1,5 @@
 {
-  "version": "1.7",
+  "version": "1.8",
   "date": "2026-10-12",
-  "notes": "The panel adapts to its window: tall = everything in one tab, small = separate tabs. Solids are black by default."
+  "notes": "Tools fill the panel at any size. New tab order. Delete any curve, built-in ones too."
 }
