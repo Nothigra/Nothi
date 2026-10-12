@@ -1,5 +1,5 @@
 {
-  "version": "1.6",
+  "version": "1.7",
   "date": "2026-10-12",
-  "notes": "Everything for layers in one tab. Solids ask for a color. Sequence: bottom layer first, with Invert. Beat works with MP4/MOV and loads the selected layer."
+  "notes": "The panel adapts to its window: tall = everything in one tab, small = separate tabs. Solids are black by default."
 }
