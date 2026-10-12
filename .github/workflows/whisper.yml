@@ -45,3 +45,19 @@ jobs:
           bash ./models/download-ggml-model.sh tiny && ../out/whisper-cli.exe -m models/ggml-tiny.bin -f samples/jfk.wav -ml 1 -sow -oj -of ../out/test -np && head -c 600 ../out/test.json
       - uses: actions/upload-artifact@v4
         with: { name: whisper-windows, path: "out/whisper-cli.exe" }
+  publish:
+    needs: [test-linux, mac, windows]
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: art }
+      - run: |
+          mkdir pub && cd pub && git init -q && git checkout -q -b whisper-bin
+          mkdir -p mac win test
+          cp ../art/whisper-mac/whisper-cli mac/ && chmod +x mac/whisper-cli
+          cp ../art/whisper-windows/whisper-cli.exe win/
+          cp ../art/linux-test/* test/
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "whisper-cli binaries"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" whisper-bin
