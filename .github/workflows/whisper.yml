@@ -1,0 +1,47 @@
+name: whisper-binaries
+on:
+  push:
+    branches: [whisper-build]
+  workflow_dispatch:
+jobs:
+  test-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - run: git clone --depth 1 https://github.com/ggml-org/whisper.cpp w && cd w && git log -1 --format='%H %cd' > ../commit.txt
+      - run: cd w && cmake -B build -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=OFF -DWHISPER_BUILD_TESTS=OFF && cmake --build build --config Release -j 4 --target whisper-cli
+      - run: cd w && bash ./models/download-ggml-model.sh tiny && ls -la models build/bin
+      - run: |
+          cd w
+          ./build/bin/whisper-cli -m models/ggml-tiny.bin -f samples/jfk.wav -l auto -ml 1 -sow -oj -of ../words -np || true
+          ./build/bin/whisper-cli -m models/ggml-tiny.bin -f samples/jfk.wav -l auto -ojf -of ../full -np || true
+          ./build/bin/whisper-cli --help > ../help.txt 2>&1 || true
+          cp samples/jfk.wav ../jfk.wav
+      - uses: actions/upload-artifact@v4
+        with: { name: linux-test, path: "commit.txt\nwords.json\nfull.json\nhelp.txt" }
+  mac:
+    runs-on: macos-14
+    steps:
+      - run: git clone --depth 1 https://github.com/ggml-org/whisper.cpp w
+      - run: |
+          cd w
+          cmake -B build -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=OFF -DWHISPER_BUILD_TESTS=OFF \
+            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 \
+            -DGGML_METAL=ON -DGGML_METAL_EMBED_LIBRARY=ON -DGGML_BLAS=OFF
+          cmake --build build --config Release -j 4 --target whisper-cli
+          mkdir -p ../out && cp build/bin/whisper-cli ../out/ && lipo -info ../out/whisper-cli && otool -L ../out/whisper-cli
+          bash ./models/download-ggml-model.sh tiny && ../out/whisper-cli -m models/ggml-tiny.bin -f samples/jfk.wav -ml 1 -sow -oj -of ../out/test -np && head -c 600 ../out/test.json
+      - uses: actions/upload-artifact@v4
+        with: { name: whisper-mac, path: "out/whisper-cli" }
+  windows:
+    runs-on: windows-latest
+    steps:
+      - run: git clone --depth 1 https://github.com/ggml-org/whisper.cpp w
+      - shell: bash
+        run: |
+          cd w
+          cmake -B build -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=OFF -DWHISPER_BUILD_TESTS=OFF -DCMAKE_POLICY_DEFAULT_CMP0091=NEW -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
+          cmake --build build --config Release -j 4 --target whisper-cli
+          mkdir -p ../out && find build -name 'whisper-cli.exe' -exec cp {} ../out/ \; && ls -la ../out
+          bash ./models/download-ggml-model.sh tiny && ../out/whisper-cli.exe -m models/ggml-tiny.bin -f samples/jfk.wav -ml 1 -sow -oj -of ../out/test -np && head -c 600 ../out/test.json
+      - uses: actions/upload-artifact@v4
+        with: { name: whisper-windows, path: "out/whisper-cli.exe" }
