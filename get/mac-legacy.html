@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Downloading Nothi Toolkit for macOS</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0A0A0A">
+<link rel="icon" href="../img/logo-mark.png">
+<style>
+@font-face { font-family: 'Jakarta'; src: url(../fonts/plus-jakarta-sans-latin-wght-normal.woff2) format('woff2'); font-weight: 200 800; }
+@font-face { font-family: 'Inter'; src: url(../fonts/inter-latin-wght-normal.woff2) format('woff2'); font-weight: 100 900; }
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; background: #0A0A0A; color: #F4F4F6; font: 400 16px/1.6 Inter, -apple-system, 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; }
+body { display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+.box { width: 100%; max-width: 520px; display: grid; gap: 22px; justify-items: center; text-align: center; }
+.brand { display: flex; align-items: center; gap: 10px; font: 800 18px Jakarta, Inter, sans-serif; letter-spacing: -0.03em; text-decoration: none; color: inherit; }
+.brand img { width: 30px; } .brand span { color: #8A8A93; font-weight: 600; }
+.ring { width: 56px; height: 56px; border-radius: 50%; border: 3px solid #2E2E34; border-top-color: #fff; animation: s 0.9s linear infinite; }
+@keyframes s { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ring { animation: none; } }
+h1 { margin: 0; font: 800 clamp(30px, 6vw, 42px)/1.1 Jakarta, Inter, sans-serif; letter-spacing: -0.04em; }
+p { margin: 0; color: #8A8A93; }
+a.btn { display: inline-flex; align-items: center; gap: 10px; height: 46px; padding: 0 22px; border-radius: 999px; font: 700 15px Jakarta, Inter, sans-serif; text-decoration: none; border: 1px solid #2E2E34; color: #F4F4F6; }
+a.btn.primary { background: #F4F4F6; color: #0A0A0A; border-color: #F4F4F6; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+small { color: #5E5E66; font-size: 13px; }
+</style>
+</head>
+<body>
+<main class="box">
+  <a class="brand" href="../"><img src="../img/logo-mark.png" alt="" width="30" height="23">Nothi <span>Labs</span></a>
+  <div class="ring" aria-hidden="true"></div>
+  <h1>Your download is starting</h1>
+  <p>Nothi Toolkit 1.9 for macOS · After Effects 2019, 2020 and 2021<br>NothiToolkit_Mac_Legacy.zip</p>
+  <div class="row">
+    <a class="btn primary" id="again" href="../downloads/NothiToolkit_Mac_Legacy.zip" download>Download again</a>
+    <a class="btn" href="../#install">How to install →</a>
+  </div>
+  <small>Nothing happening? Click “Download again”. Wrong After Effects? <a href="mac.html" style="color:#8A8A93">Get the 2022+ version</a>.</small>
+</main>
+<script>
+  // Counted as a page view in Cloudflare Web Analytics, then the zip starts.
+  setTimeout(function () { location.href = '../downloads/NothiToolkit_Mac_Legacy.zip'; }, 700);
+</script>
+</body>
+</html>

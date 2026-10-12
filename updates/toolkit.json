@@ -1,5 +1,5 @@
 {
-  "version": "1.8",
+  "version": "1.9",
   "date": "2026-10-12",
-  "notes": "Tools fill the panel at any size. New tab order. Delete any curve, built-in ones too."
+  "notes": "Auto captions, split text into words, beats on the bass peaks, zoomable curve graph."
 }
