@@ -86,7 +86,7 @@ jobs:
       - run: git clone --depth 1 -b n7.1 https://github.com/FFmpeg/FFmpeg f
       - run: |
           cd f && ./configure --disable-everything --disable-autodetect --disable-network --disable-doc --disable-debug --disable-x86asm --disable-ffplay --disable-ffprobe --enable-ffmpeg --disable-swscale --disable-avdevice --enable-swresample --enable-avfilter --enable-protocol=file,pipe --enable-demuxer=mov,matroska,avi,mp3,wav,aiff,flac,ogg,mpegts,mpegps,asf,aac,ac3,eac3,w64,caf,mxf,flv,dts,truehd --enable-decoder=aac,aac_latm,mp3,mp3float,mp2,mp2float,ac3,eac3,dca,truehd,mlp,opus,vorbis,flac,alac,pcm_s16le,pcm_s16be,pcm_s24le,pcm_s24be,pcm_s32le,pcm_s32be,pcm_f32le,pcm_f32be,pcm_f64le,pcm_s8,pcm_u8,pcm_mulaw,pcm_alaw,pcm_bluray,pcm_dvd,adpcm_ima_qt,wmav1,wmav2,wmapro --enable-parser=aac,aac_latm,ac3,mpegaudio,dca,flac,opus,vorbis,mlp --enable-muxer=wav --enable-encoder=pcm_s16le --enable-filter=abuffer,abuffersink,aformat,anull,aresample,atrim,asetpts,anullsink --enable-static --disable-shared --arch=x86_64 --target-os=mingw32 --cross-prefix=x86_64-w64-mingw32- --extra-ldflags="-static -static-libgcc" --pkg-config-flags=--static --enable-w32threads || { echo "::error::configure: $(tail -c 900 ffbuild/config.log | tr '\n' ' ')"; exit 1; }
-          make -j4 ffmpeg 2>err.txt || { echo "::error::make: $(tail -c 900 err.txt | tr '\n' ' ')"; exit 1; }
+          make -j4 ffmpeg.exe 2>err.txt || { echo "::error::make: $(tail -c 900 err.txt | tr '\n' ' ')"; exit 1; }
           x86_64-w64-mingw32-strip ffmpeg.exe && ls -la ffmpeg.exe && x86_64-w64-mingw32-objdump -p ffmpeg.exe | grep "DLL Name"
           mkdir -p ../out && cp ffmpeg.exe ../out/
       - uses: actions/upload-artifact@v4
