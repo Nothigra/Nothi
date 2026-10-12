@@ -14,10 +14,11 @@ jobs:
           cd w
           ./build/bin/whisper-cli -m models/ggml-tiny.bin -f samples/jfk.wav -l auto -ml 1 -sow -oj -of ../words -np || true
           ./build/bin/whisper-cli -m models/ggml-tiny.bin -f samples/jfk.wav -l auto -ojf -of ../full -np || true
+          ./build/bin/whisper-cli -m models/ggml-tiny.bin -f samples/jfk.wav -l auto -ojf -dtw tiny -nfa -of ../dtw -np > ../dtw_log.txt 2>&1 || echo "dtw failed" >> ../dtw_log.txt
           ./build/bin/whisper-cli --help > ../help.txt 2>&1 || true
           cp samples/jfk.wav ../jfk.wav
       - uses: actions/upload-artifact@v4
-        with: { name: linux-test, path: "commit.txt\nwords.json\nfull.json\nhelp.txt" }
+        with: { name: linux-test, path: "commit.txt\nwords.json\nfull.json\nhelp.txt\ndtw.json\ndtw_log.txt" }
   mac:
     runs-on: macos-14
     steps:
@@ -46,7 +47,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: whisper-windows, path: "out/whisper-cli.exe" }
   publish:
-    needs: [test-linux, mac, windows]
+    needs: [test-linux, mac, windows, ffmpeg-linux-test, ffmpeg-windows, ffmpeg-mac]
     runs-on: ubuntu-latest
     permissions: { contents: write }
     steps:
@@ -58,6 +59,45 @@ jobs:
           cp ../art/whisper-mac/whisper-cli mac/ && chmod +x mac/whisper-cli
           cp ../art/whisper-windows/whisper-cli.exe win/
           cp ../art/linux-test/* test/
+          cp ../art/ffmpeg-windows/ffmpeg.exe win/ && cp ../art/ffmpeg-mac/ffmpeg mac/ && chmod +x mac/ffmpeg
+          cp ../art/ffmpeg-test/ff_test.txt test/
           git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A
           git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "whisper-cli binaries"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" whisper-bin
+
+  ffmpeg-linux-test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - run: git clone --depth 1 -b n7.1 https://github.com/FFmpeg/FFmpeg f
+      - run: cd f && ./configure --disable-everything --disable-autodetect --disable-network --disable-doc --disable-debug --disable-x86asm --disable-ffplay --disable-ffprobe --enable-ffmpeg --disable-swscale --disable-avdevice --enable-swresample --enable-avfilter --enable-protocol=file,pipe --enable-demuxer=mov,matroska,avi,mp3,wav,aiff,flac,ogg,mpegts,mpegps,asf,aac,ac3,eac3,w64,caf,mxf,flv,dts,truehd --enable-decoder=aac,aac_latm,mp3,mp3float,mp2,mp2float,ac3,eac3,dca,truehd,mlp,opus,vorbis,flac,alac,pcm_s16le,pcm_s16be,pcm_s24le,pcm_s24be,pcm_s32le,pcm_s32be,pcm_f32le,pcm_f32be,pcm_f64le,pcm_s8,pcm_u8,pcm_mulaw,pcm_alaw,pcm_bluray,pcm_dvd,adpcm_ima_qt,wmav1,wmav2,wmapro --enable-parser=aac,aac_latm,ac3,mpegaudio,dca,flac,opus,vorbis,mlp --enable-muxer=wav --enable-encoder=pcm_s16le --enable-filter=abuffer,abuffersink,aformat,anull,aresample,atrim,asetpts,anullsink --enable-static --disable-shared && make -j4 ffmpeg && ls -la ffmpeg
+      - run: |
+          ffmpeg -hide_banner -loglevel error -f lavfi -i "sine=f=440:d=20" -f lavfi -i "color=c=black:s=320x240:d=20" -c:a aac -c:v libx264 -shortest t_aac.mp4
+          ffmpeg -hide_banner -loglevel error -f lavfi -i "sine=f=440:d=20" -ac 6 -c:a ac3 t_ac3.mkv
+          ffmpeg -hide_banner -loglevel error -f lavfi -i "sine=f=440:d=20" -c:a pcm_s24le t_pcm.mov
+          for t in t_aac.mp4 t_ac3.mkv t_pcm.mov; do ./f/ffmpeg -nostdin -hide_banner -loglevel error -ss 5 -t 4 -i $t -vn -sn -dn -ac 1 -ar 16000 -c:a pcm_s16le -y out_$t.wav && echo "$t OK $(stat -c%s out_$t.wav) bytes" >> ff_test.txt || echo "$t FAILED" >> ff_test.txt; done
+          cat ff_test.txt
+      - uses: actions/upload-artifact@v4
+        with: { name: ffmpeg-test, path: ff_test.txt }
+  ffmpeg-windows:
+    runs-on: ubuntu-latest
+    steps:
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq mingw-w64
+      - run: git clone --depth 1 -b n7.1 https://github.com/FFmpeg/FFmpeg f
+      - run: |
+          cd f && ./configure --disable-everything --disable-autodetect --disable-network --disable-doc --disable-debug --disable-x86asm --disable-ffplay --disable-ffprobe --enable-ffmpeg --disable-swscale --disable-avdevice --enable-swresample --enable-avfilter --enable-protocol=file,pipe --enable-demuxer=mov,matroska,avi,mp3,wav,aiff,flac,ogg,mpegts,mpegps,asf,aac,ac3,eac3,w64,caf,mxf,flv,dts,truehd --enable-decoder=aac,aac_latm,mp3,mp3float,mp2,mp2float,ac3,eac3,dca,truehd,mlp,opus,vorbis,flac,alac,pcm_s16le,pcm_s16be,pcm_s24le,pcm_s24be,pcm_s32le,pcm_s32be,pcm_f32le,pcm_f32be,pcm_f64le,pcm_s8,pcm_u8,pcm_mulaw,pcm_alaw,pcm_bluray,pcm_dvd,adpcm_ima_qt,wmav1,wmav2,wmapro --enable-parser=aac,aac_latm,ac3,mpegaudio,dca,flac,opus,vorbis,mlp --enable-muxer=wav --enable-encoder=pcm_s16le --enable-filter=abuffer,abuffersink,aformat,anull,aresample,atrim,asetpts,anullsink --enable-static --disable-shared --arch=x86_64 --target-os=mingw32 --cross-prefix=x86_64-w64-mingw32- --extra-ldflags="-static -static-libgcc" --pkg-config-flags=--static
+          make -j4 ffmpeg && x86_64-w64-mingw32-strip ffmpeg.exe && ls -la ffmpeg.exe && x86_64-w64-mingw32-objdump -p ffmpeg.exe | grep "DLL Name"
+          mkdir -p ../out && cp ffmpeg.exe ../out/
+      - uses: actions/upload-artifact@v4
+        with: { name: ffmpeg-windows, path: out/ffmpeg.exe }
+  ffmpeg-mac:
+    runs-on: macos-14
+    steps:
+      - run: git clone --depth 1 -b n7.1 https://github.com/FFmpeg/FFmpeg f && cp -R f fx
+      - run: |
+          cd f && ./configure --disable-everything --disable-autodetect --disable-network --disable-doc --disable-debug --disable-x86asm --disable-ffplay --disable-ffprobe --enable-ffmpeg --disable-swscale --disable-avdevice --enable-swresample --enable-avfilter --enable-protocol=file,pipe --enable-demuxer=mov,matroska,avi,mp3,wav,aiff,flac,ogg,mpegts,mpegps,asf,aac,ac3,eac3,w64,caf,mxf,flv,dts,truehd --enable-decoder=aac,aac_latm,mp3,mp3float,mp2,mp2float,ac3,eac3,dca,truehd,mlp,opus,vorbis,flac,alac,pcm_s16le,pcm_s16be,pcm_s24le,pcm_s24be,pcm_s32le,pcm_s32be,pcm_f32le,pcm_f32be,pcm_f64le,pcm_s8,pcm_u8,pcm_mulaw,pcm_alaw,pcm_bluray,pcm_dvd,adpcm_ima_qt,wmav1,wmav2,wmapro --enable-parser=aac,aac_latm,ac3,mpegaudio,dca,flac,opus,vorbis,mlp --enable-muxer=wav --enable-encoder=pcm_s16le --enable-filter=abuffer,abuffersink,aformat,anull,aresample,atrim,asetpts,anullsink --enable-static --disable-shared --extra-cflags="-mmacosx-version-min=11.0" --extra-ldflags="-mmacosx-version-min=11.0" && make -j4 ffmpeg
+          cd ../fx && ./configure --disable-everything --disable-autodetect --disable-network --disable-doc --disable-debug --disable-x86asm --disable-ffplay --disable-ffprobe --enable-ffmpeg --disable-swscale --disable-avdevice --enable-swresample --enable-avfilter --enable-protocol=file,pipe --enable-demuxer=mov,matroska,avi,mp3,wav,aiff,flac,ogg,mpegts,mpegps,asf,aac,ac3,eac3,w64,caf,mxf,flv,dts,truehd --enable-decoder=aac,aac_latm,mp3,mp3float,mp2,mp2float,ac3,eac3,dca,truehd,mlp,opus,vorbis,flac,alac,pcm_s16le,pcm_s16be,pcm_s24le,pcm_s24be,pcm_s32le,pcm_s32be,pcm_f32le,pcm_f32be,pcm_f64le,pcm_s8,pcm_u8,pcm_mulaw,pcm_alaw,pcm_bluray,pcm_dvd,adpcm_ima_qt,wmav1,wmav2,wmapro --enable-parser=aac,aac_latm,ac3,mpegaudio,dca,flac,opus,vorbis,mlp --enable-muxer=wav --enable-encoder=pcm_s16le --enable-filter=abuffer,abuffersink,aformat,anull,aresample,atrim,asetpts,anullsink --enable-static --disable-shared --enable-cross-compile --arch=x86_64 --target-os=darwin --cc="clang -arch x86_64" --extra-cflags="-mmacosx-version-min=11.0" --extra-ldflags="-mmacosx-version-min=11.0 -arch x86_64" && make -j4 ffmpeg
+          cd .. && mkdir -p out && lipo -create f/ffmpeg fx/ffmpeg -output out/ffmpeg && strip -x out/ffmpeg || true
+          codesign --force -s - out/ffmpeg && lipo -info out/ffmpeg && otool -L out/ffmpeg && ls -la out/ffmpeg
+      - uses: actions/upload-artifact@v4
+        with: { name: ffmpeg-mac, path: out/ffmpeg }
