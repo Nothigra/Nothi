@@ -371,7 +371,7 @@ footer .legal { flex-basis: 100%; }
         <a class="tool" href="#g-layers"><span class="ico"><svg><use href="#i-layers"/></svg></span><h3>Layers</h3><p>Duplicate a precomp without linking it to the original. Sequence clips, move the anchor point, precompose, decompose, rename.</p><span class="go">Guide →</span></a>
         <a class="tool" href="#g-style"><span class="ico"><svg><use href="#i-style"/></svg></span><h3>Style</h3><p>Copy the effects and animation of one clip. Paste them on others, with the animation fitted to each clip’s length.</p><span class="go">Guide →</span></a>
         <a class="tool" href="#g-captions"><span class="ico"><svg><use href="#i-captions"/></svg></span><h3>Captions</h3><p>Select a clip, click once: the speech becomes text layers, timed to the voice. Split text into words, move or scale all of them at once.</p><span class="go">Guide →</span></a>
-        <a class="tool" href="#g-presets"><span class="ico"><svg><use href="#i-presets"/></svg></span><h3>Presets</h3><p>Save effects, expressions, a text look or a whole layer. Sort them in folders, apply them in one click.</p><span class="go">Guide →</span></a>
+        <a class="tool" href="#g-presets"><span class="ico"><svg><use href="#i-presets"/></svg></span><h3>Presets</h3><p>Select effects, a text animation or properties, save. Sort them in folders, apply in one click, or send them to After Effects’ own presets.</p><span class="go">Guide →</span></a>
         <a class="tool span2" href="#g-search"><span class="ico"><svg><use href="#i-search"/></svg></span><h3>Search</h3><p>Every action and every preset from the keyboard: press Ctrl+K, type a few letters, Enter. Your recent actions come first.</p><span class="go">Guide →</span></a>
       </div>
       <div class="extras">
@@ -469,6 +469,7 @@ footer .legal { flex-basis: 100%; }
           <ol>
             <li><span>Select a layer in your timeline (optional).</span></li>
             <li><span>Click a tile: <strong>Text, Adjust, Null, Shape, Camera</strong> or <strong>Light</strong>. The new layer lands right above the selected one, with the same start and end.</span></li>
+            <li><span><strong>Paste image</strong>: copy an image anywhere (on Google: right-click › <strong>Copy image</strong>), then click the tile. It lands in your comp at the playhead, transparency kept, and is saved in Documents › Nothi Labs. A copied image link works too. Ctrl/Cmd+V on the panel does the same.</span></li>
             <li><span><strong>Solid</strong> opens a color picker first (black by default): pick a swatch, the rainbow square for any color, or type a hex code. Then <strong>Create solid</strong>, or double-click a swatch. The little dot on the tile shows your last color.</span></li>
           </ol>
           <div class="opts"><h4>Options (sliders icon)</h4><dl>
@@ -550,6 +551,8 @@ footer .legal { flex-basis: 100%; }
             <dt>Drag the empty space</dt><dd>Moves around the graph when you're zoomed in.</dd>
             <dt>Double-click</dt><dd>Fits the whole curve back in view (or the frame button).</dd>
             <dt>Linear</dt><dd>Is now a curve in the library, first in the list.</dd>
+            <dt>Value / Speed</dt><dd>Value graph by default. Switch to <strong>Speed</strong> to work like After Effects’ speed graph: drag a handle sideways for the influence, up or down for the speed.</dd>
+            <dt>Invert</dt><dd>The ⇄ button swaps the ease out and the ease in: a fast start becomes a fast end.</dd>
             <dt>The numbers</dt><dd>Click them to type exact values, like 0.33, 0, 0.67, 1.</dd>
             <dt>Read</dt><dd>The copy icon loads the ease of the selected keyframes into the graph, to tweak it.</dd>
             <dt>Apply while editing</dt><dd>In the options: applies each time you release a handle.</dd></dl></div>
@@ -621,21 +624,18 @@ footer .legal { flex-basis: 100%; }
 
       <article class="howto" id="g-presets">
         <figure><img src="img/tool-presets.webp" alt="Presets tab: folders Captions and Glows, then presets Wiggle soft, Film look, Lower third and Title pop" width="680" height="840" loading="lazy">
-          <div class="thumbs"><img src="img/tool-presets-save.webp" alt="Save menu: Effects, Expressions, Text style, Whole layer" width="680" height="840" loading="lazy"><img src="img/tool-presets-folder.webp" alt="Inside the Captions folder: Bold yellow and Clean white" width="680" height="840" loading="lazy"></div>
-          <figcaption>Your library, the Save menu, and a folder</figcaption></figure>
+          <div class="thumbs"><img src="img/tool-presets-save.webp" alt="Naming a new preset saved from the selected effects and text animator" width="680" height="840" loading="lazy"><img src="img/tool-presets-folder.webp" alt="Inside the Captions folder: Bold yellow and Clean white" width="680" height="840" loading="lazy"></div>
+          <figcaption>Your library, naming a new preset, and a folder</figcaption></figure>
         <div class="howto-text">
           <h3><span class="ico"><svg><use href="#i-presets"/></svg></span>Presets</h3>
-          <p>Your own library: a look you built once, ready in one click on any project.</p>
+          <p>Your own library: a look you built once, ready in one click on any project. It works like After Effects’ <strong>Save Animation Preset</strong>.</p>
           <ol>
-            <li><span><strong>Select a layer</strong> that has the look you want to keep, open Presets and click <strong>Save</strong>.</span></li>
-            <li><span>Pick what to keep: <strong>Effects</strong>, <strong>Expressions</strong>, <strong>Text style</strong> or the <strong>Whole layer</strong>. Name it, press <strong>Enter</strong>.</span></li>
-            <li><span>Later: select layers and <strong>click the preset</strong>. Done.</span></li>
+            <li><span>In the timeline, <strong>select what to keep</strong>: one or more effects, a text animator, masks, shape groups, or properties like Position or Scale with their keyframes and expressions.</span></li>
+            <li><span>Click <strong>Save</strong>, name it, press <strong>Enter</strong>.</span></li>
+            <li><span>Later: select layers and <strong>click the preset</strong>. Effects and animators are added, properties are set, and the animation starts at the playhead.</span></li>
           </ol>
-          <div class="opts"><h4>What each kind keeps</h4><dl>
-            <dt>Effects</dt><dd>All the effects of the layer, with their keyframes and expressions. Applied on top of the effects already there.</dd>
-            <dt>Expressions</dt><dd>Select a property with an expression (like a wiggle) before saving: it goes on whatever property you select later. Without a selected property, it keeps every expression of the layer.</dd>
-            <dt>Text style</dt><dd>Font, size, colors, outline, text animators and effects. The text you apply it to keeps its own words.</dd>
-            <dt>Whole layer</dt><dd>Everything, words and animation included. Click it with nothing selected and it creates the layer at the playhead (text, shape, solid, null, adjustment).</dd></dl></div>
+          <div class="opts"><h4>In After Effects too</h4><dl>
+            <dt>AE button</dt><dd>On each preset. It opens After Effects’ own Save Animation Preset window: the preset becomes a real .ffx file in your User Presets, in the Effects &amp; Presets panel (☰ › Refresh List to see it).</dd></dl></div>
           <div class="opts"><h4>Folders</h4><dl>
             <dt>New folder</dt><dd>The folder button next to Save. Click a folder to open it, “Presets” at the top to go back.</dd>
             <dt>Drag and drop</dt><dd>Drag a preset onto a folder to move it in, onto “Presets” to move it out, or between two presets to change the order.</dd>
@@ -660,6 +660,7 @@ footer .legal { flex-basis: 100%; }
             <dt>Change the shortcut</dt><dd>··· menu › Open the search, then press your keys.</dd>
             <dt>Undo</dt><dd>After each action, an <strong>Undo</strong> button appears in the status bar. Ctrl/Cmd+Z works too.</dd>
             <dt>Icon size</dt><dd>··· menu › Small, Medium or Large.</dd>
+            <dt>Look</dt><dd>··· menu › Look: a theme in one click, or your own background, text and accent colors. Add an image, a looping GIF or a WEBM video behind the panel and set its opacity.</dd>
             <dt>Status bar</dt><dd>Shows what just happened, or what's missing (“Select a precomp layer”).</dd></dl></div>
           <p class="tip-line"><b>Tip</b><span>After Effects keeps the keyboard for itself unless the panel is focused, so click the panel first.</span></p>
         </div>
@@ -674,7 +675,7 @@ footer .legal { flex-basis: 100%; }
       <div class="faq-cols">
         <div>
           <h3>Nothi Toolkit &amp; Labs</h3>
-          <details><summary>What's new?</summary><div class="a"><p><strong>1.9:</strong> <strong>Auto captions</strong>: select a clip, one click, the speech becomes text layers (runs on your computer). <strong>Split text</strong> into words, lines or letters; select all text layers, move or scale them together. <strong>Presets</strong>: save effects, expressions, text looks or whole layers, in folders. Beat now follows the bass peaks only, with a slim waveform and a <strong>Cut</strong> button. The curve graph zooms and scrolls, and its handles are easier to grab (Mac included). The <strong>Update</strong> button downloads the right file directly. And a version for <strong>After Effects 2019, 2020 and 2021</strong>.</p><p><strong>1.8:</strong> the tools grow to fill the panel, whatever its size. Tabs in a small window: Create, Curves, Beat, Layers, Copy style. Any curve can be deleted, built-in ones too.</p><p><strong>1.7:</strong> the panel adapts to its window. Make it tall and everything for layers sits in the Create tab; keep it small and Layers and Copy style have their own tabs. Solids are black by default. Precomps keep the composition color.</p><p><strong>1.6:</strong> everything for layers in the <strong>Create</strong> tab (new layers, precomps, duplicate, sequence, anchor, copy style). Solids ask for a color. Sequence puts the bottom layer first, with an <strong>Invert</strong> button. Beat loads the selected layer by itself, shows only the visible part, works with MP4 and MOV, and has a remove button. The Effects tab is gone.</p><p><strong>1.5:</strong> a <strong>curve editor</strong> in the Curves tab, drag the handles and apply. <strong>Duplicate</strong> in the Layers tab: a precomp copy that isn’t linked to the original.</p><p><strong>1.4:</strong> <strong>Sequence</strong> in the Layers tab: select your clips, they play one after another. <strong>Fit to clip</strong> in the Style tab: pasted animations adapt to each clip’s length and keep their speed graph. Pasted keyframes now keep their eases too.</p></div></details>
+          <details><summary>What's new?</summary><div class="a"><p><strong>1.9:</strong> <strong>Auto captions</strong>: select a clip, one click, the speech becomes text layers (runs on your computer). <strong>Split text</strong> into words, lines or letters; select all text layers, move or scale them together. <strong>Presets</strong> like Save Animation Preset (whatever is selected), in folders, with an AE button that saves them in After Effects too. Curve graph in <strong>Speed</strong> mode and an invert button. <strong>Paste image</strong> from the clipboard. Your own <strong>look</strong> for the panel: colors, image, GIF or video in the background. Beat now follows the bass peaks only, with a slim waveform and a <strong>Cut</strong> button. The curve graph zooms and scrolls, and its handles are easier to grab (Mac included). The <strong>Update</strong> button downloads the right file directly. And a version for <strong>After Effects 2019, 2020 and 2021</strong>.</p><p><strong>1.8:</strong> the tools grow to fill the panel, whatever its size. Tabs in a small window: Create, Curves, Beat, Layers, Copy style. Any curve can be deleted, built-in ones too.</p><p><strong>1.7:</strong> the panel adapts to its window. Make it tall and everything for layers sits in the Create tab; keep it small and Layers and Copy style have their own tabs. Solids are black by default. Precomps keep the composition color.</p><p><strong>1.6:</strong> everything for layers in the <strong>Create</strong> tab (new layers, precomps, duplicate, sequence, anchor, copy style). Solids ask for a color. Sequence puts the bottom layer first, with an <strong>Invert</strong> button. Beat loads the selected layer by itself, shows only the visible part, works with MP4 and MOV, and has a remove button. The Effects tab is gone.</p><p><strong>1.5:</strong> a <strong>curve editor</strong> in the Curves tab, drag the handles and apply. <strong>Duplicate</strong> in the Layers tab: a precomp copy that isn’t linked to the original.</p><p><strong>1.4:</strong> <strong>Sequence</strong> in the Layers tab: select your clips, they play one after another. <strong>Fit to clip</strong> in the Style tab: pasted animations adapt to each clip’s length and keep their speed graph. Pasted keyframes now keep their eases too.</p></div></details>
           <details><summary>What is Nothi Labs?</summary><div class="a"><p>The free side of Nothi: tools for editors, made alongside the Nothi marketplace. <strong>Nothi Toolkit</strong> is the first one. New tools will show up on this site.</p></div></details>
           <details><summary>Is it really free?</summary><div class="a"><p>Yes. No account, no trial, no watermark, no ads in the panel.</p></div></details>
           <details><summary>Which versions of After Effects work?</summary><div class="a"><p><strong>After Effects 2019 and newer</strong>, on Windows and on macOS (Intel and Apple Silicon).</p><p>When you click download, pick your version: <strong>2022 or newer</strong>, or <strong>2019, 2020 or 2021</strong>. Both have the same tools. Not sure which one you have? In After Effects, open <strong>Help › About After Effects</strong> (on Mac: <strong>After Effects › About After Effects</strong>).</p></div></details>
