@@ -7,7 +7,7 @@ jobs:
   test-linux:
     runs-on: ubuntu-latest
     steps:
-      - run: git clone --depth 1 https://github.com/ggml-org/whisper.cpp w && cd w && git log -1 --format='%H %cd' > ../commit.txt
+      - run: mkdir w && cd w && git init -q && git remote add origin https://github.com/ggml-org/whisper.cpp && git fetch -q --depth 1 origin 0c7be696371069e0baa2515ed7aa08d5a5473aa6 && git checkout -q FETCH_HEAD && cd .. && cd w && git log -1 --format='%H %cd' > ../commit.txt
       - run: cd w && cmake -B build -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=OFF -DWHISPER_BUILD_TESTS=OFF && cmake --build build --config Release -j 4 --target whisper-cli
       - run: cd w && bash ./models/download-ggml-model.sh tiny && ls -la models build/bin
       - run: |
@@ -22,7 +22,7 @@ jobs:
   mac:
     runs-on: macos-14
     steps:
-      - run: git clone --depth 1 https://github.com/ggml-org/whisper.cpp w
+      - run: mkdir w && cd w && git init -q && git remote add origin https://github.com/ggml-org/whisper.cpp && git fetch -q --depth 1 origin 0c7be696371069e0baa2515ed7aa08d5a5473aa6 && git checkout -q FETCH_HEAD && cd ..
       - run: |
           cd w
           cmake -B build -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=OFF -DWHISPER_BUILD_TESTS=OFF \
@@ -36,7 +36,7 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-      - run: git clone --depth 1 https://github.com/ggml-org/whisper.cpp w
+      - run: mkdir w && cd w && git init -q && git remote add origin https://github.com/ggml-org/whisper.cpp && git fetch -q --depth 1 origin 0c7be696371069e0baa2515ed7aa08d5a5473aa6 && git checkout -q FETCH_HEAD && cd ..
       - shell: bash
         run: |
           cd w
@@ -46,8 +46,35 @@ jobs:
           bash ./models/download-ggml-model.sh tiny && ../out/whisper-cli.exe -m models/ggml-tiny.bin -f samples/jfk.wav -ml 1 -sow -oj -of ../out/test -np && head -c 600 ../out/test.json
       - uses: actions/upload-artifact@v4
         with: { name: whisper-windows, path: "out/whisper-cli.exe" }
+  windows-compat:
+    runs-on: windows-latest
+    steps:
+      - shell: bash
+        run: mkdir w && cd w && git init -q && git remote add origin https://github.com/ggml-org/whisper.cpp && git fetch -q --depth 1 origin 0c7be696371069e0baa2515ed7aa08d5a5473aa6 && git checkout -q FETCH_HEAD && cd ..
+      - shell: bash
+        run: |
+          cd w
+          cmake -B build -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=OFF -DGGML_SSE42=OFF -DGGML_AVX=OFF -DGGML_AVX_VNNI=OFF -DGGML_AVX2=OFF -DGGML_BMI2=OFF -DGGML_AVX512=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF -DWHISPER_BUILD_TESTS=OFF -DCMAKE_POLICY_DEFAULT_CMP0091=NEW -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DGGML_OPENMP=OFF
+          cmake --build build --config Release -j 4 --target whisper-cli
+          mkdir -p ../out && find build -name 'whisper-cli.exe' -exec cp {} ../out/whisper-cli-compat.exe \; && ls -la ../out
+          bash ./models/download-ggml-model.sh tiny && ../out/whisper-cli-compat.exe -m models/ggml-tiny.bin -f samples/jfk.wav -ml 1 -sow -oj -of ../out/test -np && head -c 600 ../out/test.json
+      - uses: actions/upload-artifact@v4
+        with: { name: whisper-windows-compat, path: "out/whisper-cli-compat.exe" }
+  mac-compat:
+    runs-on: macos-14
+    steps:
+      - run: mkdir w && cd w && git init -q && git remote add origin https://github.com/ggml-org/whisper.cpp && git fetch -q --depth 1 origin 0c7be696371069e0baa2515ed7aa08d5a5473aa6 && git checkout -q FETCH_HEAD && cd ..
+      - run: |
+          cd w
+          cmake -B build -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=OFF -DGGML_SSE42=OFF -DGGML_AVX=OFF -DGGML_AVX_VNNI=OFF -DGGML_AVX2=OFF -DGGML_BMI2=OFF -DGGML_AVX512=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF -DWHISPER_BUILD_TESTS=OFF \
+            -DCMAKE_OSX_ARCHITECTURES="x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 \
+            -DGGML_METAL=ON -DGGML_METAL_EMBED_LIBRARY=ON -DGGML_BLAS=OFF -DGGML_OPENMP=OFF
+          cmake --build build --config Release -j 4 --target whisper-cli
+          mkdir -p ../out && cp build/bin/whisper-cli ../out/whisper-cli-compat && lipo -info ../out/whisper-cli-compat
+      - uses: actions/upload-artifact@v4
+        with: { name: whisper-mac-compat, path: "out/whisper-cli-compat" }
   publish:
-    needs: [test-linux, mac, windows, ffmpeg-linux-test, ffmpeg-windows, ffmpeg-mac]
+    needs: [test-linux, mac, windows, windows-compat, mac-compat, ffmpeg-linux-test, ffmpeg-windows, ffmpeg-mac]
     runs-on: ubuntu-latest
     permissions: { contents: write }
     steps:
@@ -58,6 +85,8 @@ jobs:
           mkdir -p mac win test
           cp ../art/whisper-mac/whisper-cli mac/ && chmod +x mac/whisper-cli
           cp ../art/whisper-windows/whisper-cli.exe win/
+          cp ../art/whisper-windows-compat/whisper-cli-compat.exe win/
+          cp ../art/whisper-mac-compat/whisper-cli-compat mac/ && chmod +x mac/whisper-cli-compat
           cp ../art/linux-test/* test/
           cp ../art/ffmpeg-windows/ffmpeg.exe win/ && cp ../art/ffmpeg-mac/ffmpeg mac/ && chmod +x mac/ffmpeg
           cp ../art/ffmpeg-test/ff_test.txt test/
