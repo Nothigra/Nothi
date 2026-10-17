@@ -1,0 +1,6 @@
+t_aac.mp4 OK 128078 bytes
+t_ac3.mkv OK 127576 bytes
+t_pcm.mov OK 128078 bytes
+frames OK 72
+tiff OK 129600
+-rwxr-xr-x 1 runner runner 7459040 Oct 17 17:28 f/ffmpeg
