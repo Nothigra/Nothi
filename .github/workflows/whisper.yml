@@ -2,6 +2,7 @@ name: whisper-binaries
 on:
   push:
     branches: [whisper-build]
+    paths-ignore: ['.github/workflows/models.yml']
   workflow_dispatch:
 jobs:
   test-linux:

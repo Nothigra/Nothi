@@ -1,0 +1,18 @@
+name: speech-models-mirror
+on:
+  push:
+    branches: [whisper-build]
+    paths: ['.github/workflows/models.yml']
+  workflow_dispatch:
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - run: |
+          for f in ggml-base.bin ggml-small.bin; do curl -fL --retry 3 -o $f "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/$f"; done
+          ls -la && sha256sum ggml-*.bin
+      - env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          gh release delete models --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
+          gh release create models ggml-base.bin ggml-small.bin --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Speech models (mirror)" --notes "Whisper speech models used by Nothi Toolkit auto captions (whisper.cpp ggml format, MIT). Mirror for people who can't reach huggingface.co."
