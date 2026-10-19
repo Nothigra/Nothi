@@ -8,7 +8,8 @@
 // Part of Nothi Toolkit (https://nothilabs.com). Uses ONNX Runtime (MIT).
 #include <onnxruntime_cxx_api.h>
 #ifdef NM_DML
-#include <dml_provider_factory.h>
+// declared here instead of dml_provider_factory.h (that header pulls in d3d12/DirectML headers we don't need)
+extern "C" OrtStatus *ORT_API_CALL OrtSessionOptionsAppendExecutionProvider_DML(OrtSessionOptions *options, int device_id);
 #endif
 #ifdef NM_COREML
 #include <coreml_provider_factory.h>

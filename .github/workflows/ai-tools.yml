@@ -73,32 +73,22 @@ jobs:
 
   # ---------------------------------------------------------------- windows
   matte-windows:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - shell: pwsh
-        run: |
-          nuget install Microsoft.ML.OnnxRuntime.DirectML -Version $env:ORTV -OutputDirectory pk | Out-Null
-          nuget install Microsoft.AI.DirectML -Version 1.13.1 -OutputDirectory pk | Out-Null
-          Get-ChildItem -Recurse pk -Include *.dll,*.lib,dml_provider_factory.h | Select-Object FullName,Length | Format-Table -AutoSize | Out-String -Width 300
-      - uses: ilammy/msvc-dev-cmd@v1
-      - shell: cmd
-        run: |
-          set O=pk\Microsoft.ML.OnnxRuntime.DirectML.%ORTV%
-          mkdir out
-          cl /nologo /O2 /EHsc /MT /std:c++17 /DNM_DML /I%O%\build\native\include /Ipk\Microsoft.AI.DirectML.1.13.1\include tools\nothi-matte.cpp /Feout\nothi-matte.exe /link %O%\runtimes\win-x64\native\onnxruntime.lib > cl.txt 2>&1
-          type cl.txt
-          if not exist out\nothi-matte.exe exit /b 1
-      - shell: bash
-        run: |
-          cp pk/Microsoft.ML.OnnxRuntime.DirectML.$ORTV/runtimes/win-x64/native/onnxruntime.dll out/
-          cp pk/Microsoft.AI.DirectML.1.13.1/bin/x64-win/DirectML.dll out/
-          rm -f out/*.obj; ls -la out
-      - if: failure()
-        shell: bash
-        run: |
-          echo "::error::$(tail -c 1500 cl.txt 2>/dev/null | tr '\n' ' ')"
-          ls -R pk | head -80 | tr '\n' ' ' | sed 's/^/::error::/'
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq mingw-w64 unzip
+      - run: |
+          set -e
+          curl -fsSL -o ort.zip https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.DirectML/$ORTV
+          curl -fsSL -o dml.zip https://www.nuget.org/api/v2/package/Microsoft.AI.DirectML/1.13.1
+          mkdir -p ort dml out && unzip -q ort.zip -d ort && unzip -q dml.zip -d dml
+          cp ort/runtimes/win-x64/native/onnxruntime.dll out/
+          cp dml/bin/x64-win/DirectML.dll out/
+          x86_64-w64-mingw32-g++-posix -O2 -std=c++17 -municode -DNM_DML -Iort/build/native/include tools/nothi-matte.cpp out/onnxruntime.dll \
+            -static -static-libgcc -static-libstdc++ -o out/nothi-matte.exe 2>err.txt || { tail -c 3000 err.txt; exit 1; }
+          x86_64-w64-mingw32-strip out/nothi-matte.exe
+          x86_64-w64-mingw32-objdump -p out/nothi-matte.exe | grep "DLL Name"
+          ls -la out
       - uses: actions/upload-artifact@v4
         with: { name: matte-windows, path: out/ }
 
