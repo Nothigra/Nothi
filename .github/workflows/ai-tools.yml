@@ -1,0 +1,241 @@
+name: ai-tools
+on:
+  push:
+    branches: [whisper-build]
+    paths: ['.github/workflows/ai-tools.yml', 'tools/**']
+  workflow_dispatch:
+env:
+  ORTV: 1.17.3
+  FF_COMMON: >-
+    --disable-everything --disable-autodetect --disable-network --disable-doc --disable-debug --disable-x86asm --disable-ffplay --disable-ffprobe
+    --enable-ffmpeg --enable-swscale --disable-avdevice --enable-swresample --enable-avfilter --enable-protocol=file,pipe
+    --enable-demuxer=mov,image2,gif,matroska,avi,mp3,wav,aiff,flac,ogg,mpegts,mpegps,asf,aac,ac3,eac3,w64,caf,mxf,flv,dts,truehd,f32le,rawvideo
+    --enable-decoder=tiff,psd,qtrle,rawvideo,dnxhd,bmp,targa,h264,hevc,mpeg4,mpeg2video,vp8,vp9,prores,mjpeg,png,gif,webp,v210,r210,aac,aac_latm,mp3,mp3float,mp2,mp2float,ac3,eac3,dca,truehd,mlp,opus,vorbis,flac,alac,pcm_s16le,pcm_s16be,pcm_s24le,pcm_s24be,pcm_s32le,pcm_s32be,pcm_f32le,pcm_f32be,pcm_f64le,pcm_s8,pcm_u8,pcm_mulaw,pcm_alaw,pcm_bluray,pcm_dvd,adpcm_ima_qt,wmav1,wmav2,wmapro
+    --enable-parser=h264,hevc,mpeg4video,mpegvideo,vp8,vp9,png,gif,aac,aac_latm,ac3,mpegaudio,dca,flac,opus,vorbis,mlp
+    --enable-muxer=wav,image2,rawvideo,mp4,mov,f32le
+    --enable-encoder=pcm_s16le,pcm_s24le,pcm_f32le,mjpeg,rawvideo,aac,png
+    --enable-filter=abuffer,abuffersink,aformat,anull,aresample,atrim,asetpts,anullsink,buffer,buffersink,format,null,scale,fps,trim,setpts,pad,volume,pan,apad,amix,aevalsrc
+    --enable-static --disable-shared
+jobs:
+  # ---------------------------------------------------------------- models (huggingface is reachable from here)
+  models:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          mkdir m && cd m
+          curl -fsSL https://huggingface.co/api/models/onnx-community/BiRefNet_lite-ONNX | python3 -c "import json,sys; print([s['rfilename'] for s in json.load(sys.stdin)['siblings']])"
+          curl -fL --retry 3 -o birefnet_lite.onnx https://huggingface.co/onnx-community/BiRefNet_lite-ONNX/resolve/main/onnx/model.onnx
+          curl -fsSL https://huggingface.co/api/datasets/Retrobear/demucs.cpp | python3 -c "import json,sys; print([s['rfilename'] for s in json.load(sys.stdin)['siblings']])" || true
+          curl -fL --retry 3 -o voice_htdemucs_ft_vocals.bin "https://huggingface.co/datasets/Retrobear/demucs.cpp/resolve/main/ggml-model-htdemucs_ft_vocals-4s-f16.bin" || echo "no prebuilt demucs weights"
+          ls -la
+      - name: convert demucs weights if needed
+        run: |
+          cd m
+          if [ ! -s voice_htdemucs_ft_vocals.bin ]; then
+            git clone -q --depth 1 https://github.com/sevagh/demucs.cpp d && cd d && git submodule update --init --depth 1 vendor/demucs
+            python3 -m pip install -q torch --index-url https://download.pytorch.org/whl/cpu && python3 -m pip install -q -e ./vendor/demucs numpy
+            python3 scripts/convert-pth-to-ggml.py ../out --ft-vocals && ls -la ../out && cp ../out/*ft_vocals* ../voice_htdemucs_ft_vocals.bin && cd ..
+          fi
+          python3 -m pip install -q onnx && python3 -c "
+          import onnx; m=onnx.load('birefnet_lite.onnx', load_external_data=False)
+          print('inputs', [(i.name, [d.dim_value or d.dim_param for d in i.type.tensor_type.shape.dim]) for i in m.graph.input])
+          print('outputs', [(o.name, [d.dim_value or d.dim_param for d in o.type.tensor_type.shape.dim]) for o in m.graph.output])
+          print('opset', [o.version for o in m.opset_import])"
+          sha256sum * 2>/dev/null; ls -la
+      - uses: actions/upload-artifact@v4
+        with: { name: models, path: "m/birefnet_lite.onnx\nm/voice_htdemucs_ft_vocals.bin", compression-level: 0 }
+
+  # ---------------------------------------------------------------- linux tests (same code, real models)
+  test-linux:
+    needs: models
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: models, path: m }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq libeigen3-dev ffmpeg
+      - run: |
+          curl -fsSL -o ort.tgz https://github.com/microsoft/onnxruntime/releases/download/v$ORTV/onnxruntime-linux-x64-$ORTV.tgz && tar xzf ort.tgz
+          O=onnxruntime-linux-x64-$ORTV
+          g++ -O2 -std=c++17 tools/nothi-matte.cpp -I$O/include -L$O/lib -lonnxruntime -Wl,-rpath,$O/lib -o nothi-matte
+          ./nothi-matte --model m/birefnet_lite.onnx --probe 2>&1 | tee -a log.txt
+          ffmpeg -hide_banner -loglevel error -f lavfi -i "testsrc2=s=640x360:d=1:r=4" -f rawvideo -pix_fmt rgb24 frames.rgb
+          ./nothi-matte --model m/birefnet_lite.onnx --w 640 --h 360 < frames.rgb > alpha.raw 2>>log.txt; ls -la alpha.raw >> log.txt
+      - run: |
+          git clone -q --depth 1 https://github.com/sevagh/demucs.cpp d
+          time g++ -O3 -std=c++17 -DNDEBUG -I/usr/include/eigen3 -Id/src d/src/*.cpp tools/nothi-voice.cpp -o nothi-voice -lpthread 2>/dev/null
+          ffmpeg -hide_banner -loglevel error -f lavfi -i "sine=f=220:d=30" -f lavfi -i "anoisesrc=d=30:a=0.1" -filter_complex amix=inputs=2 -ac 2 -ar 44100 -f f32le mix.f32
+          ( time ./nothi-voice m/voice_htdemucs_ft_vocals.bin mix.f32 voice.f32 4 ) 2>&1 | tail -6 >> log.txt; ls -la voice.f32 >> log.txt
+          cat log.txt
+      - uses: actions/upload-artifact@v4
+        with: { name: linux-log, path: log.txt }
+
+  # ---------------------------------------------------------------- windows
+  matte-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - shell: pwsh
+        run: |
+          nuget install Microsoft.ML.OnnxRuntime.DirectML -Version $env:ORTV -OutputDirectory pk | Out-Null
+          nuget install Microsoft.AI.DirectML -Version 1.13.1 -OutputDirectory pk | Out-Null
+          Get-ChildItem -Recurse pk -Include *.dll,*.lib,dml_provider_factory.h | Select-Object FullName,Length | Format-Table -AutoSize | Out-String -Width 300
+      - shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          set O=pk\Microsoft.ML.OnnxRuntime.DirectML.%ORTV%
+          mkdir out
+          cl /nologo /O2 /EHsc /MT /std:c++17 /DNM_DML /I%O%\build\native\include tools\nothi-matte.cpp /Feout\nothi-matte.exe /link %O%\runtimes\win-x64\native\onnxruntime.lib || exit /b 1
+          copy %O%\runtimes\win-x64\native\onnxruntime.dll out\
+          for /r pk\Microsoft.AI.DirectML.1.13.1\bin\x64-win %%f in (DirectML.dll) do copy "%%f" out\
+          dir out
+          dumpbin /dependents out\nothi-matte.exe
+          dumpbin /dependents out\onnxruntime.dll
+      - uses: actions/upload-artifact@v4
+        with: { name: matte-windows, path: out/ }
+
+  voice-windows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq mingw-w64 libeigen3-dev
+      - run: |
+          git clone -q --depth 1 https://github.com/sevagh/demucs.cpp d
+          mkdir out
+          F="-O3 -std=c++17 -DNDEBUG -I/usr/include/eigen3 -Id/src d/src/*.cpp tools/nothi-voice.cpp -static -static-libgcc -static-libstdc++ -lpthread"
+          x86_64-w64-mingw32-g++-posix -mavx2 -mfma $F -o out/nothi-voice.exe 2>err1.txt || { tail -c 2000 err1.txt; exit 1; }
+          x86_64-w64-mingw32-g++-posix $F -o out/nothi-voice-compat.exe 2>err2.txt || { tail -c 2000 err2.txt; exit 1; }
+          x86_64-w64-mingw32-strip out/*.exe && ls -la out && x86_64-w64-mingw32-objdump -p out/nothi-voice.exe | grep "DLL Name"
+      - uses: actions/upload-artifact@v4
+        with: { name: voice-windows, path: out/ }
+
+  ffmpeg-windows:
+    runs-on: ubuntu-latest
+    steps:
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq mingw-w64
+      - run: git clone --depth 1 -b n7.1 https://github.com/FFmpeg/FFmpeg f
+      - run: |
+          cd f && ./configure $FF_COMMON --enable-mediafoundation --enable-encoder=h264_mf --arch=x86_64 --target-os=mingw32 --cross-prefix=x86_64-w64-mingw32- --extra-ldflags="-static -static-libgcc" --pkg-config-flags=--static --enable-w32threads || { echo "::error::configure: $(tail -c 900 ffbuild/config.log | tr '\n' ' ')"; exit 1; }
+          grep -E "h264_mf|mediafoundation" config.h | head
+          make -j4 ffmpeg.exe 2>err.txt || { echo "::error::make: $(tail -c 900 err.txt | tr '\n' ' ')"; exit 1; }
+          x86_64-w64-mingw32-strip ffmpeg.exe && ls -la ffmpeg.exe && x86_64-w64-mingw32-objdump -p ffmpeg.exe | grep "DLL Name"
+          mkdir -p ../out && cp ffmpeg.exe ../out/
+      - uses: actions/upload-artifact@v4
+        with: { name: ffmpeg-windows, path: out/ffmpeg.exe }
+
+  test-windows:
+    needs: [models, matte-windows, voice-windows, ffmpeg-windows]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: art }
+      - shell: bash
+        run: |
+          set -x
+          cd art && ls -R | head -40
+          ./ffmpeg-windows/ffmpeg.exe -hide_banner -encoders 2>/dev/null | grep -E "h264|aac" | tee -a ../log.txt
+          head -c 82944000 /dev/urandom > v.rgb && head -c 1058400 /dev/urandom > a.f32
+          ./ffmpeg-windows/ffmpeg.exe -hide_banner -loglevel error -f rawvideo -pix_fmt rgb24 -s 1280x720 -r 30 -i v.rgb -f f32le -ar 44100 -ac 2 -i a.f32 -c:v h264_mf -b:v 12M -pix_fmt nv12 -c:a aac -b:a 256k -movflags +faststart t.mp4 2>&1 | tee -a ../log.txt; ls -la t.mp4 | tee -a ../log.txt || true
+          ./matte-windows/nothi-matte.exe --model models/birefnet_lite.onnx --probe 2>&1 | tee -a ../log.txt
+          ./matte-windows/nothi-matte.exe --model models/birefnet_lite.onnx --probe --ep cpu 2>&1 | tee -a ../log.txt
+          head -c 15876000 /dev/urandom > mix.f32
+          ( time ./voice-windows/nothi-voice.exe models/voice_htdemucs_ft_vocals.bin mix.f32 voice.f32 4 ) 2>&1 | tail -5 | tee -a ../log.txt
+          ls -la voice.f32 | tee -a ../log.txt
+      - uses: actions/upload-artifact@v4
+        with: { name: windows-log, path: log.txt }
+
+  # ---------------------------------------------------------------- mac (universal: Apple Silicon + Intel)
+  matte-mac:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          curl -fsSL -o ort.tgz https://github.com/microsoft/onnxruntime/releases/download/v$ORTV/onnxruntime-osx-universal2-$ORTV.tgz && tar xzf ort.tgz
+          O=onnxruntime-osx-universal2-$ORTV && ls $O/include $O/lib
+          mkdir out
+          clang++ -O2 -std=c++17 -arch arm64 -arch x86_64 -mmacosx-version-min=11.0 -DNM_COREML -I$O/include tools/nothi-matte.cpp -L$O/lib -lonnxruntime -Wl,-rpath,@executable_path -o out/nothi-matte
+          cp $O/lib/libonnxruntime.$ORTV.dylib out/ && cd out && ln -sf libonnxruntime.$ORTV.dylib libonnxruntime.dylib && cd ..
+          otool -L out/nothi-matte; otool -l out/libonnxruntime.$ORTV.dylib | grep -A4 -E "LC_BUILD_VERSION|LC_VERSION_MIN" | head -20
+          codesign --force -s - out/libonnxruntime.$ORTV.dylib && codesign --force -s - out/nothi-matte
+          rm out/libonnxruntime.dylib && ls -la out
+      - uses: actions/upload-artifact@v4
+        with: { name: matte-mac, path: out/ }
+
+  voice-mac:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          brew install eigen >/dev/null
+          git clone -q --depth 1 https://github.com/sevagh/demucs.cpp d
+          E=$(brew --prefix eigen)/include/eigen3
+          mkdir out
+          clang++ -O3 -std=c++17 -DNDEBUG -I$E -Id/src d/src/*.cpp tools/nothi-voice.cpp -arch arm64 -mmacosx-version-min=11.0 -o v_arm 2>/dev/null
+          clang++ -O3 -std=c++17 -DNDEBUG -I$E -Id/src d/src/*.cpp tools/nothi-voice.cpp -arch x86_64 -mmacosx-version-min=11.0 -o v_x86 2>/dev/null
+          lipo -create v_arm v_x86 -output out/nothi-voice && codesign --force -s - out/nothi-voice && lipo -info out/nothi-voice && otool -L out/nothi-voice
+      - uses: actions/upload-artifact@v4
+        with: { name: voice-mac, path: out/ }
+
+  ffmpeg-mac:
+    runs-on: macos-14
+    steps:
+      - run: git clone --depth 1 -b n7.1 https://github.com/FFmpeg/FFmpeg f && cp -R f fx
+      - run: |
+          cd f && ./configure $FF_COMMON --enable-videotoolbox --enable-audiotoolbox --enable-encoder=h264_videotoolbox,aac_at --extra-cflags="-mmacosx-version-min=11.0" --extra-ldflags="-mmacosx-version-min=11.0" && make -j4 ffmpeg
+          cd ../fx && ./configure $FF_COMMON --enable-videotoolbox --enable-audiotoolbox --enable-encoder=h264_videotoolbox,aac_at --enable-cross-compile --arch=x86_64 --target-os=darwin --cc="clang -arch x86_64" --extra-cflags="-mmacosx-version-min=11.0" --extra-ldflags="-mmacosx-version-min=11.0 -arch x86_64" && make -j4 ffmpeg
+          cd .. && mkdir -p out && lipo -create f/ffmpeg fx/ffmpeg -output out/ffmpeg && strip -x out/ffmpeg || true
+          codesign --force -s - out/ffmpeg && lipo -info out/ffmpeg && otool -L out/ffmpeg && ls -la out/ffmpeg
+      - uses: actions/upload-artifact@v4
+        with: { name: ffmpeg-mac, path: out/ffmpeg }
+
+  test-mac:
+    needs: [models, matte-mac, voice-mac, ffmpeg-mac]
+    runs-on: macos-14
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: art }
+      - run: |
+          cd art && chmod +x */nothi-* ffmpeg-mac/ffmpeg
+          ./ffmpeg-mac/ffmpeg -hide_banner -encoders 2>/dev/null | grep -E "h264|aac" | tee -a ../log.txt
+          head -c 82944000 /dev/urandom > v.rgb && head -c 1058400 /dev/urandom > a.f32
+          ./ffmpeg-mac/ffmpeg -hide_banner -loglevel error -f rawvideo -pix_fmt rgb24 -s 1280x720 -r 30 -i v.rgb -f f32le -ar 44100 -ac 2 -i a.f32 -c:v h264_videotoolbox -b:v 12M -pix_fmt yuv420p -c:a aac -b:a 256k -movflags +faststart t.mp4 2>&1 | tee -a ../log.txt; ls -la t.mp4 | tee -a ../log.txt || true
+          ./matte-mac/nothi-matte --model models/birefnet_lite.onnx --probe 2>&1 | tee -a ../log.txt
+          ./matte-mac/nothi-matte --model models/birefnet_lite.onnx --probe --ep cpu 2>&1 | tee -a ../log.txt
+          head -c 15876000 /dev/urandom > mix.f32
+          ( time ./voice-mac/nothi-voice models/voice_htdemucs_ft_vocals.bin mix.f32 voice.f32 4 ) 2>&1 | tail -5 | tee -a ../log.txt
+      - uses: actions/upload-artifact@v4
+        with: { name: mac-log, path: log.txt }
+
+  # ---------------------------------------------------------------- publish: binaries on branch ai-bin, everything in release "ai"
+  publish:
+    needs: [test-linux, test-windows, test-mac]
+    if: ${{ always() && needs.test-windows.result != 'cancelled' }}
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: art }
+      - run: |
+          mkdir pub && cd pub && git init -q && git checkout -q -b ai-bin
+          mkdir -p win mac logs
+          cp ../art/matte-windows/* win/ 2>/dev/null || true
+          cp ../art/voice-windows/* win/ 2>/dev/null || true
+          cp ../art/ffmpeg-windows/ffmpeg.exe win/ 2>/dev/null || true
+          cp ../art/matte-mac/* mac/ 2>/dev/null || true
+          cp ../art/voice-mac/* mac/ 2>/dev/null || true
+          cp ../art/ffmpeg-mac/ffmpeg mac/ 2>/dev/null || true
+          chmod +x mac/* 2>/dev/null || true
+          cp ../art/*-log/log.txt logs/ 2>/dev/null; for d in ../art/*-log; do cp $d/log.txt logs/$(basename $d).txt 2>/dev/null; done
+          ls -laR
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "ai tools binaries"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" ai-bin
+      - env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          mkdir rel && cd rel
+          cp ../art/models/* .
+          (cd ../art/matte-windows && zip -qr ../../rel/engine-win.zip .)
+          (cd ../art/matte-mac && zip -qr ../../rel/engine-mac.zip .)
+          ls -la
+          gh release delete ai --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
+          gh release create ai * --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "AI files (mirror)" --notes "AI files used by Nothi Toolkit: BiRefNet lite (MIT) for the character mask, Demucs v4 fine-tuned vocals (MIT, via demucs.cpp) for voice isolation, and the matting engine built on ONNX Runtime (MIT)."
