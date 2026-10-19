@@ -80,17 +80,23 @@ jobs:
           nuget install Microsoft.ML.OnnxRuntime.DirectML -Version $env:ORTV -OutputDirectory pk | Out-Null
           nuget install Microsoft.AI.DirectML -Version 1.13.1 -OutputDirectory pk | Out-Null
           Get-ChildItem -Recurse pk -Include *.dll,*.lib,dml_provider_factory.h | Select-Object FullName,Length | Format-Table -AutoSize | Out-String -Width 300
+      - uses: ilammy/msvc-dev-cmd@v1
       - shell: cmd
         run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           set O=pk\Microsoft.ML.OnnxRuntime.DirectML.%ORTV%
           mkdir out
-          cl /nologo /O2 /EHsc /MT /std:c++17 /DNM_DML /I%O%\build\native\include tools\nothi-matte.cpp /Feout\nothi-matte.exe /link %O%\runtimes\win-x64\native\onnxruntime.lib || exit /b 1
+          cl /nologo /O2 /EHsc /MT /std:c++17 /DNM_DML /I%O%\build\native\include /Ipk\Microsoft.AI.DirectML.1.13.1\include tools\nothi-matte.cpp /Feout\nothi-matte.exe /link %O%\runtimes\win-x64\native\onnxruntime.lib > cl.txt 2>&1
+          if errorlevel 1 (type cl.txt & exit /b 1)
           copy %O%\runtimes\win-x64\native\onnxruntime.dll out\
           for /r pk\Microsoft.AI.DirectML.1.13.1\bin\x64-win %%f in (DirectML.dll) do copy "%%f" out\
           dir out
           dumpbin /dependents out\nothi-matte.exe
           dumpbin /dependents out\onnxruntime.dll
+      - if: failure()
+        shell: bash
+        run: |
+          echo "::error::$(tail -c 1500 cl.txt 2>/dev/null | tr '\n' ' ')"
+          ls -R pk | head -80 | tr '\n' ' ' | sed 's/^/::error::/'
       - uses: actions/upload-artifact@v4
         with: { name: matte-windows, path: out/ }
 
@@ -216,6 +222,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with: { path: art }
       - run: |
+          set +e
           mkdir pub && cd pub && git init -q && git checkout -q -b ai-bin
           mkdir -p win mac logs
           cp ../art/matte-windows/* win/ 2>/dev/null || true
@@ -225,17 +232,19 @@ jobs:
           cp ../art/voice-mac/* mac/ 2>/dev/null || true
           cp ../art/ffmpeg-mac/ffmpeg mac/ 2>/dev/null || true
           chmod +x mac/* 2>/dev/null || true
-          cp ../art/*-log/log.txt logs/ 2>/dev/null; for d in ../art/*-log; do cp $d/log.txt logs/$(basename $d).txt 2>/dev/null; done
+          for d in ../art/*-log; do cp $d/log.txt logs/$(basename $d).txt 2>/dev/null || true; done
           ls -laR
           git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A
           git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "ai tools binaries"
+          set -e
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" ai-bin
       - env: { GH_TOKEN: "${{ github.token }}" }
         run: |
           mkdir rel && cd rel
           cp ../art/models/* .
-          (cd ../art/matte-windows && zip -qr ../../rel/engine-win.zip .)
-          (cd ../art/matte-mac && zip -qr ../../rel/engine-mac.zip .)
+          cp ../art/matte-windows/* . 2>/dev/null || true
+          cp ../art/matte-mac/* . 2>/dev/null || true
+          sha256sum * > SHA256SUMS.txt; cat SHA256SUMS.txt; ls -la
           ls -la
           gh release delete ai --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
           gh release create ai * --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "AI files (mirror)" --notes "AI files used by Nothi Toolkit: BiRefNet lite (MIT) for the character mask, Demucs v4 fine-tuned vocals (MIT, via demucs.cpp) for voice isolation, and the matting engine built on ONNX Runtime (MIT)."
