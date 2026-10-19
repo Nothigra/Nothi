@@ -129,18 +129,26 @@ jobs:
         with: { path: art }
       - shell: bash
         run: |
-          set -x
+          set +e +o pipefail
           cd art && ls -R | head -40
           ./ffmpeg-windows/ffmpeg.exe -hide_banner -encoders 2>/dev/null | grep -E "h264|aac" | tee -a ../log.txt
+          echo "rc=${PIPESTATUS[0]}" | tee -a ../log.txt
           head -c 82944000 /dev/urandom > v.rgb && head -c 1058400 /dev/urandom > a.f32
           ./ffmpeg-windows/ffmpeg.exe -hide_banner -loglevel error -f rawvideo -pix_fmt rgb24 -s 1280x720 -r 30 -i v.rgb -f f32le -ar 44100 -ac 2 -i a.f32 -c:v h264_mf -b:v 12M -pix_fmt nv12 -c:a aac -b:a 256k -movflags +faststart t.mp4 2>&1 | tee -a ../log.txt; ls -la t.mp4 | tee -a ../log.txt || true
+          echo "rc=${PIPESTATUS[0]}" | tee -a ../log.txt
           ./matte-windows/nothi-matte.exe --model models/birefnet_lite.onnx --probe 2>&1 | tee -a ../log.txt
+          echo "rc=${PIPESTATUS[0]}" | tee -a ../log.txt
           ./matte-windows/nothi-matte.exe --model models/birefnet_lite.onnx --probe --ep cpu 2>&1 | tee -a ../log.txt
+          echo "rc=${PIPESTATUS[0]}" | tee -a ../log.txt
           ./matte-windows/nothi-matte.exe --model models/modnet.onnx --probe --size 512 --norm half 2>&1 | tee -a ../log.txt
+          echo "rc=${PIPESTATUS[0]}" | tee -a ../log.txt
           head -c 15876000 /dev/urandom > mix.f32
           ( time ./voice-windows/nothi-voice.exe models/voice_htdemucs_ft_vocals.bin mix.f32 voice.f32 4 ) 2>&1 | tail -5 | tee -a ../log.txt
+          echo "rc=${PIPESTATUS[0]}" | tee -a ../log.txt
           ls -la voice.f32 | tee -a ../log.txt
-      - uses: actions/upload-artifact@v4
+          echo "::error::$(tail -c 2500 ../log.txt | tr '\n' ' ')"
+      - if: always()
+        uses: actions/upload-artifact@v4
         with: { name: windows-log, path: log.txt }
 
   # ---------------------------------------------------------------- mac (universal: Apple Silicon + Intel)
