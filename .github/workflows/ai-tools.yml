@@ -85,7 +85,7 @@ jobs:
           cp ort/runtimes/win-x64/native/onnxruntime.dll out/
           cp dml/bin/x64-win/DirectML.dll out/
           x86_64-w64-mingw32-g++-posix -O2 -std=c++17 -municode -DNM_DML -Iort/build/native/include tools/nothi-matte.cpp out/onnxruntime.dll \
-            -static -static-libgcc -static-libstdc++ -o out/nothi-matte.exe 2>err.txt || { tail -c 3000 err.txt; exit 1; }
+            -static -static-libgcc -static-libstdc++ -o out/nothi-matte.exe 2>err.txt || { echo "::error::$(grep -E "error|undefined" err.txt | head -15 | tr '\n' ' ')"; exit 1; }
           x86_64-w64-mingw32-strip out/nothi-matte.exe
           x86_64-w64-mingw32-objdump -p out/nothi-matte.exe | grep "DLL Name"
           ls -la out

@@ -6,6 +6,82 @@
 //   nothi-matte --model m.onnx --probe            (prints the engine in use and the time of one frame)
 //
 // Part of Nothi Toolkit (https://nothilabs.com). Uses ONNX Runtime (MIT).
+#ifdef __MINGW32__
+// MinGW build: the ONNX Runtime headers use MSVC-only annotations, make them empty
+#include <sal.h>
+#ifndef _stdcall
+#define _stdcall __stdcall
+#endif
+#ifndef _Check_return_
+#define _Check_return_
+#endif
+#ifndef _Frees_ptr_opt_
+#define _Frees_ptr_opt_
+#endif
+#ifndef _In_
+#define _In_
+#endif
+#ifndef _In_opt_
+#define _In_opt_
+#endif
+#ifndef _In_opt_z_
+#define _In_opt_z_
+#endif
+#ifndef _In_z_
+#define _In_z_
+#endif
+#ifndef _Inout_
+#define _Inout_
+#endif
+#ifndef _Inout_opt_
+#define _Inout_opt_
+#endif
+#ifndef _Out_
+#define _Out_
+#endif
+#ifndef _Out_opt_
+#define _Out_opt_
+#endif
+#ifndef _Outptr_
+#define _Outptr_
+#endif
+#ifndef _Outptr_result_maybenull_
+#define _Outptr_result_maybenull_
+#endif
+#ifndef _Ret_maybenull_
+#define _Ret_maybenull_
+#endif
+#ifndef _Ret_notnull_
+#define _Ret_notnull_
+#endif
+#ifndef _In_reads_
+#define _In_reads_(...)
+#endif
+#ifndef _Inout_updates_
+#define _Inout_updates_(...)
+#endif
+#ifndef _Inout_updates_all_
+#define _Inout_updates_all_(...)
+#endif
+#ifndef _Out_writes_
+#define _Out_writes_(...)
+#endif
+#ifndef _Out_writes_all_
+#define _Out_writes_all_(...)
+#endif
+#ifndef _Out_writes_bytes_all_
+#define _Out_writes_bytes_all_(...)
+#endif
+#ifndef _Outptr_result_buffer_maybenull_
+#define _Outptr_result_buffer_maybenull_(...)
+#endif
+#ifndef _Return_type_success_
+#define _Return_type_success_(...)
+#endif
+#ifndef _Success_
+#define _Success_(...)
+#endif
+#endif
 #include <onnxruntime_cxx_api.h>
 #ifdef NM_DML
 // declared here instead of dml_provider_factory.h (that header pulls in d3d12/DirectML headers we don't need)
