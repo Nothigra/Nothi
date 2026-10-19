@@ -37,6 +37,7 @@ static bool readAll(void *p, size_t n) {
 }
 
 // bilinear resize of an interleaved 8-bit image (c channels) into planar floats with ImageNet normalisation
+static bool g_half = false; // MODNet-style input: (x - 0.5) / 0.5 instead of ImageNet mean/std
 static void toTensor(const unsigned char *src, int w, int h, float *dst, int S, int T) {
   static const float mean[3] = {0.485f, 0.456f, 0.406f}, stdv[3] = {0.229f, 0.224f, 0.225f};
   const size_t plane = (size_t)S * T;
@@ -48,7 +49,7 @@ static void toTensor(const unsigned char *src, int w, int h, float *dst, int S, 
         float a = src[((size_t)y0 * w + x0) * 3 + c], b = src[((size_t)y0 * w + x1) * 3 + c];
         float d = src[((size_t)y1 * w + x0) * 3 + c], e = src[((size_t)y1 * w + x1) * 3 + c];
         float v = (a + (b - a) * ax) * (1 - ay) + (d + (e - d) * ax) * ay;
-        dst[c * plane + (size_t)y * S + x] = (v / 255.f - mean[c]) / stdv[c];
+        dst[c * plane + (size_t)y * S + x] = g_half ? (v / 127.5f - 1.f) : (v / 255.f - mean[c]) / stdv[c];
       }
     }
   }
@@ -150,6 +151,7 @@ int main(int argc, char **argv) {
     else if (a == "--threads") threads = atoi(next().c_str());
     else if (a == "--ep") ep = next();
     else if (a == "--probe") probe = true;
+    else if (a == "--norm") g_half = next() == "half";
     else if (a == "--version") { say("nothi-matte 1.0"); return 0; }
   }
   if (model.empty()) { say("usage: nothi-matte --model m.onnx --w W --h H"); return 2; }
@@ -157,6 +159,16 @@ int main(int argc, char **argv) {
   if (!E.open(model.c_str(), ep, threads)) { say("ERROR could not load the model"); return 3; }
   if (size > 0 && !E.fixed) { E.S = size; E.T = size; }
   if (probe) { w = w ? w : 640; h = h ? h : 360; }
+  if (!probe && ep == "auto" && E.ep != "cpu" && w > 0 && h > 0) {
+    std::vector<unsigned char> t1((size_t)w * h * 3, 128), t2((size_t)w * h);
+    auto timeIt = [&](Engine &X) { double best = 1e18; for (int k = 0; k < 2; k++) { auto t0 = std::chrono::steady_clock::now(); X.run(t1.data(), w, h, t2.data()); best = std::min(best, std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count()); } return best; };
+    double g = 1e18, c = 1e18;
+    try { g = timeIt(E); } catch (const std::exception &x) { fprintf(stderr, "gpu test failed: %s\n", x.what()); }
+    Engine C;
+    if (C.open(model.c_str(), "cpu", threads)) { if (size > 0 && !C.fixed) { C.S = size; C.T = size; } try { c = timeIt(C); } catch (...) {} }
+    fprintf(stderr, "BENCH gpu=%.0f cpu=%.0f\n", g, c);
+    if (c < g * 0.9 || g >= 1e17) { if (!E.open(model.c_str(), "cpu", threads)) return 3; if (size > 0 && !E.fixed) { E.S = size; E.T = size; } }
+  }
   if (w <= 0 || h <= 0) { say("ERROR missing --w/--h"); return 2; }
   std::vector<unsigned char> rgb((size_t)w * h * 3), alpha((size_t)w * h);
   if (probe) {

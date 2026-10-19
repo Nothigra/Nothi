@@ -9,10 +9,10 @@ env:
   FF_COMMON: >-
     --disable-everything --disable-autodetect --disable-network --disable-doc --disable-debug --disable-x86asm --disable-ffplay --disable-ffprobe
     --enable-ffmpeg --enable-swscale --disable-avdevice --enable-swresample --enable-avfilter --enable-protocol=file,pipe
-    --enable-demuxer=mov,image2,gif,matroska,avi,mp3,wav,aiff,flac,ogg,mpegts,mpegps,asf,aac,ac3,eac3,w64,caf,mxf,flv,dts,truehd,f32le,rawvideo
+    --enable-demuxer=mov,image2,gif,matroska,avi,mp3,wav,aiff,flac,ogg,mpegts,mpegps,asf,aac,ac3,eac3,w64,caf,mxf,flv,dts,truehd,pcm_f32le,rawvideo
     --enable-decoder=tiff,psd,qtrle,rawvideo,dnxhd,bmp,targa,h264,hevc,mpeg4,mpeg2video,vp8,vp9,prores,mjpeg,png,gif,webp,v210,r210,aac,aac_latm,mp3,mp3float,mp2,mp2float,ac3,eac3,dca,truehd,mlp,opus,vorbis,flac,alac,pcm_s16le,pcm_s16be,pcm_s24le,pcm_s24be,pcm_s32le,pcm_s32be,pcm_f32le,pcm_f32be,pcm_f64le,pcm_s8,pcm_u8,pcm_mulaw,pcm_alaw,pcm_bluray,pcm_dvd,adpcm_ima_qt,wmav1,wmav2,wmapro
     --enable-parser=h264,hevc,mpeg4video,mpegvideo,vp8,vp9,png,gif,aac,aac_latm,ac3,mpegaudio,dca,flac,opus,vorbis,mlp
-    --enable-muxer=wav,image2,rawvideo,mp4,mov,f32le
+    --enable-muxer=wav,image2,rawvideo,mp4,mov,pcm_f32le
     --enable-encoder=pcm_s16le,pcm_s24le,pcm_f32le,mjpeg,rawvideo,aac,png
     --enable-filter=abuffer,abuffersink,aformat,anull,aresample,atrim,asetpts,anullsink,buffer,buffersink,format,null,scale,fps,trim,setpts,pad,volume,pan,apad,amix,aevalsrc
     --enable-static --disable-shared
@@ -25,6 +25,7 @@ jobs:
           mkdir m && cd m
           curl -fsSL https://huggingface.co/api/models/onnx-community/BiRefNet_lite-ONNX | python3 -c "import json,sys; print([s['rfilename'] for s in json.load(sys.stdin)['siblings']])"
           curl -fL --retry 3 -o birefnet_lite.onnx https://huggingface.co/onnx-community/BiRefNet_lite-ONNX/resolve/main/onnx/model.onnx
+          curl -fL --retry 3 -o modnet.onnx https://huggingface.co/Xenova/modnet/resolve/main/onnx/model.onnx
           curl -fsSL https://huggingface.co/api/datasets/Retrobear/demucs.cpp | python3 -c "import json,sys; print([s['rfilename'] for s in json.load(sys.stdin)['siblings']])" || true
           curl -fL --retry 3 -o voice_htdemucs_ft_vocals.bin "https://huggingface.co/datasets/Retrobear/demucs.cpp/resolve/main/ggml-model-htdemucs_ft_vocals-4s-f16.bin" || echo "no prebuilt demucs weights"
           ls -la
@@ -43,7 +44,7 @@ jobs:
           print('opset', [o.version for o in m.opset_import])"
           sha256sum * 2>/dev/null; ls -la
       - uses: actions/upload-artifact@v4
-        with: { name: models, path: "m/birefnet_lite.onnx\nm/voice_htdemucs_ft_vocals.bin", compression-level: 0 }
+        with: { name: models, path: "m/birefnet_lite.onnx\nm/modnet.onnx\nm/voice_htdemucs_ft_vocals.bin", compression-level: 0 }
 
   # ---------------------------------------------------------------- linux tests (same code, real models)
   test-linux:
@@ -86,12 +87,13 @@ jobs:
           set O=pk\Microsoft.ML.OnnxRuntime.DirectML.%ORTV%
           mkdir out
           cl /nologo /O2 /EHsc /MT /std:c++17 /DNM_DML /I%O%\build\native\include /Ipk\Microsoft.AI.DirectML.1.13.1\include tools\nothi-matte.cpp /Feout\nothi-matte.exe /link %O%\runtimes\win-x64\native\onnxruntime.lib > cl.txt 2>&1
-          if errorlevel 1 (type cl.txt & exit /b 1)
-          copy %O%\runtimes\win-x64\native\onnxruntime.dll out\
-          for /r pk\Microsoft.AI.DirectML.1.13.1\bin\x64-win %%f in (DirectML.dll) do copy "%%f" out\
-          dir out
-          dumpbin /dependents out\nothi-matte.exe
-          dumpbin /dependents out\onnxruntime.dll
+          type cl.txt
+          if not exist out\nothi-matte.exe exit /b 1
+      - shell: bash
+        run: |
+          cp pk/Microsoft.ML.OnnxRuntime.DirectML.$ORTV/runtimes/win-x64/native/onnxruntime.dll out/
+          cp pk/Microsoft.AI.DirectML.1.13.1/bin/x64-win/DirectML.dll out/
+          rm -f out/*.obj; ls -la out
       - if: failure()
         shell: bash
         run: |
@@ -144,6 +146,7 @@ jobs:
           ./ffmpeg-windows/ffmpeg.exe -hide_banner -loglevel error -f rawvideo -pix_fmt rgb24 -s 1280x720 -r 30 -i v.rgb -f f32le -ar 44100 -ac 2 -i a.f32 -c:v h264_mf -b:v 12M -pix_fmt nv12 -c:a aac -b:a 256k -movflags +faststart t.mp4 2>&1 | tee -a ../log.txt; ls -la t.mp4 | tee -a ../log.txt || true
           ./matte-windows/nothi-matte.exe --model models/birefnet_lite.onnx --probe 2>&1 | tee -a ../log.txt
           ./matte-windows/nothi-matte.exe --model models/birefnet_lite.onnx --probe --ep cpu 2>&1 | tee -a ../log.txt
+          ./matte-windows/nothi-matte.exe --model models/modnet.onnx --probe --size 512 --norm half 2>&1 | tee -a ../log.txt
           head -c 15876000 /dev/urandom > mix.f32
           ( time ./voice-windows/nothi-voice.exe models/voice_htdemucs_ft_vocals.bin mix.f32 voice.f32 4 ) 2>&1 | tail -5 | tee -a ../log.txt
           ls -la voice.f32 | tee -a ../log.txt
@@ -207,6 +210,7 @@ jobs:
           ./ffmpeg-mac/ffmpeg -hide_banner -loglevel error -f rawvideo -pix_fmt rgb24 -s 1280x720 -r 30 -i v.rgb -f f32le -ar 44100 -ac 2 -i a.f32 -c:v h264_videotoolbox -b:v 12M -pix_fmt yuv420p -c:a aac -b:a 256k -movflags +faststart t.mp4 2>&1 | tee -a ../log.txt; ls -la t.mp4 | tee -a ../log.txt || true
           ./matte-mac/nothi-matte --model models/birefnet_lite.onnx --probe 2>&1 | tee -a ../log.txt
           ./matte-mac/nothi-matte --model models/birefnet_lite.onnx --probe --ep cpu 2>&1 | tee -a ../log.txt
+          ./matte-mac/nothi-matte --model models/modnet.onnx --probe --size 512 --norm half --ep cpu 2>&1 | tee -a ../log.txt
           head -c 15876000 /dev/urandom > mix.f32
           ( time ./voice-mac/nothi-voice models/voice_htdemucs_ft_vocals.bin mix.f32 voice.f32 4 ) 2>&1 | tail -5 | tee -a ../log.txt
       - uses: actions/upload-artifact@v4
