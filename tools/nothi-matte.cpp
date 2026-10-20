@@ -7,6 +7,9 @@
 //   nothi-matte --task face --model yunet.onnx --w W --h H
 //        faces: reads rgb24 frames, writes one text line per frame on stdout:
 //        "F score x y w h  x1 y1 ... x5 y5" (the face kept, 5 points: eyes, nose, mouth corners) or "F 0"
+//   nothi-matte --task face --model yunet.onnx --mesh facemesh.onnx --w W --h H
+//        with the face mesh (MediaPipe Face Landmarker): "M presence  x y z (points 33 263 10 152 1)  minx miny maxx maxy"
+//        in pixels of the frame (z: same scale, negative = closer to the camera), or "M 0"
 //   --lowmem   less memory (no arena, basic graph optimisation, processor only). Used by itself when a load fails.
 //
 // Part of Nothi Toolkit (https://nothilabs.com). Uses ONNX Runtime (MIT).
@@ -270,16 +273,80 @@ struct Engine {
   }
 };
 
+// ── face mesh: 478 points in 3D on a square crop around the face, turned with the head (like MediaPipe)
+struct Mesh {
+  Engine net; bool nhwc = true; int S = 256; bool ok = false;
+  double cx = 0, cy = 0, size = 0, ang = 0; // the crop: centre, side, rotation (radians)
+  bool have = false; // a crop from the last frame's points
+  std::vector<float> pts;
+  bool open(const ORTCHAR_T *model, int threads) {
+    net.lowmem = false;
+    if (!net.open(model, "cpu", threads)) return false;
+    auto sh = net.sess->GetInputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
+    if (sh.size() == 4) { if (sh[3] == 3) { nhwc = true; S = (int)(sh[1] > 0 ? sh[1] : 256); } else { nhwc = false; S = (int)(sh[2] > 0 ? sh[2] : 256); } }
+    ok = true; return true;
+  }
+  // one pass on the crop; false when no face
+  bool pass(const unsigned char *rgb, int w, int h, float &presence) {
+    std::vector<float> in((size_t)3 * S * S);
+    const double ca = std::cos(ang), sa = std::sin(ang);
+    for (int v = 0; v < S; v++) for (int u = 0; u < S; u++) {
+      double dx = ((u + 0.5) / S - 0.5) * size, dy = ((v + 0.5) / S - 0.5) * size;
+      double sx = cx + dx * ca - dy * sa, sy = cy + dx * sa + dy * ca;
+      float fx = (float)sx - 0.5f, fy = (float)sy - 0.5f; int x0 = (int)std::floor(fx), y0 = (int)std::floor(fy); float ax = fx - x0, ay = fy - y0;
+      for (int c = 0; c < 3; c++) {
+        auto px = [&](int x, int y) -> float { if (x < 0 || y < 0 || x >= w || y >= h) return 0.f; return rgb[((size_t)y * w + x) * 3 + c]; };
+        float val = ((px(x0, y0) * (1 - ax) + px(x0 + 1, y0) * ax) * (1 - ay) + (px(x0, y0 + 1) * (1 - ax) + px(x0 + 1, y0 + 1) * ax) * ay) / 255.f;
+        if (nhwc) in[((size_t)v * S + u) * 3 + c] = val; else in[(size_t)c * S * S + (size_t)v * S + u] = val;
+      }
+    }
+    int64_t dims[4] = {1, nhwc ? S : 3, nhwc ? S : S, nhwc ? 3 : S}; if (!nhwc) { dims[1] = 3; dims[2] = S; dims[3] = S; }
+    Ort::MemoryInfo mi = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+    Ort::Value t = Ort::Value::CreateTensor<float>(mi, in.data(), in.size(), dims, 4);
+    std::vector<const char *> outs; for (auto &n : net.outNames) outs.push_back(n.c_str());
+    const char *ins[1] = {net.inName.c_str()};
+    auto r = net.sess->Run(Ort::RunOptions{nullptr}, ins, &t, 1, outs.data(), outs.size());
+    const float *L = nullptr; size_t ln = 0; presence = 1.f;
+    for (size_t q = 0; q < r.size(); q++) {
+      size_t n = r[q].GetTensorTypeAndShapeInfo().GetElementCount(); const float *d = r[q].GetTensorData<float>();
+      if (n >= 1404 && n > ln) { L = d; ln = n; } else if (n == 1) { float v = d[0]; presence = (v < 0.f || v > 1.f) ? 1.f / (1.f + std::exp(-v)) : v; }
+    }
+    if (!L || presence < 0.5f) return false;
+    const size_t np = ln / 3; pts.assign(np * 3, 0.f);
+    for (size_t i = 0; i < np; i++) {
+      double u = L[i * 3], v = L[i * 3 + 1], z = L[i * 3 + 2];
+      double dx = (u / S - 0.5) * size, dy = (v / S - 0.5) * size;
+      pts[i * 3] = (float)(cx + dx * ca - dy * sa); pts[i * 3 + 1] = (float)(cy + dx * sa + dy * ca); pts[i * 3 + 2] = (float)(z / S * size);
+    }
+    return true;
+  }
+  // the next crop from these points: around them, 1.5× bigger, turned like the eyes
+  void cropFromPoints() {
+    const size_t np = pts.size() / 3; double mnx = 1e30, mny = 1e30, mxx = -1e30, mxy = -1e30;
+    for (size_t i = 0; i < np; i++) { mnx = std::min(mnx, (double)pts[i * 3]); mxx = std::max(mxx, (double)pts[i * 3]); mny = std::min(mny, (double)pts[i * 3 + 1]); mxy = std::max(mxy, (double)pts[i * 3 + 1]); }
+    ang = std::atan2(pts[263 * 3 + 1] - pts[33 * 3 + 1], pts[263 * 3] - pts[33 * 3]);
+    cx = (mnx + mxx) / 2; cy = (mny + mxy) / 2; size = std::max(mxx - mnx, mxy - mny) * 1.5; have = true;
+  }
+  std::string line(float presence) {
+    const size_t np = pts.size() / 3; double mnx = 1e30, mny = 1e30, mxx = -1e30, mxy = -1e30;
+    for (size_t i = 0; i < np; i++) { mnx = std::min(mnx, (double)pts[i * 3]); mxx = std::max(mxx, (double)pts[i * 3]); mny = std::min(mny, (double)pts[i * 3 + 1]); mxy = std::max(mxy, (double)pts[i * 3 + 1]); }
+    char buf[640]; int o = snprintf(buf, sizeof buf, "M %.3f", presence);
+    for (int id : {33, 263, 10, 152, 1}) o += snprintf(buf + o, sizeof buf - o, " %.2f %.2f %.2f", pts[id * 3], pts[id * 3 + 1], pts[id * 3 + 2]);
+    snprintf(buf + o, sizeof buf - o, " %.1f %.1f %.1f %.1f", mnx, mny, mxx, mxy);
+    return buf;
+  }
+};
+
 #ifdef _WIN32
 static std::string narrow(const wchar_t *w) { int n = WideCharToMultiByte(CP_UTF8, 0, w, -1, 0, 0, 0, 0); std::string s(n > 0 ? n - 1 : 0, '\0'); if (n > 1) WideCharToMultiByte(CP_UTF8, 0, w, -1, &s[0], n, 0, 0); return s; }
 int wmain(int argc, wchar_t **wargv) {
   _setmode(_fileno(stdin), _O_BINARY); _setmode(_fileno(stdout), _O_BINARY);
   std::vector<std::string> args; for (int i = 0; i < argc; i++) args.push_back(narrow(wargv[i]));
-  std::wstring model;
+  std::wstring model, meshModel;
 #else
 int main(int argc, char **argv) {
   std::vector<std::string> args(argv, argv + argc);
-  std::string model;
+  std::string model, meshModel;
 #endif
   int w = 0, h = 0, threads = 0, size = 0; std::string ep = "auto", task = "matte"; bool probe = false, lowmem = false;
   for (int i = 1; i < argc; i++) {
@@ -298,6 +365,13 @@ int main(int argc, char **argv) {
     else if (a == "--probe") probe = true;
     else if (a == "--norm") g_half = next() == "half";
     else if (a == "--task") task = next();
+    else if (a == "--mesh") {
+#ifdef _WIN32
+      meshModel = (i + 1 < argc) ? std::wstring(wargv[i + 1]) : L""; i++;
+#else
+      meshModel = next();
+#endif
+    }
     else if (a == "--lowmem") lowmem = true;
     else if (a == "--version") { say("nothi-matte 1.0"); return 0; }
   }
@@ -312,9 +386,27 @@ int main(int argc, char **argv) {
   if (task == "face") {
     if (w <= 0 || h <= 0) { say("ERROR missing --w/--h"); return 2; }
     std::vector<unsigned char> rgb((size_t)w * h * 3);
-    fprintf(stderr, "READY ep=%s size=%dx%d\n", E.ep.c_str(), E.S, E.T); fflush(stderr);
+    Mesh M; bool useMesh = false;
+    if (!meshModel.empty()) { try { useMesh = M.open(meshModel.c_str(), threads); } catch (const std::exception &x) { fprintf(stderr, "mesh failed: %s\n", x.what()); } }
+    fprintf(stderr, "READY ep=%s size=%dx%d mesh=%d\n", E.ep.c_str(), E.S, E.T, useMesh ? 1 : 0); fflush(stderr);
     while (readAll(rgb.data(), rgb.size())) {
       std::string line;
+      if (useMesh) {
+        try {
+          float pr = 0; bool got = false;
+          if (M.have) got = M.pass(rgb.data(), w, h, pr);
+          if (!got) { // find the face again: the detector, then twice the mesh (the 2nd crop is turned with the head)
+            M.have = false; std::string d = E.face(rgb.data(), w, h);
+            float v[15]; if (sscanf(d.c_str(), "F %f %f %f %f %f %f %f %f %f", &v[0], &v[1], &v[2], &v[3], &v[4], &v[5], &v[6], &v[7], &v[8]) == 9) {
+              M.cx = v[1] + v[3] / 2; M.cy = v[2] + v[4] / 2; M.size = std::max(v[3], v[4]) * 1.6; M.ang = std::atan2(v[8] - v[6], v[7] - v[5]);
+              if (M.pass(rgb.data(), w, h, pr)) { M.cropFromPoints(); got = M.pass(rgb.data(), w, h, pr); }
+            }
+          }
+          if (got) { line = M.line(pr); M.cropFromPoints(); } else line = "M 0";
+        } catch (const std::exception &x) { fprintf(stderr, "mesh run failed: %s\n", x.what()); line = "M 0"; M.have = false; }
+        fprintf(stdout, "%s\n", line.c_str()); fflush(stdout);
+        continue;
+      }
       try { line = E.face(rgb.data(), w, h); } catch (const std::exception &x) {
         fprintf(stderr, "run on %s failed: %s\n", E.ep.c_str(), x.what());
         if (E.ep == "cpu" || !E.open(model.c_str(), "cpu", threads)) { say("ERROR inference failed"); return 4; }
