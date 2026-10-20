@@ -26,6 +26,7 @@ jobs:
           curl -fsSL https://huggingface.co/api/models/onnx-community/BiRefNet_lite-ONNX | python3 -c "import json,sys; print([s['rfilename'] for s in json.load(sys.stdin)['siblings']])"
           curl -fL --retry 3 -o birefnet_lite.onnx https://huggingface.co/onnx-community/BiRefNet_lite-ONNX/resolve/main/onnx/model.onnx
           curl -fL --retry 3 -o modnet.onnx https://huggingface.co/Xenova/modnet/resolve/main/onnx/model.onnx
+          curl -fL --retry 3 -o yunet.onnx https://media.githubusercontent.com/media/opencv/opencv_zoo/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx
           curl -fsSL https://huggingface.co/api/datasets/Retrobear/demucs.cpp | python3 -c "import json,sys; print([s['rfilename'] for s in json.load(sys.stdin)['siblings']])" || true
           curl -fL --retry 3 -o voice_htdemucs_ft_vocals.bin "https://huggingface.co/datasets/Retrobear/demucs.cpp/resolve/main/ggml-model-htdemucs_ft_vocals-4s-f16.bin" || echo "no prebuilt demucs weights"
           ls -la
@@ -44,7 +45,7 @@ jobs:
           print('opset', [o.version for o in m.opset_import])"
           sha256sum * 2>/dev/null; ls -la
       - uses: actions/upload-artifact@v4
-        with: { name: models, path: "m/birefnet_lite.onnx\nm/modnet.onnx\nm/voice_htdemucs_ft_vocals.bin", compression-level: 0 }
+        with: { name: models, path: "m/birefnet_lite.onnx\nm/modnet.onnx\nm/voice_htdemucs_ft_vocals.bin\nm/yunet.onnx", compression-level: 0 }
 
   # ---------------------------------------------------------------- fluid motion: RIFE 4.6 (MIT) through rife-ncnn-vulkan (MIT)
   rife:
@@ -160,6 +161,8 @@ jobs:
           echo "rc=${PIPESTATUS[0]}" | tee -a ../log.txt
           ./matte-windows/nothi-matte.exe --model models/modnet.onnx --probe --size 512 --norm half 2>&1 | tee -a ../log.txt
           echo "rc=${PIPESTATUS[0]}" | tee -a ../log.txt
+          head -c 2764800 v.rgb | ./matte-windows/nothi-matte.exe --task face --model models/yunet.onnx --w 640 --h 360 2>&1 | tail -4 | tee -a ../log.txt
+          ./matte-windows/nothi-matte.exe --model models/birefnet_lite.onnx --probe --lowmem 2>&1 | tail -2 | tee -a ../log.txt
           head -c 15876000 /dev/urandom > mix.f32
           ( time ./voice-windows/nothi-voice.exe models/voice_htdemucs_ft_vocals.bin mix.f32 voice.f32 4 ) 2>&1 | tail -5 | tee -a ../log.txt
           echo "rc=${PIPESTATUS[0]}" | tee -a ../log.txt
@@ -233,6 +236,7 @@ jobs:
           ./matte-mac/nothi-matte --model models/birefnet_lite.onnx --probe 2>&1 | tee -a ../log.txt
           ./matte-mac/nothi-matte --model models/birefnet_lite.onnx --probe --ep cpu 2>&1 | tee -a ../log.txt
           ./matte-mac/nothi-matte --model models/modnet.onnx --probe --size 512 --norm half --ep cpu 2>&1 | tee -a ../log.txt
+          head -c 2764800 v.rgb | ./matte-mac/nothi-matte --task face --model models/yunet.onnx --w 640 --h 360 2>&1 | tail -4 | tee -a ../log.txt || true
           head -c 15876000 /dev/urandom > mix.f32
           ( time ./voice-mac/nothi-voice models/voice_htdemucs_ft_vocals.bin mix.f32 voice.f32 4 ) 2>&1 | tail -5 | tee -a ../log.txt
           mkdir -p rv/rife-v4.6 fr fo && cp rife/rife-ncnn-vulkan rv/ && chmod +x rv/rife-ncnn-vulkan && cp rife/rife_flownet.bin rv/rife-v4.6/flownet.bin && cp rife/rife_flownet.param rv/rife-v4.6/flownet.param
