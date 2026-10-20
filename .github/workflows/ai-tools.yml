@@ -44,8 +44,26 @@ jobs:
           print('outputs', [(o.name, [d.dim_value or d.dim_param for d in o.type.tensor_type.shape.dim]) for o in m.graph.output])
           print('opset', [o.version for o in m.opset_import])"
           sha256sum * 2>/dev/null; ls -la
+      - name: face landmarks (Google MediaPipe Face Landmarker, Apache 2.0) converted to ONNX with tf2onnx
+        run: |
+          cd m
+          curl -fL --retry 3 -o fl.task https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task
+          mkdir fl && cd fl && unzip -o ../fl.task && ls -la && cd ..
+          python3 -m pip install -q tensorflow-cpu tf2onnx onnx onnxruntime
+          python3 -m tf2onnx.convert --tflite fl/face_landmarks_detector.tflite --output facemesh.onnx --opset 13 2>&1 | tail -5
+          python3 - <<'P' | tee face-io.txt
+          import onnx, onnxruntime as ort, numpy as np
+          m = onnx.load('facemesh.onnx')
+          print('in', [(i.name, [d.dim_value or d.dim_param for d in i.type.tensor_type.shape.dim]) for i in m.graph.input])
+          print('out', [(o.name, [d.dim_value or d.dim_param for d in o.type.tensor_type.shape.dim]) for o in m.graph.output])
+          s = ort.InferenceSession('facemesh.onnx'); i = s.get_inputs()[0]
+          shp = [d if isinstance(d, int) else 1 for d in i.shape]
+          r = s.run(None, {i.name: np.random.rand(*shp).astype(np.float32)})
+          print('run ok', [x.shape for x in r])
+          P
+          ls -la
       - uses: actions/upload-artifact@v4
-        with: { name: models, path: "m/birefnet_lite.onnx\nm/modnet.onnx\nm/voice_htdemucs_ft_vocals.bin\nm/yunet.onnx", compression-level: 0 }
+        with: { name: models, path: "m/birefnet_lite.onnx\nm/modnet.onnx\nm/voice_htdemucs_ft_vocals.bin\nm/yunet.onnx\nm/facemesh.onnx\nm/face-io.txt", compression-level: 0 }
 
   # ---------------------------------------------------------------- fluid motion: RIFE 4.6 (MIT) through rife-ncnn-vulkan (MIT)
   rife:
@@ -269,6 +287,7 @@ jobs:
           cp ../art/ffmpeg-mac/ffmpeg mac/ 2>/dev/null || true
           chmod +x mac/* 2>/dev/null || true
           for d in ../art/*-log; do cp $d/log.txt logs/$(basename $d).txt 2>/dev/null || true; done
+          cp ../art/models/face-io.txt logs/ 2>/dev/null || true
           ls -laR
           git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A
           git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "ai tools binaries"
@@ -278,6 +297,7 @@ jobs:
         run: |
           mkdir rel && cd rel
           cp ../art/models/* .
+          rm -f face-io.txt
           cp ../art/matte-windows/* . 2>/dev/null || true
           cp ../art/matte-mac/* . 2>/dev/null || true
           cp ../art/rife/* . 2>/dev/null || true
