@@ -21,6 +21,7 @@ jobs:
   models:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - run: |
           mkdir m && cd m
           curl -fsSL https://huggingface.co/api/models/onnx-community/BiRefNet_lite-ONNX | python3 -c "import json,sys; print([s['rfilename'] for s in json.load(sys.stdin)['siblings']])"
