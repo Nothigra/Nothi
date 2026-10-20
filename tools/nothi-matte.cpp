@@ -308,10 +308,10 @@ struct Mesh {
     std::vector<const char *> outs; for (auto &n : net.outNames) outs.push_back(n.c_str());
     const char *ins[1] = {net.inName.c_str()};
     auto r = net.sess->Run(Ort::RunOptions{nullptr}, ins, &t, 1, outs.data(), outs.size());
-    const float *L = nullptr; size_t ln = 0; presence = 1.f;
+    const float *L = nullptr; size_t ln = 0; presence = 1.f; bool gotP = false;
     for (size_t q = 0; q < r.size(); q++) {
       size_t n = r[q].GetTensorTypeAndShapeInfo().GetElementCount(); const float *d = r[q].GetTensorData<float>();
-      if (n >= 1404 && n > ln) { L = d; ln = n; } else if (n == 1) { float v = d[0]; presence = (v < 0.f || v > 1.f) ? 1.f / (1.f + std::exp(-v)) : v; }
+      if (n >= 1404 && n > ln) { L = d; ln = n; } else if (n == 1 && !gotP) { gotP = true; float v = d[0]; presence = (v < 0.f || v > 1.f) ? 1.f / (1.f + std::exp(-v)) : v; }
     }
     if (!L || presence < 0.5f) return false;
     const size_t np = ln / 3; pts.assign(np * 3, 0.f);
