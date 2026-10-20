@@ -62,8 +62,35 @@ jobs:
           print('run ok', [x.shape for x in r])
           P
           ls -la
+      - name: upscaler for the processor (Real-ESRGAN animevideov3, BSD-3) to ONNX
+        run: |
+          cd m
+          curl -fL --retry 3 -o rav3.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesr-animevideov3.pth
+          python3 -m pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+          python3 - <<'P' | tee -a face-io.txt
+          import torch, torch.nn as nn, torch.nn.functional as F
+          class SRVGGNetCompact(nn.Module):
+              def __init__(s, num_in_ch=3, num_out_ch=3, num_feat=64, num_conv=16, upscale=4):
+                  super().__init__(); s.upscale = upscale; s.body = nn.ModuleList()
+                  s.body.append(nn.Conv2d(num_in_ch, num_feat, 3, 1, 1)); s.body.append(nn.PReLU(num_parameters=num_feat))
+                  for _ in range(num_conv): s.body.append(nn.Conv2d(num_feat, num_feat, 3, 1, 1)); s.body.append(nn.PReLU(num_parameters=num_feat))
+                  s.body.append(nn.Conv2d(num_feat, num_out_ch * upscale * upscale, 3, 1, 1)); s.upsampler = nn.PixelShuffle(upscale)
+              def forward(s, x):
+                  out = x
+                  for l in s.body: out = l(out)
+                  return s.upsampler(out) + F.interpolate(x, scale_factor=s.upscale, mode='nearest')
+          ck = torch.load('rav3.pth', map_location='cpu', weights_only=True)
+          sd = ck.get('params_ema', ck.get('params', ck))
+          m = SRVGGNetCompact(); m.load_state_dict(sd, strict=True); m.eval()
+          x = torch.rand(1, 3, 64, 64)
+          torch.onnx.export(m, x, 'esr_fast_x4.onnx', input_names=['input'], output_names=['output'], opset_version=13, dynamic_axes={'input': {2: 'h', 3: 'w'}, 'output': {2: 'H', 3: 'W'}})
+          import onnxruntime as ort, numpy as np
+          r = ort.InferenceSession('esr_fast_x4.onnx').run(None, {'input': np.random.rand(1, 3, 50, 70).astype(np.float32)})
+          print('esr ok', r[0].shape)
+          P
+          ls -la
       - uses: actions/upload-artifact@v4
-        with: { name: models, path: "m/birefnet_lite.onnx\nm/modnet.onnx\nm/voice_htdemucs_ft_vocals.bin\nm/yunet.onnx\nm/facemesh.onnx\nm/face-io.txt", compression-level: 0 }
+        with: { name: models, path: "m/birefnet_lite.onnx\nm/modnet.onnx\nm/voice_htdemucs_ft_vocals.bin\nm/yunet.onnx\nm/facemesh.onnx\nm/esr_fast_x4.onnx\nm/face-io.txt", compression-level: 0 }
 
   # ---------------------------------------------------------------- fluid motion: RIFE 4.6 (MIT) through rife-ncnn-vulkan (MIT)
   rife:
@@ -181,6 +208,7 @@ jobs:
           echo "rc=${PIPESTATUS[0]}" | tee -a ../log.txt
           head -c 2764800 v.rgb | ./matte-windows/nothi-matte.exe --task face --model models/yunet.onnx --w 640 --h 360 2>&1 | tail -4 | tee -a ../log.txt
           head -c 2764800 v.rgb | ./matte-windows/nothi-matte.exe --task face --model models/yunet.onnx --mesh models/facemesh.onnx --w 640 --h 360 2>&1 | tail -4 | tee -a ../log.txt
+          ( time sh -c 'head -c 691200 v.rgb | ./matte-windows/nothi-matte.exe --task upscale --model models/esr_fast_x4.onnx --w 480 --h 480 --scale 4 --ep cpu | wc -c' ) 2>&1 | tail -5 | tee -a ../log.txt
           ./matte-windows/nothi-matte.exe --model models/birefnet_lite.onnx --probe --lowmem 2>&1 | tail -2 | tee -a ../log.txt
           head -c 15876000 /dev/urandom > mix.f32
           ( time ./voice-windows/nothi-voice.exe models/voice_htdemucs_ft_vocals.bin mix.f32 voice.f32 4 ) 2>&1 | tail -5 | tee -a ../log.txt

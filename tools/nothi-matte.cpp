@@ -10,6 +10,8 @@
 //   nothi-matte --task face --model yunet.onnx --mesh facemesh.onnx --w W --h H
 //        with the face mesh (MediaPipe Face Landmarker): "M presence  x y z (points 33 263 10 152 1)  minx miny maxx maxy"
 //        in pixels of the frame (z: same scale, negative = closer to the camera), or "M 0"
+//   nothi-matte --task upscale --model sr.onnx --w W --h H --scale 4
+//        upscaling (Real-ESRGAN compact): reads rgb24 frames, writes rgb24 frames W*4 x H*4, in tiles
 //   --lowmem   less memory (no arena, basic graph optimisation, processor only). Used by itself when a load fails.
 //
 // Part of Nothi Toolkit (https://nothilabs.com). Uses ONNX Runtime (MIT).
@@ -348,7 +350,7 @@ int main(int argc, char **argv) {
   std::vector<std::string> args(argv, argv + argc);
   std::string model, meshModel;
 #endif
-  int w = 0, h = 0, threads = 0, size = 0; std::string ep = "auto", task = "matte"; bool probe = false, lowmem = false;
+  int w = 0, h = 0, threads = 0, size = 0, scale = 4; std::string ep = "auto", task = "matte"; bool probe = false, lowmem = false;
   for (int i = 1; i < argc; i++) {
     const std::string &a = args[i]; auto next = [&]() -> std::string { return i + 1 < argc ? args[++i] : std::string(); };
     if (a == "--model") {
@@ -373,6 +375,7 @@ int main(int argc, char **argv) {
 #endif
     }
     else if (a == "--lowmem") lowmem = true;
+    else if (a == "--scale") scale = atoi(next().c_str());
     else if (a == "--version") { say("nothi-matte 1.0"); return 0; }
   }
   if (model.empty()) { say("usage: nothi-matte --model m.onnx --w W --h H"); return 2; }
@@ -382,6 +385,40 @@ int main(int argc, char **argv) {
     if (lowmem) { say("ERROR could not load the model"); return 3; }
     say("LOWMEM retry"); E.lowmem = lowmem = true;
     if (!E.open(model.c_str(), "cpu", threads)) { say("ERROR could not load the model"); return 3; }
+  }
+  if (task == "upscale") {
+    // tiles of 192 px with 12 px of margin (no seams), the model's output stitched back
+    if (w <= 0 || h <= 0 || scale < 1) { say("ERROR missing --w/--h"); return 2; }
+    const int TL = 192, M = 12, W2 = w * scale, H2 = h * scale;
+    std::vector<unsigned char> rgb((size_t)w * h * 3), out((size_t)W2 * H2 * 3);
+    fprintf(stderr, "READY ep=%s\n", E.ep.c_str()); fflush(stderr);
+    while (readAll(rgb.data(), rgb.size())) {
+      for (int ty = 0; ty < h; ty += TL) for (int tx = 0; tx < w; tx += TL) {
+        const int x0 = std::max(0, tx - M), y0 = std::max(0, ty - M), x1 = std::min(w, tx + TL + M), y1 = std::min(h, ty + TL + M), tw = x1 - x0, th = y1 - y0;
+        std::vector<float> in((size_t)3 * tw * th);
+        for (int y = 0; y < th; y++) for (int x = 0; x < tw; x++) for (int c = 0; c < 3; c++) in[(size_t)c * tw * th + (size_t)y * tw + x] = rgb[((size_t)(y0 + y) * w + x0 + x) * 3 + c] / 255.f;
+        int64_t dims[4] = {1, 3, th, tw};
+        Ort::MemoryInfo mi = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+        Ort::Value t = Ort::Value::CreateTensor<float>(mi, in.data(), in.size(), dims, 4);
+        const char *ins[1] = {E.inName.c_str()}, *outs[1] = {E.outName.c_str()};
+        std::vector<Ort::Value> r;
+        try { r = E.sess->Run(Ort::RunOptions{nullptr}, ins, &t, 1, outs, 1); }
+        catch (const std::exception &x) {
+          fprintf(stderr, "run on %s failed: %s\n", E.ep.c_str(), x.what());
+          if (E.ep == "cpu" || !E.open(model.c_str(), "cpu", threads)) { say("ERROR inference failed"); return 4; }
+          r = E.sess->Run(Ort::RunOptions{nullptr}, ins, &t, 1, outs, 1);
+        }
+        auto sh = r[0].GetTensorTypeAndShapeInfo().GetShape(); const int oh = (int)sh[2], ow = (int)sh[3], k = ow / tw; const float *o = r[0].GetTensorData<float>();
+        // keep the tile without its margin
+        for (int y = (ty - y0) * k; y < (std::min(h, ty + TL) - y0) * k && y < oh; y++) for (int x = (tx - x0) * k; x < (std::min(w, tx + TL) - x0) * k && x < ow; x++) {
+          const int X = x0 * k + x, Y = y0 * k + y; if (X >= W2 || Y >= H2) continue;
+          for (int c = 0; c < 3; c++) { float v = o[(size_t)c * oh * ow + (size_t)y * ow + x]; int q = (int)std::lround(v * 255.f); out[((size_t)Y * W2 + X) * 3 + c] = (unsigned char)(q < 0 ? 0 : q > 255 ? 255 : q); }
+        }
+      }
+      if (fwrite(out.data(), 1, out.size(), stdout) != out.size()) return 5;
+      fflush(stdout);
+    }
+    return 0;
   }
   if (task == "face") {
     if (w <= 0 || h <= 0) { say("ERROR missing --w/--h"); return 2; }
