@@ -14,7 +14,7 @@ env:
     --enable-parser=h264,hevc,mpeg4video,mpegvideo,vp8,vp9,png,gif,aac,aac_latm,ac3,mpegaudio,dca,flac,opus,vorbis,mlp
     --enable-muxer=wav,image2,rawvideo,mp4,mov,pcm_f32le
     --enable-encoder=pcm_s16le,pcm_s24le,pcm_f32le,mjpeg,rawvideo,aac,png
-    --enable-filter=abuffer,abuffersink,aformat,anull,aresample,atrim,asetpts,anullsink,buffer,buffersink,format,null,scale,fps,trim,setpts,pad,volume,pan,apad,amix,aevalsrc
+    --enable-filter=tmix,select,abuffer,abuffersink,aformat,anull,aresample,atrim,asetpts,anullsink,buffer,buffersink,format,null,scale,fps,trim,setpts,pad,volume,pan,apad,amix,aevalsrc
     --enable-static --disable-shared
 jobs:
   # ---------------------------------------------------------------- models (huggingface is reachable from here)
@@ -45,6 +45,24 @@ jobs:
           sha256sum * 2>/dev/null; ls -la
       - uses: actions/upload-artifact@v4
         with: { name: models, path: "m/birefnet_lite.onnx\nm/modnet.onnx\nm/voice_htdemucs_ft_vocals.bin", compression-level: 0 }
+
+  # ---------------------------------------------------------------- fluid motion: RIFE 4.6 (MIT) through rife-ncnn-vulkan (MIT)
+  rife:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          set -e
+          V=20221029; U=https://github.com/nihui/rife-ncnn-vulkan/releases/download/$V
+          curl -fsSL -o w.zip $U/rife-ncnn-vulkan-$V-windows.zip && curl -fsSL -o m.zip $U/rife-ncnn-vulkan-$V-macos.zip
+          unzip -q w.zip && unzip -q m.zip && mkdir out
+          cp rife-ncnn-vulkan-$V-windows/rife-ncnn-vulkan.exe rife-ncnn-vulkan-$V-windows/vcomp140.dll out/
+          cp rife-ncnn-vulkan-$V-macos/rife-ncnn-vulkan out/ && chmod +x out/rife-ncnn-vulkan
+          cp rife-ncnn-vulkan-$V-macos/rife-v4.6/flownet.bin out/rife_flownet.bin
+          cp rife-ncnn-vulkan-$V-macos/rife-v4.6/flownet.param out/rife_flownet.param
+          cp rife-ncnn-vulkan-$V-macos/LICENSE out/LICENSE-rife.txt
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with: { name: rife, path: out/ }
 
   # ---------------------------------------------------------------- linux tests (same code, real models)
   test-linux:
@@ -122,7 +140,7 @@ jobs:
         with: { name: ffmpeg-windows, path: out/ffmpeg.exe }
 
   test-windows:
-    needs: [models, matte-windows, voice-windows, ffmpeg-windows]
+    needs: [models, matte-windows, voice-windows, ffmpeg-windows, rife]
     runs-on: windows-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -146,6 +164,12 @@ jobs:
           ( time ./voice-windows/nothi-voice.exe models/voice_htdemucs_ft_vocals.bin mix.f32 voice.f32 4 ) 2>&1 | tail -5 | tee -a ../log.txt
           echo "rc=${PIPESTATUS[0]}" | tee -a ../log.txt
           ls -la voice.f32 | tee -a ../log.txt
+          mkdir -p rv/rife-v4.6 fr fo && cp rife/rife-ncnn-vulkan.exe rife/vcomp140.dll rv/ && cp rife/rife_flownet.bin rv/rife-v4.6/flownet.bin && cp rife/rife_flownet.param rv/rife-v4.6/flownet.param
+          ./ffmpeg-windows/ffmpeg.exe -hide_banner -loglevel error -f rawvideo -pix_fmt rgb24 -s 1280x720 -i v.rgb -frames:v 3 -q:v 2 fr/%07d.jpg; ls fr | tee -a ../log.txt
+          ( time ./rv/rife-ncnn-vulkan.exe -i fr -o fo -m rv/rife-v4.6 -n 24 -f %08d.jpg ) 2>&1 | tail -6 | tee -a ../log.txt; echo "rife gpu: $(ls fo | wc -l)" | tee -a ../log.txt
+          rm -rf fo; mkdir fo; ( time ./rv/rife-ncnn-vulkan.exe -i fr -o fo -m rv/rife-v4.6 -n 24 -f %08d.jpg -g -1 ) 2>&1 | tail -6 | tee -a ../log.txt; echo "rife cpu: $(ls fo | wc -l)" | tee -a ../log.txt
+          ./ffmpeg-windows/ffmpeg.exe -hide_banner -loglevel error -y -framerate 192 -i fo/%08d.jpg -vf "tmix=frames=5,select='not(mod(n-2\,8))',setpts=N/(24*TB),format=yuv420p" -r 24 -c:v h264_mf -b:v 20M blur.mp4 2>&1 | tee -a ../log.txt; ls -la blur.mp4 | tee -a ../log.txt
+          ./ffmpeg-windows/ffmpeg.exe -hide_banner -loglevel error -y -framerate 192 -i fo/%08d.jpg -vf "tmix=frames=5,select='not(mod(n-2\,8))',setpts=N/(24*TB),format=yuvj420p" -r 24 -c:v mjpeg -q:v 2 blur.mov 2>&1 | tee -a ../log.txt; ls -la blur.mov | tee -a ../log.txt
           echo "::error::$(tail -c 2500 ../log.txt | tr '\n' ' ')"
       - if: always()
         uses: actions/upload-artifact@v4
@@ -196,7 +220,7 @@ jobs:
         with: { name: ffmpeg-mac, path: out/ffmpeg }
 
   test-mac:
-    needs: [models, matte-mac, voice-mac, ffmpeg-mac]
+    needs: [models, matte-mac, voice-mac, ffmpeg-mac, rife]
     runs-on: macos-14
     steps:
       - uses: actions/download-artifact@v4
@@ -211,7 +235,13 @@ jobs:
           ./matte-mac/nothi-matte --model models/modnet.onnx --probe --size 512 --norm half --ep cpu 2>&1 | tee -a ../log.txt
           head -c 15876000 /dev/urandom > mix.f32
           ( time ./voice-mac/nothi-voice models/voice_htdemucs_ft_vocals.bin mix.f32 voice.f32 4 ) 2>&1 | tail -5 | tee -a ../log.txt
-      - uses: actions/upload-artifact@v4
+          mkdir -p rv/rife-v4.6 fr fo && cp rife/rife-ncnn-vulkan rv/ && chmod +x rv/rife-ncnn-vulkan && cp rife/rife_flownet.bin rv/rife-v4.6/flownet.bin && cp rife/rife_flownet.param rv/rife-v4.6/flownet.param
+          ./ffmpeg-mac/ffmpeg -hide_banner -loglevel error -f rawvideo -pix_fmt rgb24 -s 1280x720 -i v.rgb -frames:v 3 -q:v 2 fr/%07d.jpg; ls fr | tee -a ../log.txt
+          ( time ./rv/rife-ncnn-vulkan -i fr -o fo -m rv/rife-v4.6 -n 24 -f %08d.jpg ) 2>&1 | tail -6 | tee -a ../log.txt; echo "rife gpu: $(ls fo | wc -l)" | tee -a ../log.txt
+          rm -rf fo; mkdir fo; ( time ./rv/rife-ncnn-vulkan -i fr -o fo -m rv/rife-v4.6 -n 24 -f %08d.jpg -g -1 ) 2>&1 | tail -6 | tee -a ../log.txt; echo "rife cpu: $(ls fo | wc -l)" | tee -a ../log.txt
+          ./ffmpeg-mac/ffmpeg -hide_banner -loglevel error -y -framerate 192 -i fo/%08d.jpg -vf "tmix=frames=5,select='not(mod(n-2\,8))',setpts=N/(24*TB),format=yuvj420p" -r 24 -c:v mjpeg -q:v 2 blur.mov 2>&1 | tee -a ../log.txt; ls -la blur.mov | tee -a ../log.txt
+      - if: always()
+        uses: actions/upload-artifact@v4
         with: { name: mac-log, path: log.txt }
 
   # ---------------------------------------------------------------- publish: binaries on branch ai-bin, everything in release "ai"
@@ -246,7 +276,8 @@ jobs:
           cp ../art/models/* .
           cp ../art/matte-windows/* . 2>/dev/null || true
           cp ../art/matte-mac/* . 2>/dev/null || true
+          cp ../art/rife/* . 2>/dev/null || true
           sha256sum * > SHA256SUMS.txt; cat SHA256SUMS.txt; ls -la
           ls -la
           gh release delete ai --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
-          gh release create ai * --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "AI files (mirror)" --notes "AI files used by Nothi Toolkit: BiRefNet lite (MIT) for the character mask, Demucs v4 fine-tuned vocals (MIT, via demucs.cpp) for voice isolation, and the matting engine built on ONNX Runtime (MIT)."
+          gh release create ai * --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "AI files (mirror)" --notes "AI files used by Nothi Toolkit: BiRefNet lite (MIT) for the character mask, Demucs v4 fine-tuned vocals (MIT, via demucs.cpp) for voice isolation, the matting engine built on ONNX Runtime (MIT), and RIFE 4.6 through rife-ncnn-vulkan (MIT) for fluid motion."
