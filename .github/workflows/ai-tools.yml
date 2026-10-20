@@ -13,7 +13,7 @@ env:
     --enable-decoder=tiff,psd,qtrle,rawvideo,dnxhd,bmp,targa,h264,hevc,mpeg4,mpeg2video,vp8,vp9,prores,mjpeg,png,gif,webp,v210,r210,aac,aac_latm,mp3,mp3float,mp2,mp2float,ac3,eac3,dca,truehd,mlp,opus,vorbis,flac,alac,pcm_s16le,pcm_s16be,pcm_s24le,pcm_s24be,pcm_s32le,pcm_s32be,pcm_f32le,pcm_f32be,pcm_f64le,pcm_s8,pcm_u8,pcm_mulaw,pcm_alaw,pcm_bluray,pcm_dvd,adpcm_ima_qt,wmav1,wmav2,wmapro
     --enable-parser=h264,hevc,mpeg4video,mpegvideo,vp8,vp9,png,gif,aac,aac_latm,ac3,mpegaudio,dca,flac,opus,vorbis,mlp
     --enable-muxer=wav,image2,rawvideo,mp4,mov,pcm_f32le
-    --enable-encoder=pcm_s16le,pcm_s24le,pcm_f32le,mjpeg,rawvideo,aac,png
+    --enable-encoder=pcm_s16le,pcm_s24le,pcm_f32le,mjpeg,rawvideo,aac,png,prores_ks
     --enable-filter=tmix,select,abuffer,abuffersink,aformat,anull,aresample,atrim,asetpts,anullsink,buffer,buffersink,format,null,scale,fps,trim,setpts,pad,volume,pan,apad,amix,aevalsrc
     --enable-static --disable-shared
 jobs:
@@ -69,9 +69,11 @@ jobs:
           cd m
           curl -fL --retry 3 -o rav3.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesr-animevideov3.pth
           python3 ../tools/esr_to_onnx.py rav3.pth esr_fast_x4.onnx | tee -a face-io.txt
+          curl -fL --retry 3 -o gen.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesr-general-x4v3.pth
+          python3 ../tools/esr_to_onnx.py gen.pth esr_general_x4.onnx | tee -a face-io.txt
           ls -la esr_fast_x4.onnx
       - uses: actions/upload-artifact@v4
-        with: { name: models, path: "m/birefnet_lite.onnx\nm/modnet.onnx\nm/voice_htdemucs_ft_vocals.bin\nm/yunet.onnx\nm/facemesh.onnx\nm/esr_fast_x4.onnx\nm/face-io.txt", compression-level: 0 }
+        with: { name: models, path: "m/birefnet_lite.onnx\nm/modnet.onnx\nm/voice_htdemucs_ft_vocals.bin\nm/yunet.onnx\nm/facemesh.onnx\nm/esr_fast_x4.onnx\nm/esr_general_x4.onnx\nm/face-io.txt", compression-level: 0 }
 
   # ---------------------------------------------------------------- fluid motion: RIFE 4.6 (MIT) through rife-ncnn-vulkan (MIT)
   rife:
@@ -190,6 +192,9 @@ jobs:
           head -c 2764800 v.rgb | ./matte-windows/nothi-matte.exe --task face --model models/yunet.onnx --w 640 --h 360 2>&1 | tail -4 | tee -a ../log.txt
           head -c 2764800 v.rgb | ./matte-windows/nothi-matte.exe --task face --model models/yunet.onnx --mesh models/facemesh.onnx --w 640 --h 360 2>&1 | tail -4 | tee -a ../log.txt
           ( time sh -c 'head -c 691200 v.rgb | ./matte-windows/nothi-matte.exe --task upscale --model models/esr_fast_x4.onnx --w 480 --h 480 --scale 4 --ep cpu | wc -c' ) 2>&1 | tail -5 | tee -a ../log.txt
+          ( time sh -c 'head -c 691200 v.rgb | ./matte-windows/nothi-matte.exe --task upscale --model models/esr_general_x4.onnx --w 480 --h 480 --scale 4 | wc -c' ) 2>&1 | tail -5 | tee -a ../log.txt
+          head -c 2764800 v.rgb | ./matte-windows/nothi-matte.exe --task face --model models/yunet.onnx --w 640 --h 360 --pick left 2>&1 | tail -2 | tee -a ../log.txt
+          head -c 6912000 v.rgb | ./ffmpeg-windows/ffmpeg.exe -hide_banner -loglevel error -y -f rawvideo -pix_fmt rgb24 -s 1280x720 -r 24 -i - -vf "scale=out_color_matrix=bt709:out_range=tv:flags=bicubic+accurate_rnd+full_chroma_int,format=yuv422p10le" -c:v prores_ks -profile:v 3 -vendor apl0 -colorspace bt709 -color_primaries bt709 -color_trc bt709 -color_range tv pr.mov 2>&1 | tee -a ../log.txt; ls -la pr.mov | tee -a ../log.txt
           ./matte-windows/nothi-matte.exe --model models/birefnet_lite.onnx --probe --lowmem 2>&1 | tail -2 | tee -a ../log.txt
           head -c 15876000 /dev/urandom > mix.f32
           ( time ./voice-windows/nothi-voice.exe models/voice_htdemucs_ft_vocals.bin mix.f32 voice.f32 4 ) 2>&1 | tail -5 | tee -a ../log.txt
@@ -266,6 +271,8 @@ jobs:
           ./matte-mac/nothi-matte --model models/modnet.onnx --probe --size 512 --norm half --ep cpu 2>&1 | tee -a ../log.txt
           head -c 2764800 v.rgb | ./matte-mac/nothi-matte --task face --model models/yunet.onnx --w 640 --h 360 2>&1 | tail -4 | tee -a ../log.txt || true
           head -c 2764800 v.rgb | ./matte-mac/nothi-matte --task face --model models/yunet.onnx --mesh models/facemesh.onnx --w 640 --h 360 2>&1 | tail -4 | tee -a ../log.txt || true
+          ( time sh -c 'head -c 691200 v.rgb | ./matte-mac/nothi-matte --task upscale --model models/esr_general_x4.onnx --w 480 --h 480 --scale 4 | wc -c' ) 2>&1 | tail -5 | tee -a ../log.txt || true
+          head -c 6912000 v.rgb | ./ffmpeg-mac/ffmpeg -hide_banner -loglevel error -y -f rawvideo -pix_fmt rgb24 -s 1280x720 -r 24 -i - -vf "scale=out_color_matrix=bt709:out_range=tv:flags=bicubic+accurate_rnd+full_chroma_int,format=yuv422p10le" -c:v prores_ks -profile:v 3 -vendor apl0 -colorspace bt709 -color_primaries bt709 -color_trc bt709 -color_range tv pr.mov 2>&1 | tee -a ../log.txt; ls -la pr.mov | tee -a ../log.txt || true
           head -c 15876000 /dev/urandom > mix.f32
           ( time ./voice-mac/nothi-voice models/voice_htdemucs_ft_vocals.bin mix.f32 voice.f32 4 ) 2>&1 | tail -5 | tee -a ../log.txt
           mkdir -p rv/rife-v4.6 fr fo && cp rife/rife-ncnn-vulkan rv/ && chmod +x rv/rife-ncnn-vulkan && cp rife/rife_flownet.bin rv/rife-v4.6/flownet.bin && cp rife/rife_flownet.param rv/rife-v4.6/flownet.param
@@ -278,8 +285,19 @@ jobs:
         with: { name: mac-log, path: log.txt }
 
   # ---------------------------------------------------------------- publish: binaries on branch ai-bin, everything in release "ai"
+  downloads:
+    # the panel's own download code (tools/dl_test.js, made from app.js) on Windows and macOS: each AI file, each source
+    strategy: { fail-fast: false, matrix: { os: [windows-latest, macos-14] } }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - shell: bash
+        run: |
+          for f in modnet model voice; do node tools/dl_test.js $f 2>&1 | grep -v "Getting the AI" | tee -a dl-${{ matrix.os }}.txt; done
+      - uses: actions/upload-artifact@v4
+        with: { name: "dl-${{ matrix.os }}", path: "dl-${{ matrix.os }}.txt" }
   publish:
-    needs: [test-linux, test-windows, test-mac]
+    needs: [test-linux, test-windows, test-mac, downloads]
     if: ${{ always() && needs.test-windows.result != 'cancelled' }}
     runs-on: ubuntu-latest
     permissions: { contents: write }
@@ -298,6 +316,7 @@ jobs:
           cp ../art/ffmpeg-mac/ffmpeg mac/ 2>/dev/null || true
           chmod +x mac/* 2>/dev/null || true
           for d in ../art/*-log; do cp $d/log.txt logs/$(basename $d).txt 2>/dev/null || true; done
+          cp ../art/dl-*/dl-*.txt logs/ 2>/dev/null || true
           cp ../art/models/face-io.txt logs/ 2>/dev/null || true
           ls -laR
           git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A

@@ -4,13 +4,13 @@
 //
 //   nothi-matte --model m.onnx --w 1280 --h 720 [--size 1024] [--ep auto|cpu|gpu] [--threads N]
 //   nothi-matte --model m.onnx --probe            (prints the engine in use and the time of one frame)
-//   nothi-matte --task face --model yunet.onnx --w W --h H
+//   nothi-matte --task face --model yunet.onnx --w W --h H [--pick auto|left|right]
 //        faces: reads rgb24 frames, writes one text line per frame on stdout:
 //        "F score x y w h  x1 y1 ... x5 y5" (the face kept, 5 points: eyes, nose, mouth corners) or "F 0"
 //   nothi-matte --task face --model yunet.onnx --mesh facemesh.onnx --w W --h H
 //        with the face mesh (MediaPipe Face Landmarker): "M presence  x y z (points 33 263 10 152 1)  minx miny maxx maxy"
 //        in pixels of the frame (z: same scale, negative = closer to the camera), or "M 0"
-//   nothi-matte --task upscale --model sr.onnx --w W --h H --scale 4
+//   nothi-matte --task upscale --model sr.onnx --w W --h H --scale 4 [--tile 192]
 //        upscaling (Real-ESRGAN compact): reads rgb24 frames, writes rgb24 frames W*4 x H*4, in tiles
 //   --lowmem   less memory (no arena, basic graph optimisation, processor only). Used by itself when a load fails.
 //
@@ -216,6 +216,7 @@ struct Engine {
   }
   // ── faces (YuNet): BGR 0-255, letterboxed into the model's square; returns the face kept as a text line
   float px = -1, py = -1; // centre of the face kept on the previous frame
+  int pick = 0; // the first face: 0 the clearest, 1 the one on the left, 2 the one on the right
   std::string face(const unsigned char *rgb, int w, int h) {
     const float k = std::min((float)S / w, (float)T / h); const int nw = std::max(1, (int)(w * k)), nh = std::max(1, (int)(h * k));
     std::vector<float> in((size_t)3 * S * T, 0.f); const size_t plane = (size_t)S * T;
@@ -255,7 +256,13 @@ struct Engine {
     if (all.empty()) return "F 0";
     // keep the face that goes on from the last frame (else the most confident and biggest)
     int best = 0; float bv = -1e30f;
-    for (size_t q = 0; q < all.size(); q++) {
+    if (px < 0 && pick) { // left or right: among the real faces (not tiny ones far behind), the one on that side
+      float big = 0; for (auto &f : all) big = std::max(big, f.w * f.h);
+      float ex = pick == 1 ? 1e30f : -1e30f;
+      for (size_t q = 0; q < all.size(); q++) { const F &f = all[q]; if (f.w * f.h < big * 0.2f) continue; float c = f.x + f.w / 2; if (pick == 1 ? c < ex : c > ex) { ex = c; best = (int)q; } }
+      bv = 1e30f;
+    }
+    for (size_t q = 0; q < all.size() && bv < 1e29f; q++) {
       const F &f = all[q]; float v = f.s * 2 + std::log(1 + f.w * f.h) * 0.25f;
       if (px >= 0) { float dx = f.x + f.w / 2 - px, dy = f.y + f.h / 2 - py, dd = std::sqrt(dx * dx + dy * dy) / std::max(1.f, f.w); v -= dd * 3; }
       if (v > bv) { bv = v; best = (int)q; }
@@ -350,7 +357,7 @@ int main(int argc, char **argv) {
   std::vector<std::string> args(argv, argv + argc);
   std::string model, meshModel;
 #endif
-  int w = 0, h = 0, threads = 0, size = 0, scale = 4; std::string ep = "auto", task = "matte"; bool probe = false, lowmem = false;
+  int w = 0, h = 0, threads = 0, size = 0, scale = 4, tile = 0, pick = 0; std::string ep = "auto", task = "matte"; bool probe = false, lowmem = false;
   for (int i = 1; i < argc; i++) {
     const std::string &a = args[i]; auto next = [&]() -> std::string { return i + 1 < argc ? args[++i] : std::string(); };
     if (a == "--model") {
@@ -376,10 +383,12 @@ int main(int argc, char **argv) {
     }
     else if (a == "--lowmem") lowmem = true;
     else if (a == "--scale") scale = atoi(next().c_str());
+    else if (a == "--tile") tile = std::max(64, atoi(next().c_str()));
+    else if (a == "--pick") { std::string v = next(); pick = v == "left" ? 1 : v == "right" ? 2 : 0; }
     else if (a == "--version") { say("nothi-matte 1.0"); return 0; }
   }
   if (model.empty()) { say("usage: nothi-matte --model m.onnx --w W --h H"); return 2; }
-  Engine E; E.lowmem = lowmem;
+  Engine E; E.lowmem = lowmem; E.pick = pick;
   if (!E.open(model.c_str(), ep, threads)) {
     // not enough memory (or no graphics card): once more, light on memory, on the processor
     if (lowmem) { say("ERROR could not load the model"); return 3; }
@@ -389,12 +398,13 @@ int main(int argc, char **argv) {
   if (task == "upscale") {
     // tiles of 192 px with 12 px of margin (no seams), the model's output stitched back
     if (w <= 0 || h <= 0 || scale < 1) { say("ERROR missing --w/--h"); return 2; }
-    const int TL = 192, M = 12, W2 = w * scale, H2 = h * scale;
+    const int TL = tile > 0 ? tile : (E.ep == "cpu" ? 192 : 384), M = 12, W2 = w * scale, H2 = h * scale;
     std::vector<unsigned char> rgb((size_t)w * h * 3), out((size_t)W2 * H2 * 3);
     fprintf(stderr, "READY ep=%s\n", E.ep.c_str()); fflush(stderr);
     while (readAll(rgb.data(), rgb.size())) {
       for (int ty = 0; ty < h; ty += TL) for (int tx = 0; tx < w; tx += TL) {
-        const int x0 = std::max(0, tx - M), y0 = std::max(0, ty - M), x1 = std::min(w, tx + TL + M), y1 = std::min(h, ty + TL + M), tw = x1 - x0, th = y1 - y0;
+        // every tile the same size (the graphics card prepares one shape only): the last ones start a bit earlier
+        const int x0 = std::max(0, std::min(tx - M, w - (TL + 2 * M))), y0 = std::max(0, std::min(ty - M, h - (TL + 2 * M))), x1 = std::min(w, x0 + TL + 2 * M), y1 = std::min(h, y0 + TL + 2 * M), tw = x1 - x0, th = y1 - y0;
         std::vector<float> in((size_t)3 * tw * th);
         for (int y = 0; y < th; y++) for (int x = 0; x < tw; x++) for (int c = 0; c < 3; c++) in[(size_t)c * tw * th + (size_t)y * tw + x] = rgb[((size_t)(y0 + y) * w + x0 + x) * 3 + c] / 255.f;
         int64_t dims[4] = {1, 3, th, tw};
@@ -439,7 +449,7 @@ int main(int argc, char **argv) {
               if (M.pass(rgb.data(), w, h, pr)) { M.cropFromPoints(); got = M.pass(rgb.data(), w, h, pr); }
             }
           }
-          if (got) { line = M.line(pr); M.cropFromPoints(); } else line = "M 0";
+          if (got) { line = M.line(pr); M.cropFromPoints(); E.px = M.cx; E.py = M.cy; } else line = "M 0";
         } catch (const std::exception &x) { fprintf(stderr, "mesh run failed: %s\n", x.what()); line = "M 0"; M.have = false; }
         fprintf(stdout, "%s\n", line.c_str()); fflush(stdout);
         continue;
