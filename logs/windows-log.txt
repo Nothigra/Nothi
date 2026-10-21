@@ -1,0 +1,75 @@
+ V....D h264_mf              H264 via MediaFoundation (codec h264)
+ A....D aac                  AAC (Advanced Audio Coding)
+rc=0
+[aac @ 000001ee4d22b000] Input contains (near) NaN/+-Inf
+[aost#0:1/aac @ 000001ee4d22ab80] Error submitting audio frame to the encoder
+[aost#0:1/aac @ 000001ee4d22ab80] Error encoding a frame: Invalid argument
+[aost#0:1/aac @ 000001ee4d22ab80] Task finished with error code: -22 (Invalid argument)
+[aost#0:1/aac @ 000001ee4d22ab80] Terminating thread with return code -22 (Invalid argument)
+-rw-r--r-- 1 runneradmin 197121 5580711 Oct 21 20:16 t.mp4
+rc=0
+engine gpu failed: D:\a\_work\1\s\onnxruntime\core\providers\dml\dml_provider_factory.cc(442)\onnxruntime.dll!00007FFF32B846F0: (caller: 00007FFF32B849A8) Exception(1) tid(820) C0262002 Specified display adapter handle is invalid.
+
+PROBE ep=cpu size=1024x1024 ms=9668
+PROBE ep=cpu size=1024x1024 ms=9581
+rc=0
+PROBE ep=cpu size=1024x1024 ms=9670
+PROBE ep=cpu size=1024x1024 ms=9518
+rc=0
+engine gpu failed: D:\a\_work\1\s\onnxruntime\core\providers\dml\dml_provider_factory.cc(442)\onnxruntime.dll!00007FFF32B846F0: (caller: 00007FFF32B849A8) Exception(1) tid(1c18) C0262002 Specified display adapter handle is invalid.
+
+PROBE ep=cpu size=512x512 ms=275
+PROBE ep=cpu size=512x512 ms=254
+rc=0
+F 0
+F 0
+F 0
+F 0
+M 0
+M 0
+M 0
+M 0
+11059200
+
+real	0m3.648s
+user	0m0.060s
+sys	0m0.045s
+11059200
+
+real	0m6.532s
+user	0m0.060s
+sys	0m0.015s
+F 0
+F 0
+[in#0 @ 0000029aa7f83200] Error opening input: Protocol not found
+[in#0 @ 0000029aa7f83200] Did you mean file:fd:?
+Error opening input file -.
+Error opening input files: Protocol not found
+PROBE ep=cpu size=1024x1024 ms=11899
+PROBE ep=cpu size=1024x1024 ms=11888
+DONE
+
+real	1m25.998s
+user	0m0.000s
+sys	0m0.000s
+rc=0
+-rw-r--r-- 1 runneradmin 197121 15876000 Oct 21 20:19 voice.f32
+0000001.jpg
+0000002.jpg
+0000003.jpg
+vkCreateInstance failed -9
+vkCreateInstance failed -9
+
+real	0m12.554s
+user	0m0.000s
+sys	0m0.015s
+rife gpu: 24
+vkCreateInstance failed -9
+vkCreateInstance failed -9
+
+real	0m13.048s
+user	0m0.000s
+sys	0m0.000s
+rife cpu: 24
+-rw-r--r-- 1 runneradmin 197121 1610809 Oct 21 20:19 blur.mp4
+-rw-r--r-- 1 runneradmin 197121 1920596 Oct 21 20:19 blur.mov

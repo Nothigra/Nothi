@@ -1,0 +1,65 @@
+ V....D h264_videotoolbox    VideoToolbox H.264 Encoder (codec h264)
+ A....D aac                  AAC (Advanced Audio Coding)
+ A..... aac_at               aac (AudioToolbox) (codec aac)
+[aac @ 0x15a60a1a0] Input contains (near) NaN/+-Inf
+[aost#0:1/aac @ 0x15a609ed0] Error submitting audio frame to the encoder
+[aost#0:1/aac @ 0x15a609ed0] Error encoding a frame: Invalid argument
+[aost#0:1/aac @ 0x15a609ed0] Task finished with error code: -22 (Invalid argument)
+[aost#0:1/aac @ 0x15a609ed0] Terminating thread with return code -22 (Invalid argument)
+[h264_videotoolbox @ 0x15a607c20] Error: cannot create compression session: -12903
+[h264_videotoolbox @ 0x15a607c20] Try -allow_sw 1. The hardware encoder may be busy, or not supported.
+[vost#0:0/h264_videotoolbox @ 0x15a607950] Error while opening encoder - maybe incorrect parameters such as bit_rate, rate, width or height.
+[vf#0:0 @ 0x6000006b88c0] Error sending frames to consumers: Generic error in an external library
+[vf#0:0 @ 0x6000006b88c0] Task finished with error code: -542398533 (Generic error in an external library)
+[vf#0:0 @ 0x6000006b88c0] Terminating thread with return code -542398533 (Generic error in an external library)
+[vost#0:0/h264_videotoolbox @ 0x15a607950] Could not open encoder before EOF
+[vost#0:0/h264_videotoolbox @ 0x15a607950] Task finished with error code: -22 (Invalid argument)
+[vost#0:0/h264_videotoolbox @ 0x15a607950] Terminating thread with return code -22 (Invalid argument)
+[out#0/mp4 @ 0x6000002b8240] Nothing was written into output file, because at least one of its streams received no packets.
+-rw-r--r--  1 runner  staff  0 Oct 21 20:26 t.mp4
+PROBE ep=coreml size=1024x1024 ms=81226
+PROBE ep=coreml size=1024x1024 ms=194101
+PROBE ep=cpu size=1024x1024 ms=22386
+PROBE ep=cpu size=1024x1024 ms=37071
+PROBE ep=cpu size=512x512 ms=588
+PROBE ep=cpu size=512x512 ms=575
+F 0
+F 0
+F 0
+F 0
+M 0
+M 0
+M 0
+M 0
+ 11059200
+
+real	0m6.989s
+user	0m14.288s
+sys	0m1.791s
+[in#0 @ 0x600003d84000] Error opening input: Protocol not found
+[in#0 @ 0x600003d84000] Did you mean file:fd:?
+Error opening input file -.
+Error opening input files: Protocol not found
+DONE
+
+real	1m24.465s
+user	3m34.180s
+sys	0m17.880s
+0000001.jpg
+0000002.jpg
+0000003.jpg
+[0 Apple Paravirtual device]  fp16-p/s/a=1/1/1  int8-p/s/a=1/1/1
+[0 Apple Paravirtual device]  subgroup=32  basic=1  vote=1  ballot=1  shuffle=1
+
+real	0m4.708s
+user	0m4.041s
+sys	0m0.267s
+rife gpu:       24
+[0 Apple Paravirtual device]  fp16-p/s/a=1/1/1  int8-p/s/a=1/1/1
+[0 Apple Paravirtual device]  subgroup=32  basic=1  vote=1  ballot=1  shuffle=1
+
+real	0m17.223s
+user	0m21.722s
+sys	0m0.683s
+rife cpu:       24
+-rw-r--r--  1 runner  staff  1881241 Oct 21 20:33 blur.mov

@@ -1,0 +1,11 @@
+PROBE ep=cpu size=1024x1024 ms=8786
+PROBE ep=cpu size=1024x1024 ms=8687
+READY ep=cpu size=1024x1024
+-rw-r--r-- 1 runner runner 921600 Oct 21 20:16 alpha.raw
+P 1.000
+DONE
+
+real	1m18.221s
+user	2m32.342s
+sys	0m2.815s
+-rw-r--r-- 1 runner runner 10584000 Oct 21 20:18 voice.f32

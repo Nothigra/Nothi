@@ -1,0 +1,9 @@
+  failed https://nothilabs.com/ai/modnet.onnx.00 Download failed (HTTP 404)
+  got https://huggingface.co/Xenova/modnet/resolve/main/onnx/model.onnx 1.3s
+OK modnet /var/folders/s6/5hzmn6lx4dz5nxs7k_0slzph0000gn/T/nl-ai-YSJieK/modnet.onnx 25888640 2s
+  failed https://nothilabs.com/ai/birefnet_lite.onnx.00 Download failed (HTTP 404)
+  got https://huggingface.co/onnx-community/BiRefNet_lite-ONNX/resolve/main/onnx/model.onnx 3.8s
+OK model /var/folders/s6/5hzmn6lx4dz5nxs7k_0slzph0000gn/T/nl-ai-nfy0vB/birefnet_lite.onnx 224005088 4s
+  failed https://nothilabs.com/ai/voice_htdemucs_ft_vocals.bin.00 Download failed (HTTP 404)
+  got https://huggingface.co/datasets/Retrobear/demucs.cpp/resolve/main/ggml-model-htdemucs_ft_vocals-4s-f16.bin 2.3s
+OK voice /var/folders/s6/5hzmn6lx4dz5nxs7k_0slzph0000gn/T/nl-ai-50fDET/voice_htdemucs_ft_vocals.bin 83994361 3s
