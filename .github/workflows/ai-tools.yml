@@ -14,7 +14,7 @@ env:
     --enable-parser=h264,hevc,mpeg4video,mpegvideo,vp8,vp9,png,gif,aac,aac_latm,ac3,mpegaudio,dca,flac,opus,vorbis,mlp
     --enable-muxer=wav,image2,rawvideo,mp4,mov,pcm_f32le
     --enable-encoder=pcm_s16le,pcm_s24le,pcm_f32le,mjpeg,rawvideo,aac,png,prores_ks
-    --enable-filter=tmix,select,abuffer,abuffersink,aformat,anull,aresample,atrim,asetpts,anullsink,buffer,buffersink,format,null,scale,fps,trim,setpts,pad,volume,pan,apad,amix,aevalsrc
+    --enable-filter=tmix,select,alphamerge,alphaextract,gblur,abuffer,abuffersink,aformat,anull,aresample,atrim,asetpts,anullsink,buffer,buffersink,format,null,scale,fps,trim,setpts,pad,volume,pan,apad,amix,aevalsrc
     --enable-static --disable-shared
 jobs:
   # ---------------------------------------------------------------- models (huggingface is reachable from here)
