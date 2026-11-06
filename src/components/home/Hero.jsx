@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useUnifiedSearch } from '../../hooks/useUnifiedSearch';
 import SearchDropdown from '../common/SearchDropdown';
 import { SOFTWARE_LIST } from '../../lib/seed';
+import { useAuth } from '../../context/AuthContext';
 import './Hero.css';
 
 const searchTerms = [
@@ -186,21 +187,16 @@ function TypewriterText({ text, className }) {
 
 /* ─────────────── Hero Component ─────────────── */
 export default function Hero() {
+  const { isAuthenticated } = useAuth();
   return (
     <section className="hero-section">
 
-      {/* Background motion visual */}
-      <video 
-        className="hero-bg-visual" 
-        preload="metadata"
-        autoPlay 
-        loop 
-        muted 
-        playsInline 
-        aria-hidden="true" 
-      >
-        <source src="/VideoSiteweb.mp4" type="video/mp4" />
-      </video>
+      {/* Slow animated gradient (light on the GPU: transforms only) */}
+      <div className="hero-aurora" aria-hidden="true">
+        <span className="hero-aurora-blob a" />
+        <span className="hero-aurora-blob b" />
+        <span className="hero-aurora-blob c" />
+      </div>
       <div className="hero-bg-fade" aria-hidden="true" />
 
       {/* Mouse-following light */}
@@ -244,7 +240,7 @@ export default function Hero() {
             <Link to="/marketplace" className="btn btn-primary btn-lg btn-pill text-center justify-center">
               Browse Marketplace
             </Link>
-            <Link to="/login" className="btn btn-outline btn-lg btn-pill text-center justify-center">
+            <Link to={isAuthenticated ? '/dashboard/upload' : '/login'} className="btn btn-outline btn-lg btn-pill text-center justify-center">
               Start Selling
             </Link>
           </div>

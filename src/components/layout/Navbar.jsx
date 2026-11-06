@@ -5,7 +5,6 @@ import { Menu, X, Sun, Moon, ShoppingCart, Heart, Gift, Palette, MessageSquare, 
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useGamification } from '../../context/GamificationContext';
-import { languages } from '../../config/i18n';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useAuth } from '../../context/AuthContext';
@@ -15,7 +14,7 @@ import MobileMenu from './MobileMenu';
 import './Navbar.css';
 
 export default function Navbar() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { theme, toggleTheme } = useTheme();
   const { items: cartItems, openCart } = useCart();
   const { items: wishlistItems } = useWishlist();
@@ -25,7 +24,6 @@ export default function Navbar() {
   const location = useLocation();
   
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLangOpen, setIsLangOpen] = useState(false);
   const [isThemeOpen, setIsThemeOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -48,11 +46,6 @@ export default function Navbar() {
   ];
 
 
-
-  const toggleLanguage = (langCode) => {
-    i18n.changeLanguage(langCode);
-    setIsLangOpen(false);
-  };
 
   return (
     <>
@@ -101,46 +94,6 @@ export default function Navbar() {
               {theme === 'light' ? <Sun size={18} /> : theme === 'custom' ? <Palette size={18} className="text-accent" /> : <Moon size={18} />}
             </button>
 
-            {/* Language Selector */}
-            <div className="lang-dropdown-wrapper hidden-mobile">
-              <button 
-                className="action-btn text-sm font-medium flex items-center gap-1"
-                onClick={() => setIsLangOpen(!isLangOpen)}
-              >
-                {languages.find(l => l.code === (i18n.language || 'en').split('-')[0])?.flag || '🇬🇧'}
-                <span style={{ marginLeft: '4px' }}>{(i18n.language || 'en').split('-')[0].toUpperCase()}</span>
-              </button>
-              
-              <AnimatePresence>
-                {isLangOpen && (
-                  <motion.div 
-                    className="lang-dropdown"
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                  >
-                    {languages.map((lang) => {
-                      const isActiveLang = (i18n.language || 'en').startsWith(lang.code);
-                      return (
-                        <button 
-                          key={lang.code}
-                          onClick={() => toggleLanguage(lang.code)} 
-                          className={`lang-option ${isActiveLang ? 'active' : ''}`}
-                        >
-                          <span className="lang-flag">{lang.flag}</span>
-                          <span className="lang-name">{lang.name}</span>
-                          {isActiveLang && (
-                            <motion.div layoutId="active-lang-dot" className="active-lang-dot" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
             {/* Rewards */}
             <Link to="/rewards" className="action-btn relative hidden-mobile" title="Rewards">
               <Gift size={16} />
@@ -182,8 +135,11 @@ export default function Navbar() {
                   )}
                 </button>
                 
+                <AnimatePresence>
                 {isProfileOpen && (
-                  <div className="lang-dropdown" style={{ right: 0, minWidth: '160px', padding: '8px' }}>
+                  <motion.div className="lang-dropdown" style={{ right: 0, minWidth: '180px', padding: '8px' }}
+                    initial={{ opacity: 0, y: -8, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}>
                     <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--color-border)', marginBottom: '8px' }}>
                       <div style={{ fontWeight: 600, fontSize: '14px' }}>{profile?.username || 'Creator'}</div>
                     </div>
@@ -197,8 +153,9 @@ export default function Navbar() {
                     <button onClick={() => { logout(); setIsProfileOpen(false); }} className="nav-link" style={{ width: '100%', textAlign: 'left', padding: '8px 12px', color: 'var(--color-error, #ef4444)' }}>
                       {t('nav.signOut', 'Log Out')}
                     </button>
-                  </div>
+                  </motion.div>
                 )}
+                </AnimatePresence>
               </div>
             )}
 

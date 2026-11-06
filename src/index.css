@@ -506,12 +506,28 @@ h6 {
 }
 
 
-.btn:hover {
-  opacity: 0.85;
+.btn {
+  transition:
+    background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+    box-shadow 0.25s ease, opacity 0.2s ease,
+    transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.btn:active {
-  transform: scale(0.98);
+.btn:hover {
+  opacity: 0.92;
+}
+
+/* Small lift on hover, press-in on click — every button on the site */
+@media (hover: hover) {
+  .btn:not(:disabled):not(.btn-icon):hover { transform: translateY(-1px); }
+  .btn-primary:not(:disabled):hover { box-shadow: 0 8px 24px color-mix(in srgb, var(--color-accent) 22%, transparent); }
+  .btn-outline:not(:disabled):hover,
+  .btn-secondary:not(:disabled):hover { border-color: var(--color-text-tertiary); }
+}
+
+.btn:not(:disabled):active {
+  transform: scale(0.97);
+  transition-duration: 0.08s;
 }
 
 .btn-primary {
@@ -1455,3 +1471,12 @@ tr:hover td { background: var(--color-bg-secondary); }
 /* No visible scrollbars anywhere on the site (scrolling still works) */
 html, body, * { scrollbar-width: none; }
 ::-webkit-scrollbar { width: 0; height: 0; background: transparent; }
+
+/* Clickable cards and links: gentle, consistent feedback */
+a, button { -webkit-tap-highlight-color: transparent; }
+.sidebar-link { transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease; }
+.sidebar-link:active { transform: scale(0.98); }
+@media (prefers-reduced-motion: reduce) {
+  .btn, .sidebar-link { transition: none; }
+  .btn:hover, .btn:active { transform: none !important; }
+}
