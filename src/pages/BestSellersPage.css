@@ -1,5 +1,5 @@
 .bestsellers-page {
-  padding-top: 140px;
+  padding-top: 56px; /* same title height as the other pages */
   padding-bottom: var(--space-4xl);
   max-width: 1200px;
   margin: 0 auto;

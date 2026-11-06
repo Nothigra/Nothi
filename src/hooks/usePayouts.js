@@ -176,7 +176,7 @@ export function usePayouts() {
         : '';
       // Sales are paid out after a short holding period (refunds/chargebacks)
       const waitNote = data?.held_cents > 0
-        ? ` ${formatEur(data.held_cents / 100)} from your latest sales will be ready on ${new Date(data.next_release_at).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })} (sales are paid out ${data.hold_days} days after purchase).`
+        ? ` ${formatEur(data.held_cents / 100)} from your latest sales will be ready on ${new Date(data.next_release_at).toLocaleDateString(document.documentElement.lang || 'en', { day: 'numeric', month: 'long' })} (sales are paid out ${data.hold_days} days after purchase).`
         : '';
       if (data?.not_ready) {
         setStripeMessage({ type: 'warning', text: 'Your Stripe account isn\'t fully verified yet. Please check back in a few minutes.' });

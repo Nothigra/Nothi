@@ -316,7 +316,7 @@ export default function DashboardProducts() {
                           <span className="dp-sale-price">
                             <s>{formatPrice(product.price)}</s> {formatPrice(product.sale_price)}
                             <span className="dp-sale-badge">
-                              Sale{product.sale_ends_at ? ` · until ${new Date(product.sale_ends_at).toLocaleDateString()}` : ''}
+                              Sale{product.sale_ends_at ? ` · until ${new Date(product.sale_ends_at).toLocaleDateString(document.documentElement.lang || 'en')}` : ''}
                             </span>
                           </span>
                         ) : (

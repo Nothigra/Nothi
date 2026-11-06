@@ -68,7 +68,7 @@ export default function DashboardBadges() {
             <i style={{ width: `${Math.round(levelProgress(xp, level) * 100)}%` }} />
           </div>
           <div className="nb-grade-sub">
-            {xp.toLocaleString()} XP · {Math.max(0, xpForLevel(level + 1) - xp).toLocaleString()} XP {t('grades.toNextLevel', { defaultValue: 'to level' })} {level + 1}
+            {xp.toLocaleString(document.documentElement.lang || 'en')} XP · {Math.max(0, xpForLevel(level + 1) - xp).toLocaleString(document.documentElement.lang || 'en')} XP {t('grades.toNextLevel', { defaultValue: 'to level' })} {level + 1}
             {next && <> · {t(`grades.${next.id}`, { defaultValue: next.label })} {t('grades.atLevel', { defaultValue: 'at level' })} {next.level}</>}
           </div>
           <ol className="nb-grade-ladder" aria-label={t('badges.ui.grades', { defaultValue: 'Grades' })}>

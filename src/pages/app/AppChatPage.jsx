@@ -23,7 +23,7 @@ function dayLabel(iso) {
   const days = Math.floor((new Date(now.toDateString()) - new Date(d.toDateString())) / 86400000);
   if (days === 0) return 'Today';
   if (days === 1) return 'Yesterday';
-  return d.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+  return d.toLocaleDateString(document.documentElement.lang || 'en', { weekday: 'long', day: 'numeric', month: 'long' });
 }
 const time = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 

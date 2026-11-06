@@ -68,7 +68,8 @@
 
 /* While compact: hide labels and re-inflate icons, counteracting the parent's
    scaleY so they stay visually crisp and undistorted instead of squashed. */
-.mobile-bottom-nav.compact .mbn-item span {
+/* (labels only: the profile picture is a span too and must stay visible) */
+.mobile-bottom-nav.compact .mbn-item > span:not(.mbn-center-avatar) {
   opacity: 0;
 }
 

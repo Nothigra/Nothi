@@ -106,7 +106,7 @@ export default function AppPayoutsPage() {
                 <span className="app-sale-avatar"><Banknote size={18} /></span>
                 <span className="app-result-meta">
                   <span className="app-result-title">{getLocalizedString(t.product?.title, lang) || 'Sale'}</span>
-                  <span className="app-result-sub">{new Date(t.purchased_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  <span className="app-result-sub">{new Date(t.purchased_at).toLocaleDateString(document.documentElement.lang || 'en', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 </span>
                 <span className="app-sale-amount">+{formatEur((t.seller_amount_cents || 0) / 100)}</span>
               </div>

@@ -26,6 +26,8 @@ const rtlLanguages = ['ar'];
 const updateDirection = (lng) => {
   const dir = rtlLanguages.includes(lng) ? 'rtl' : 'ltr';
   document.documentElement.setAttribute('dir', dir);
+  // Dates and numbers follow the site language, not the browser's
+  document.documentElement.setAttribute('lang', (lng || 'en').split('-')[0]);
 };
 
 const currentLang = localStorage.getItem('digilab-lang') || 'en';

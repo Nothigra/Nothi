@@ -262,7 +262,7 @@ export default function ProductPage() {
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [product]);
+  }, [product, loading]); // the buttons only exist once loading is over
 
   if (loading) {
     return (
@@ -666,7 +666,7 @@ export default function ProductPage() {
                                   <CheckCircle2 size={10}/> Verified Buyer
                                 </span>
                               </div>
-                              <div className="review-date">{new Date(review.created_at).toLocaleDateString()}</div>
+                              <div className="review-date">{new Date(review.created_at).toLocaleDateString(i18n.language)}</div>
                             </div>
                           </div>
                           <div className="flex text-warning">
@@ -764,9 +764,9 @@ export default function ProductPage() {
               <h4 className="font-bold mb-md">Product Details</h4>
               <ul className="space-y-sm text-sm">
 {[
-                  ['Published', product.created_at ? new Date(product.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : null],
+                  ['Published', product.created_at ? new Date(product.created_at).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' }) : null],
                   ['Updated', product.updated_at && product.created_at && new Date(product.updated_at) - new Date(product.created_at) > 86400000
-                    ? new Date(product.updated_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : null],
+                    ? new Date(product.updated_at).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' }) : null],
                   ['Category', product.category ? t(`categories.${product.category}`, { defaultValue: product.category }) : null],
                   ['Format', product.format || null],
                   ['File size', product.file_size || null],
@@ -792,7 +792,7 @@ export default function ProductPage() {
         {relatedProducts.length > 0 && (
           <div className="related-products mt-4xl pt-2xl border-t border-border">
             <h2 className="section-title mb-xl">{t('product.relatedProducts')}</h2>
-            <div className="products-grid">
+            <div className="products-grid products-grid-view">
               {relatedProducts.map(related => (
                 <ProductCard key={related.id} product={related} />
               ))}

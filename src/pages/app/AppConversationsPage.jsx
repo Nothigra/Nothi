@@ -15,8 +15,8 @@ function when(iso) {
   const days = Math.floor((new Date(now.toDateString()) - new Date(d.toDateString())) / 86400000);
   if (days === 0) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   if (days === 1) return 'Yesterday';
-  if (days < 7) return d.toLocaleDateString(undefined, { weekday: 'short' });
-  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  if (days < 7) return d.toLocaleDateString(document.documentElement.lang || 'en', { weekday: 'short' });
+  return d.toLocaleDateString(document.documentElement.lang || 'en', { day: 'numeric', month: 'short' });
 }
 
 const previewText = (m) => {

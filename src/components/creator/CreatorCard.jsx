@@ -57,11 +57,11 @@ export default function CreatorCard({ creator, rank }) {
       <div className="creator-stats">
         <div className="stat-item">
           <TrendingUp size={16} />
-          <span>{creator.sales.toLocaleString()} sales</span>
+          <span>{creator.sales.toLocaleString(document.documentElement.lang || 'en')} sales</span>
         </div>
         <div className="stat-item">
           <Users size={16} />
-          <span>{creator.followers.toLocaleString()} followers</span>
+          <span>{creator.followers.toLocaleString(document.documentElement.lang || 'en')} followers</span>
         </div>
         <div className="stat-item">
           <Package size={16} />

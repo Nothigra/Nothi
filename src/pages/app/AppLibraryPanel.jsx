@@ -19,7 +19,7 @@ function ago(iso) {
   if (d < 1) return 'Today';
   if (d < 2) return 'Yesterday';
   if (d < 30) return `${Math.floor(d)} days ago`;
-  return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  return new Date(iso).toLocaleDateString(document.documentElement.lang || 'en', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 /** The buyer's library: every asset they own, one tap to download. Works offline from the last copy. */

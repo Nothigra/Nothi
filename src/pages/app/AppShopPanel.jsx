@@ -27,7 +27,7 @@ function ago(iso) {
   if (m < 60) return `${Math.max(1, Math.round(m))} min ago`;
   if (m < 1440) return `${Math.round(m / 60)} h ago`;
   if (m < 2880) return 'Yesterday';
-  return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  return new Date(iso).toLocaleDateString(document.documentElement.lang || 'en', { day: 'numeric', month: 'short' });
 }
 
 /** The seller's shop at a glance: money, numbers, latest sales and products with quick actions. */

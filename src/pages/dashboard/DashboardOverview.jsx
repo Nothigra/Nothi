@@ -374,7 +374,7 @@ export default function DashboardOverview() {
                       <div className="font-medium text-sm text-primary">{o.product}</div>
                       <div className="text-xs text-secondary">{o.customer}</div>
                     </td>
-                    <td className="text-sm text-secondary py-md col-date">{new Date(o.date).toLocaleDateString()}</td>
+                    <td className="text-sm text-secondary py-md col-date">{new Date(o.date).toLocaleDateString(document.documentElement.lang || 'en')}</td>
                     <td className="text-sm font-medium pr-xl text-right py-md">{formatPrice(o.amount)}</td>
                   </tr>
                 ))}

@@ -124,7 +124,7 @@ export default function DashboardPayouts() {
             <div className="pt-lg border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md">
               <div className="mb-sm sm:mb-0">
                 <p className="text-sm font-medium">Estimated Arrival</p>
-                <p className="text-xs text-secondary">{new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString()} - {new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString()}</p>
+                <p className="text-xs text-secondary">{new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString(document.documentElement.lang || 'en')} - {new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString(document.documentElement.lang || 'en')}</p>
               </div>
               <button
                 className="btn btn-primary px-2xl py-md text-base shadow-lg hover:-translate-y-1 transition-transform"
@@ -259,7 +259,7 @@ export default function DashboardPayouts() {
 
                 <div className="mt-xl p-md bg-bg-tertiary rounded-lg text-sm text-secondary leading-snug">
                   <span className="font-medium text-primary block mb-xs">Tax Information</span>
-                  Ensure your W-9 / W-8BEN forms are up to date in Stripe to avoid withholding taxes.
+                  Keep your identity and tax details up to date in your Stripe account so payouts are never paused.
                 </div>
               </>
             ) : isPendingVerify ? (
@@ -363,7 +363,7 @@ export default function DashboardPayouts() {
                   </tr>
                 ) : transfers.length > 0 ? transfers.map((wd) => (
                   <tr key={wd.id} className="hover:bg-bg-tertiary transition-colors cursor-pointer">
-                    <td className="pl-xl text-sm font-medium">{new Date(wd.purchased_at).toLocaleDateString()}</td>
+                    <td className="pl-xl text-sm font-medium">{new Date(wd.purchased_at).toLocaleDateString(document.documentElement.lang || 'en')}</td>
                     <td className="text-sm font-bold text-primary">{formatEur(wd.seller_amount_cents / 100)}</td>
                     <td>
                       <span className="badge badge-success text-xs px-sm py-[2px] rounded-full flex items-center gap-xs w-max">

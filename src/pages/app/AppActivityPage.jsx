@@ -17,7 +17,7 @@ function ago(iso) {
   if (m < 60) return `${Math.round(m)} min`;
   if (m < 1440) return `${Math.round(m / 60)} h`;
   if (m < 10080) return `${Math.round(m / 1440)} d`;
-  return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  return new Date(iso).toLocaleDateString(document.documentElement.lang || 'en', { day: 'numeric', month: 'short' });
 }
 
 /** Notifications, app version: real activity — sales, messages, new assets in your library. */
