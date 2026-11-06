@@ -17,7 +17,7 @@ import BadgeIcon from '../components/common/BadgeIcon';
 import BrandedLoader from '../components/common/BrandedLoader';
 import { supabase, withTimeoutSafety, invokeFunction } from '../lib/supabase';
 import { BADGE_CATALOG, fetchGamificationState } from '../api/gamificationApi';
-import { RARITIES } from '../lib/badgeArt';
+import { RARITIES, gradeFor } from '../lib/badgeArt';
 import Input from '../components/ui/Input';
 import Textarea from '../components/ui/Textarea';
 import { useTranslation } from 'react-i18next';
@@ -1028,9 +1028,11 @@ export default function CreatorProfilePage() {
             <h1 className="profile-name flex items-center justify-center md:justify-start gap-xs">
               {shopSettings.name !== undefined ? shopSettings.name : (creator.name || creator.username)}
             </h1>
+            {((shopSettings.bio !== undefined ? shopSettings.bio : creator.bio) || isOwner) && (
             <p className={`profile-bio mt-xs mx-auto md:mx-0 ${!(shopSettings.bio !== undefined ? shopSettings.bio : creator.bio) ? 'text-secondary opacity-60 italic' : ''}`}>
               {(shopSettings.bio !== undefined ? shopSettings.bio : creator.bio) || 'Write your bio...'}
             </p>
+            )}
             
             {!isOwner && user && (
               <div className="mt-md flex justify-center md:justify-start gap-sm">
@@ -1096,8 +1098,8 @@ export default function CreatorProfilePage() {
               <span className="stat-lbl">Products</span>
             </div>
             <div className="profile-stat">
-              <span className="stat-num uppercase" style={{ color: `var(--color-text-primary)` }}>{creator.tier}</span>
-              <span className="stat-lbl">Creator Tier</span>
+              <span className="stat-num uppercase" style={{ color: `var(--color-text-primary)` }}>{t(`grades.${gradeFor(creator.level).id}`, { defaultValue: gradeFor(creator.level).label })}</span>
+              <span className="stat-lbl">{t('grades.level', { defaultValue: 'Level' })} {creator.level || 1}</span>
             </div>
             <div className="profile-stat">
               <div className="flex items-center gap-xs">
@@ -1131,6 +1133,7 @@ export default function CreatorProfilePage() {
           )}
 
           {/* Links Placeholder inside Header Card (Optional) */}
+          {(isOwner || (shopSettings.links && shopSettings.links.length > 0)) && (
           <div className={`w-full mt-md pt-md border-t border-border relative rounded-lg p-xs -mx-xs border border-transparent transition-colors ${isEditing ? 'edit-mode-wrapper group hover:border-dashed hover:border-border' : ''}`}>
              <div className="flex flex-wrap gap-sm justify-center md:justify-start">
                {(!shopSettings.links || shopSettings.links.length === 0) ? (
@@ -1155,10 +1158,11 @@ export default function CreatorProfilePage() {
               </>
             )}
           </div>
+          )}
         </div>
 
-        {/* Featured Products */}
-        {(shopSettings.show_featured !== false || isEditing) && (
+        {/* Featured Products (visitors only see it when something is featured) */}
+        {(isEditing || (shopSettings.show_featured !== false && (isOwner || (shopSettings.featured_products || []).some(id => creatorProducts.some(p => p.id === id))))) && (
           <>
             <div 
               className={`profile-content mb-xl relative p-md -mx-md border rounded-xl transition-all ${isEditing ? 'edit-mode-wrapper group' : 'border-transparent'} ${shopSettings.show_featured === false ? 'opacity-50 grayscale' : ''} ${isDraggingOverFeatured ? 'bg-bg-secondary border-accent border-dashed' : (isEditing ? 'hover:border-dashed hover:border-border border-transparent' : '')}`}
