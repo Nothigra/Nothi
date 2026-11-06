@@ -1,95 +1,33 @@
-.avatar-frame-container {
-  display: inline-block;
-  position: relative;
+.nb-avatar { position: relative; display: inline-block; flex: none; vertical-align: middle; }
+.nb-avatar-img {
+  width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;
+  background: var(--color-bg-tertiary, #1b1c20);
 }
-
-.avatar-frame-wrapper {
-  position: relative;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
+.nb-avatar-letter {
+  display: grid; place-items: center;
+  font: 600 calc(var(--nb-av, 48px) * .42) / 1 var(--font-sans);
+  color: var(--color-text-secondary);
 }
-
-.avatar-frame-img,
-.avatar-frame-placeholder {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-  z-index: 2;
-  position: relative;
+.nb-avatar-xs .nb-avatar-letter { font-size: 11px; }
+.nb-avatar-sm .nb-avatar-letter { font-size: 14px; }
+.nb-avatar-md .nb-avatar-letter { font-size: 20px; }
+.nb-avatar-lg .nb-avatar-letter { font-size: 38px; }
+.nb-avatar-xl .nb-avatar-letter { font-size: 56px; }
+.nb-avatar-ring { position: absolute; pointer-events: none; color: var(--color-text-primary); }
+.nb-avatar-ring .nb-ring { width: 100%; height: 100%; display: block; }
+.nb-avatar-pin { position: absolute; transform: translate(-50%, -50%); line-height: 0; }
+.nb-avatar-level {
+  position: absolute; left: 50%; bottom: -12%; transform: translateX(-50%);
+  font: 600 11px/1 var(--font-mono, ui-monospace, monospace); font-variant-numeric: tabular-nums;
+  padding: 4px 7px 3px; border-radius: 6px; white-space: nowrap;
+  background: var(--color-bg-card, #111); color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
 }
-
-.avatar-frame-border {
-  position: absolute;
-  inset: -3px;
-  border-radius: 50%;
-  z-index: 3;
-  pointer-events: none;
-}
-
-/* Tier: None */
-.frame-tier-none .avatar-frame-border {
-  border: none;
-  box-shadow: none;
-  background: transparent;
-}
-
-/* Tier: Bronze */
-.frame-tier-bronze .avatar-frame-border {
-  border: 2px solid #CD7F32; 
-}
-
-/* Tier: Silver */
-.frame-tier-silver .avatar-frame-border {
-  border: 2px solid #C0C0C0; 
-}
-
-/* Tier: Gold */
-.frame-tier-gold .avatar-frame-border {
-  border: 3px solid #FFD700;
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.4), inset 0 0 10px rgba(255, 215, 0, 0.2);
-  animation: goldPulse 3s infinite alternate;
-}
-
-@keyframes goldPulse {
-  0% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.3), inset 0 0 5px rgba(255, 215, 0, 0.2); }
-  100% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.6), inset 0 0 15px rgba(255, 215, 0, 0.4); }
-}
-
-/* Tier: Platinum */
-.frame-tier-platinum .avatar-frame-border {
-  border: 3px solid transparent;
-  background: linear-gradient(var(--color-bg-card), var(--color-bg-card)) padding-box,
-              linear-gradient(45deg, #E5E4E2, #8A2BE2, #00FFFF, #E5E4E2) border-box;
-  animation: platinumSpin 4s linear infinite;
-  box-shadow: 0 0 20px rgba(138, 43, 226, 0.4);
-}
-
-.frame-tier-platinum .avatar-frame-img,
-.frame-tier-platinum .avatar-frame-placeholder {
-  background: var(--color-bg-card); /* prevent transparent bleed */
-}
-
-/* One-time unlock pulse animation */
-@keyframes newUnlockPulse {
-  0% { transform: scale(1); filter: brightness(1); }
-  50% { transform: scale(1.1); filter: brightness(1.5); box-shadow: 0 0 20px rgba(255, 255, 255, 0.8); }
-  100% { transform: scale(1); filter: brightness(1); }
-}
-
-.new-unlock-pulse .avatar-frame-border {
-  animation: newUnlockPulse 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1 !important;
-}
-
-@keyframes platinumSpin {
-  0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-  100% { background-position: 100% 50%; filter: hue-rotate(360deg); }
-}
-
-/* Sizes */
-.size-sm .avatar-frame-border { inset: -2px; border-width: 2px; }
-.size-lg .avatar-frame-border { inset: -4px; border-width: 4px; }
-.size-xl .avatar-frame-border { inset: -6px; border-width: 6px; }
+.nb-avatar-level.grade-bronze { border-color: #c07a43; }
+.nb-avatar-level.grade-silver { border-color: #c9ced4; }
+.nb-avatar-level.grade-gold { border-color: #e2b04a; }
+.nb-avatar-level.grade-platinum { border-color: #b9d3e8; }
+.nb-avatar-level.grade-diamond { border-color: #b18cff; }
+.nb-avatar.is-new .nb-avatar-ring { animation: nb-ring-in .8s ease-out; }
+@keyframes nb-ring-in { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .nb-avatar.is-new .nb-avatar-ring { animation: none; } }

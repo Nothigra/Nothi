@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Menu, X, Sun, Moon, ShoppingCart, Heart, Gift, Palette, MessageSquare, Tag, Search } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, X, Sun, Moon, ShoppingCart, Heart, Gift, Palette, MessageSquare, Search } from 'lucide-react';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useGamification } from '../../context/GamificationContext';
 import { languages } from '../../config/i18n';
@@ -62,7 +62,7 @@ export default function Navbar() {
           {/* Left: Logo */}
           <div className="navbar-left">
             <Link to="/" className="navbar-logo-wrapper">
-              <img src="/logo.png" alt="Nothi Logo" className="navbar-logo-img" />
+              <img src="/logo-mark.png" alt="Nothi" className="navbar-logo-img" width="44" height="34" />
               <span className="navbar-logo">Nothi</span>
             </Link>
           </div>
@@ -176,7 +176,7 @@ export default function Navbar() {
                   className="action-btn !bg-transparent p-0 relative"
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                 >
-                  <AvatarFrame tier={profile?.tier} imageUrl={profile?.avatar_url || (profile?.shop_settings?.profile_image_url || `https://ui-avatars.com/api/?name=${profile?.username || 'User'}&background=random`)} size="sm" />
+                  <AvatarFrame level={profile?.level} imageUrl={profile?.avatar_url || profile?.shop_settings?.profile_image_url || null} name={profile?.username} size="sm" />
                   {(hasNewBadges || unreadMessages > 0) && (
                     <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-danger rounded-full border-2 border-bg z-10"></span>
                   )}
@@ -211,9 +211,11 @@ export default function Navbar() {
               {theme === 'light' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 
-            <Link to="/pricing" className="action-btn mobile-header-only" aria-label="Pricing" title="Pricing">
-              <Tag size={18} />
-            </Link>
+            {!isAuthenticated && (
+              <Link to="/login" className="btn btn-outline btn-sm mobile-header-only mobile-signin">
+                {t('nav.signIn', 'Sign In')}
+              </Link>
+            )}
 
             <Link
               to="/marketplace"

@@ -1,16 +1,14 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 import { Search, X, ChevronDown, ChevronRight, ArrowLeft, SlidersHorizontal } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import ProductCard from '../components/product/ProductCard';
-import { getLocalizedString } from '../utils/i18nHelpers';
 import { useAuth } from '../context/AuthContext';
-import { isNativeApp } from '../lib/native';
 import { useScreenFocus } from '../lib/screenFocus';
-import { peekPublicProducts, getPublicProducts } from '../api/productApi';
-import { MOCK_CREATORS, CATEGORIES as categories, SOFTWARE_LIST as softwareList, STYLE_LIST as styleList } from '../lib/seed';
+import { queryPublicProducts } from '../api/productApi';
+import { CATEGORIES as categories, SOFTWARE_LIST as softwareList, STYLE_LIST as styleList } from '../lib/seed';
 import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import Checkbox from '../components/ui/Checkbox';
@@ -74,16 +72,21 @@ export default function MarketplacePage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Paint instantly from the last loaded catalogue, then refresh in the background
-  const [products, setProducts] = useState(() => peekPublicProducts(isMockMode) || []);
-  const [loading, setLoading] = useState(() => !peekPublicProducts(isMockMode)); // Distinct local loading state
+  // Products come page by page from the database (filters + sort run there)
+  const PAGE_SIZE = 24;
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(null);
+  const sentinelRef = useRef(null);
 
   const [selectedPrice, setSelectedPrice] = useState(savedFilters?.selectedPrice || 'all');
   const [selectedRating, setSelectedRating] = useState(savedFilters?.selectedRating || 'all');
   const [selectedSoftware, setSelectedSoftware] = useState(savedFilters?.selectedSoftware || profile?.software || []);
   const [selectedStyle, setSelectedStyle] = useState(savedFilters?.selectedStyle || profile?.style || []);
   const [showPaid, setShowPaid] = useState(savedFilters?.showPaid !== undefined ? savedFilters.showPaid : true);
-  const [showFree, setShowFree] = useState(savedFilters?.showFree !== undefined ? savedFilters.showFree : false);
+  const [showFree, setShowFree] = useState(savedFilters?.showFree !== undefined ? savedFilters.showFree : true);
   // Mobile filter sheet navigation: 'main' shows Paid/Free + the 3 category
   // buttons; drilling into one shows its own checkbox list with a back arrow.
   const [filterView, setFilterView] = useState('main');
@@ -126,28 +129,71 @@ export default function MarketplacePage() {
     }));
   }, [searchTerm, selectedPrice, selectedRating, selectedSoftware, selectedStyle, showPaid, showFree, sortBy]);
 
-  useEffect(() => {
-    let isMounted = true;
-    async function loadProducts() {
-      if (isAuthLoading) return;
-      if (!peekPublicProducts(isMockMode)) setLoading(true); // spinner only on a cold start
-      const data = await getPublicProducts(isMockMode, true);
-      if (isMounted) {
-        setProducts(data); // same array when nothing changed → no re-render
-        setLoading(false);
-      }
-    }
-    loadProducts();
-    return () => { isMounted = false; };
-  }, [isMockMode, isAuthLoading, location.key]);
-
   const priceRanges = [
     { id: 'all', label: t('marketplace.priceRange') },
     { id: 'free', label: t('common.free'), min: 0, max: 0 },
-    { id: 'under25', label: 'Under $25', min: 0, max: 24.99 },
-    { id: '25to50', label: '$25 - $50', min: 25, max: 50 },
-    { id: 'over50', label: '$50+', min: 50.01, max: 9999 }
+    { id: 'under25', label: 'Under €25', min: 0, max: 24.99 },
+    { id: '25to50', label: '€25 - €50', min: 25, max: 50 },
+    { id: 'over50', label: '€50+', min: 50.01, max: 9999 }
   ];
+
+  // What the database is asked for — rebuilt only when a filter really changes
+  const softwareKey = selectedSoftware.join('|');
+  const styleKey = selectedStyle.join('|');
+  const query = useMemo(() => {
+    const range = priceRanges.find(r => r.id === selectedPrice);
+    const rating = { '4': 4, '3': 3 }[selectedRating];
+    return {
+      category: selectedCategory,
+      software: softwareKey ? softwareKey.split('|') : [],
+      style: styleKey ? styleKey.split('|') : [],
+      free: showPaid === showFree ? undefined : showFree,
+      priceMin: range && range.id !== 'all' ? range.min : undefined,
+      priceMax: range && range.id !== 'all' ? range.max : undefined,
+      minRating: rating,
+      search: debouncedQuery || '',
+      sort: sortBy,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory, softwareKey, styleKey, showPaid, showFree, selectedPrice, selectedRating, debouncedQuery, sortBy]);
+
+  useEffect(() => {
+    if (isAuthLoading) return;
+    let alive = true;
+    setLoading(true);
+    queryPublicProducts({ ...query, limit: PAGE_SIZE, offset: 0 }, isMockMode).then(({ items, count }) => {
+      if (!alive) return;
+      setProducts(items);
+      setTotalCount(count);
+      setHasMore(items.length === PAGE_SIZE);
+      setLoading(false);
+    });
+    return () => { alive = false; };
+  }, [query, isMockMode, isAuthLoading, location.key]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const { items } = await queryPublicProducts({ ...query, limit: PAGE_SIZE, offset: products.length }, isMockMode);
+    setProducts(prev => {
+      const seen = new Set(prev.map(p => p.id));
+      return [...prev, ...items.filter(p => !seen.has(p.id))];
+    });
+    setHasMore(items.length === PAGE_SIZE);
+    setLoadingMore(false);
+  }, [loadingMore, hasMore, query, products.length, isMockMode]);
+
+  // Infinite scroll: load the next page a little before the end of the grid
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasMore) return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some(e => e.isIntersecting)) loadMore();
+    }, { rootMargin: '600px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasMore, loadMore]);
+
 
   const ratingRanges = [
     { id: 'all', label: t('marketplace.rating') },
@@ -162,98 +208,8 @@ export default function MarketplacePage() {
     { id: 'priceHigh', label: t('marketplace.priceHigh') }
   ];
 
-  // Filter and sort products
-  const filteredProducts = useMemo(() => {
-    let result = [...products];
-
-    if (searchTerm) {
-      const lowerSearch = searchTerm.toLowerCase();
-      result = result.filter(p => {
-        const title = getLocalizedString(p.title, baseLang).toLowerCase();
-        const desc = getLocalizedString(p.description, baseLang).toLowerCase();
-        const creatorName = (p.creatorName || '').toLowerCase();
-        
-        const mockCreator = MOCK_CREATORS.find(c => c.id === p.creator_id);
-        const mockCreatorUsername = (mockCreator?.username || '').toLowerCase();
-        
-        let tagsArray = [];
-        if (Array.isArray(p.tags)) {
-          tagsArray = p.tags;
-        } else if (p.tags) {
-          tagsArray = p.tags[baseLang] || p.tags.en || Object.values(p.tags)[0] || [];
-        }
-
-        return (
-          title.includes(lowerSearch) || 
-          desc.includes(lowerSearch) ||
-          creatorName.includes(lowerSearch) ||
-          mockCreatorUsername.includes(lowerSearch) ||
-          tagsArray.some(tag => tag.toLowerCase().includes(lowerSearch))
-        );
-      });
-    }
-
-    if (selectedCategory !== 'all') {
-      result = result.filter(p => p.category === selectedCategory);
-    }
-
-    // Only filter when exactly one of Paid/Free is checked — if both are
-    // checked (show everything) or neither is checked (no filter applied,
-    // also show everything), skip filtering entirely.
-    if (showPaid !== showFree) {
-      result = result.filter(p => {
-        const price = p.salePrice || p.sale_price || p.price || 0;
-        const isFree = price === 0;
-        return isFree ? showFree : showPaid;
-      });
-    }
-
-    if (selectedPrice !== 'all') {
-      const range = priceRanges.find(r => r.id === selectedPrice);
-      if (range) {
-        result = result.filter(p => {
-          const price = p.salePrice || p.sale_price || p.price;
-          return price >= range.min && price <= range.max;
-        });
-      }
-    }
-
-    if (selectedRating !== 'all') {
-      const range = ratingRanges.find(r => r.id === selectedRating);
-      if (range) {
-        result = result.filter(p => p.rating >= range.min);
-      }
-    }
-
-    if (selectedSoftware.length > 0) {
-      result = result.filter(p => 
-        p.software && p.software.some(sw => selectedSoftware.includes(sw))
-      );
-    }
-
-    if (selectedStyle.length > 0) {
-      result = result.filter(p => 
-        p.style && p.style.some(st => selectedStyle.includes(st))
-      );
-    }
-
-    // Dates are read once per product, not once per comparison
-    const now = Date.now();
-    const boosted = (p) => (p.boost && new Date(p.boost.endDate).getTime() > now ? 10000 : 0);
-    const key = new Map();
-    for (const p of result) {
-      const price = p.salePrice || p.sale_price || p.price;
-      let k;
-      if (sortBy === 'newest') k = isMockMode ? parseInt(String(p.id).replace(/\D/g, '') || 0) + boosted(p) : Date.parse(p.created_at) || 0;
-      else if (sortBy === 'popular') k = isMockMode ? (p.sales_count || 0) + boosted(p) : -(p.popular_rank || 0); // rank 1 is best
-      else k = price;
-      key.set(p, k);
-    }
-    if (sortBy === 'priceLow') result.sort((a, b) => key.get(a) - key.get(b));
-    else if (sortBy === 'newest' || sortBy === 'popular' || sortBy === 'priceHigh') result.sort((a, b) => key.get(b) - key.get(a));
-
-    return result;
-  }, [products, searchTerm, selectedCategory, selectedPrice, selectedRating, selectedSoftware, selectedStyle, showPaid, showFree, sortBy]);
+  // Filtering and sorting run in the database (queryPublicProducts)
+  const filteredProducts = products;
 
   const toggleSoftware = (sw) => {
     setSelectedSoftware(prev => 
@@ -343,7 +299,7 @@ export default function MarketplacePage() {
         </button>
 
         <span className="toolbar-results text-muted">
-          {filteredProducts.length} results
+          {totalCount ?? filteredProducts.length} results
         </span>
 
         <div className="toolbar-spacer"></div>
@@ -576,34 +532,20 @@ export default function MarketplacePage() {
           {loading ? (
             <BrandedLoader />
           ) : filteredProducts.length > 0 ? (
-            isNativeApp ? (
-              // App: plain grid — per-card layout/blur animations are too heavy for phones
+            <>
               <div className="products-grid-view">
                 {filteredProducts.map(product => (
-                  <div key={product.id}><ProductCard product={product} /></div>
+                  <div key={product.id} className="grid-fade-in"><ProductCard product={product} /></div>
                 ))}
               </div>
-            ) : (
-            <motion.div 
-              className="products-grid-view"
-              layout
-            >
-              <AnimatePresence mode="popLayout">
-                {filteredProducts.map(product => (
-                  <motion.div
-                    key={product.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.95, filter: 'blur(4px)' }}
-                    animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                    exit={{ opacity: 0, scale: 0.95, filter: 'blur(4px)' }}
-                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                  >
-                    <ProductCard product={product} />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </motion.div>
-            )
+              {hasMore && (
+                <div ref={sentinelRef} className="grid-more">
+                  <button className="btn btn-outline" onClick={loadMore} disabled={loadingMore}>
+                    {loadingMore ? t('common.loading', 'Loading…') : t('marketplace.loadMore', 'Show more')}
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="empty-state">
               <Search size={40} className="text-muted mb-md" />

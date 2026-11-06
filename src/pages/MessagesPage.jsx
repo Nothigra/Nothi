@@ -8,12 +8,18 @@ import { getAccount, seedFakeConversationsIfEmpty } from '../lib/accountStore';
 import { MOCK_PRODUCTS } from '../lib/seed';
 import Input from '../components/ui/Input';
 import { getLocalizedString } from '../utils/i18nHelpers';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { getUserPurchases } from '../api/productApi';
 import { getUserMessages, groupMessagesIntoConversations, sendMessage as sendRealMessage, markMessagesAsRead as markRealRead, subscribeToMessages, uploadChatAttachment } from '../api/messageApi';
 import './MessagesPage.css';
 
 import ProBadge from '../components/common/ProBadge';
+import { openAttachment, useAttachmentUrl } from '../lib/attachments';
+
+function AttachmentImage({ url, ...rest }) {
+  const src = useAttachmentUrl(url);
+  return src ? <img src={src} {...rest} /> : <div className="rounded-md" style={{ height: 160, width: 220, background: 'var(--color-bg)' }} />;
+}
 export default function MessagesPage() {
   const { t, i18n } = useTranslation();
   const { user, profile, isMockMode } = useAuth();
@@ -501,8 +507,8 @@ export default function MessagesPage() {
                       <div key={msg.id} className={`message ${isMe ? 'sent' : 'received'}`}>
                         <div className="message-bubble" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           {msg.attachment_type === 'image' && msg.attachment_url && (
-                            <img 
-                              src={msg.attachment_url} 
+                            <AttachmentImage
+                              url={msg.attachment_url}
                               alt="Attachment" 
                               className="rounded-md"
                               style={{ maxHeight: '250px', maxWidth: '100%', objectFit: 'contain', backgroundColor: 'var(--color-bg)' }}
@@ -510,8 +516,8 @@ export default function MessagesPage() {
                           )}
                           {msg.attachment_type === 'file' && msg.attachment_url && (
                             <a 
-                              href={msg.attachment_url} 
-                              target="_blank" 
+                              href="#"
+                              onClick={(e) => { e.preventDefault(); openAttachment(msg.attachment_url); }}
                               rel="noopener noreferrer"
                               className="flex items-center gap-sm p-sm rounded-md border border-border hover:border-primary transition-colors text-sm"
                               style={{ backgroundColor: isMe ? 'rgba(0,0,0,0.1)' : 'var(--color-bg)' }}

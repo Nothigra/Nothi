@@ -17,6 +17,7 @@ import BadgeIcon from '../components/common/BadgeIcon';
 import BrandedLoader from '../components/common/BrandedLoader';
 import { supabase, withTimeoutSafety, invokeFunction } from '../lib/supabase';
 import { BADGE_CATALOG, fetchGamificationState } from '../api/gamificationApi';
+import { RARITIES } from '../lib/badgeArt';
 import Input from '../components/ui/Input';
 import Textarea from '../components/ui/Textarea';
 import { useTranslation } from 'react-i18next';
@@ -25,11 +26,12 @@ import './CreatorProfilePage.css';
 
 import ProBadge from '../components/common/ProBadge';
 import Checkbox from '../components/ui/Checkbox';
+import { usePageTitle } from '../lib/pageTitle';
 export default function CreatorProfilePage() {
   const { username } = useParams();
   const navigate = useNavigate();
   const { user, profile, updateProfile, isMockMode, followCreator, unfollowCreator, markCreatorViewed, isLoading: isAuthLoading } = useAuth();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const baseLang = (i18n.language || 'en').split('-')[0];
 
   const [creator, setCreator] = useState(null);
@@ -267,6 +269,8 @@ export default function CreatorProfilePage() {
     setShopSettings(creator?.shop_settings || { bg_color: 'var(--color-bg)', card_radius: '16px', shadow_intensity: '0.05', links: [] });
     setOrderedProducts(creatorProducts);
   }, [creator?.id]);
+
+  usePageTitle(creator ? `@${creator.username}` : null);
 
   if (isLoading) {
     return <BrandedLoader isExiting={isLoaderExiting} />;
@@ -846,7 +850,7 @@ export default function CreatorProfilePage() {
                         <div className="creator-form-group px-md mt-xl">
                           <div className="flex justify-between items-center mb-sm">
                             <label className="creator-form-label mb-0">Shop Badges (Max 5)</label>
-                            <span className="text-xs font-medium text-secondary">{shopSettings.displayed_badges?.length || 0}/5</span>
+                            <span className="text-xs font-medium text-secondary">{shopSettings.displayed_badges?.length || 0}/3</span>
                           </div>
                           
                           <div className="badge-inventory mt-md">
@@ -894,7 +898,7 @@ export default function CreatorProfilePage() {
                                 {(gamificationState?.unlockedBadges || []).filter(b => !(shopSettings.displayed_badges || []).includes(b)).map(badgeId => {
                                   const badge = BADGE_CATALOG.find(b => b.id === badgeId);
                                   if (!badge) return null;
-                                  const isAtMax = (shopSettings.displayed_badges || []).length >= 5;
+                                  const isAtMax = (shopSettings.displayed_badges || []).length >= 3;
                                   return (
                                     <div 
                                       key={badgeId} 
@@ -903,7 +907,7 @@ export default function CreatorProfilePage() {
                                         setShopSettings(prev => ({ ...prev, displayed_badges: [...(prev.displayed_badges || []), badgeId] }));
                                       }}
                                       className={`badge-item ${isAtMax ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                      title={isAtMax ? 'Maximum of 5 badges reached' : 'Click to add'}
+                                      title={isAtMax ? 'Maximum of 3 badges reached' : 'Click to add'}
                                     >
                                       <BadgeIcon badge={badge} size="sm" />
                                       <span className="text-xs font-bold text-text-primary">{badge.title}</span>
@@ -1004,7 +1008,7 @@ export default function CreatorProfilePage() {
           )}
 
           <div className={`profile-avatar-large relative ${isEditing ? 'edit-mode-wrapper group' : ''}`} style={{ background: 'transparent' }}>
-            <AvatarFrame tier={shopSettings.profile_frame?.enabled !== false ? creator.tier : 'none'} imageUrl={shopSettings.profile_image_url || creator.avatar_url} size="xl" />
+            <AvatarFrame level={shopSettings.profile_frame?.enabled !== false ? creator.level : undefined} xp={creator.xp} badges={creator.displayed_badges || []} showLevel imageUrl={shopSettings.profile_image_url || creator.avatar_url} name={creator.username} size="xl" />
             {creator.is_pro && !isEditing && <ProBadge variant="avatar" size={26} />}
             {isEditing && (
               <>
@@ -1104,25 +1108,24 @@ export default function CreatorProfilePage() {
             </div>
           </div>
 
-          {/* Shop Badges Showcase */}
+          {/* Pinned badges */}
           {(creator.displayed_badges || []).length > 0 && (
-            <div className="w-full mt-xl pt-lg border-t border-border flex flex-col items-center md:items-start relative z-20">
-              <div className="flex items-center gap-sm mb-md text-sm font-bold text-secondary uppercase tracking-wider">
-                <span style={{ fontSize: '1.2em' }}>🏅</span> Achievements
-              </div>
-              
-              <div className="w-full pb-sm">
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-lg">
-                  {(creator.displayed_badges || []).map(badgeId => {
-                    const badge = BADGE_CATALOG.find(b => b.id === badgeId);
-                    if (!badge) return null;
-                    return (
-                      <div key={badge.id} className="group relative flex flex-col items-center">
-                        <BadgeIcon badge={badge} size="md" interactive={true} />
+            <div className="w-full mt-xl pt-lg border-t border-border relative z-20">
+              <div className="shop-pinned-label">{t('badges.ui.pinned', { defaultValue: 'Pinned badges' })}</div>
+              <div className="shop-pinned-row">
+                {(creator.displayed_badges || []).map(badgeId => {
+                  const badge = BADGE_CATALOG.find(b => b.id === badgeId);
+                  if (!badge) return null;
+                  return (
+                    <div key={badge.id} className="shop-pinned-chip">
+                      <BadgeIcon badge={badge} size="md" showTitle={false} />
+                      <div>
+                        <b>{t(`badges.${badge.id}.title`, { defaultValue: badge.title })}</b>
+                        <small>{t(`badges.rarity.${badge.rarity}`, { defaultValue: RARITIES[badge.rarity].label })} · {t(`badges.${badge.id}.desc`, { defaultValue: badge.desc })}</small>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

@@ -53,8 +53,13 @@ export async function getCreatorProfile(username, isMockMode) {
       shop_settings: data.shop_settings || { bg_color: 'var(--color-bg)', card_radius: '16px', shadow_intensity: '0.05', links: [] },
       software: data.software || [],
       tier: data.tier || 'bronze',
-      displayed_badges: data.displayed_badges || [],
+      // Shown badges: the shop's choice (shop editor) or the profile's, and only
+      // ones really unlocked (the database enforces this too)
+      displayed_badges: ((data.shop_settings?.displayed_badges?.length ? data.shop_settings.displayed_badges : data.displayed_badges) || [])
+        .filter((id) => (data.unlocked_badges || []).includes(id)).slice(0, 3),
       unlocked_badges: data.unlocked_badges || [],
+      level: data.level || 1,
+      xp: data.xp || 0,
       selected_frame: data.selected_frame || null,
       is_pro: !!data.is_pro,
     };

@@ -63,12 +63,10 @@
 }
 
 .navbar-logo-img {
-  height: 36px;
+  height: 30px;
   width: auto;
   object-fit: contain;
   filter: brightness(0); /* Black in light mode */
-  transform: scale(2.8);
-  transform-origin: left center;
   margin-right: 48px;
   transition: filter var(--transition-base), transform var(--transition-base);
 }
@@ -295,3 +293,5 @@
     display: flex;
   }
 }
+
+.mobile-signin { padding: 6px 12px; font-size: 13px; white-space: nowrap; }

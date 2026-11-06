@@ -1,135 +1,125 @@
-import React, { useState, useEffect } from 'react';
-import { Shield, Search, Check, Plus, Minus, GripVertical } from 'lucide-react';
-import { BADGE_CATALOG } from '../../api/gamificationApi';
+import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Pin, PinOff } from 'lucide-react';
 import { useGamification } from '../../context/GamificationContext';
 import { useAuth } from '../../context/AuthContext';
 import BadgeIcon from '../../components/common/BadgeIcon';
-import Input from '../../components/ui/Input';
+import AvatarFrame from '../../components/common/AvatarFrame';
+import { BADGES, RARITIES, GRADES, gradeFor, nextGrade, xpForLevel, levelProgress } from '../../lib/badgeArt';
 import './DashboardBadges.css';
 
+const MAX_PINNED = 3;
+const ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
+
 export default function DashboardBadges() {
+  const { t } = useTranslation();
   const { gamificationState, markBadgesSeen } = useGamification();
   const { profile, updateProfile } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState('all');
+  const [busy, setBusy] = useState(null);
+  const [notice, setNotice] = useState('');
 
-  useEffect(() => {
-    markBadgesSeen();
-  }, [markBadgesSeen]);
+  useEffect(() => { markBadgesSeen(); }, [markBadgesSeen]);
 
+  const unlocked = useMemo(() => new Set(gamificationState?.unlockedBadges || []), [gamificationState]);
   if (!gamificationState) {
     return <div className="flex-center h-full min-h-[400px]"><div className="loader spin"></div></div>;
   }
 
-  const unlockedBadges = gamificationState.unlockedBadges || [];
+  const level = gamificationState.level || 1;
+  const xp = gamificationState.xp || 0;
+  const grade = gradeFor(level);
+  const next = nextGrade(level);
+  const pinned = (profile?.shop_settings?.displayed_badges?.length ? profile.shop_settings.displayed_badges : gamificationState.displayedBadges || [])
+    .filter((id) => unlocked.has(id));
 
-  // Future scalability: searching and filtering
-  const filteredBadges = BADGE_CATALOG.filter(b => {
-    const matchesSearch = b.title.toLowerCase().includes(searchQuery.toLowerCase()) || b.desc.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = filterType === 'all' || b.type === filterType;
-    return matchesSearch && matchesType;
-  });
+  const togglePin = async (id) => {
+    setNotice('');
+    let list;
+    if (pinned.includes(id)) list = pinned.filter((x) => x !== id);
+    else if (pinned.length >= MAX_PINNED) { setNotice(t('badges.ui.maxPinned', { defaultValue: 'You can pin up to 3 badges. Unpin one first.' })); return; }
+    else list = [...pinned, id];
+    setBusy(id);
+    try {
+      // the shop reads shop_settings.displayed_badges; the profile column is kept in sync
+      await updateProfile({ displayed_badges: list, shop_settings: { ...(profile?.shop_settings || {}), displayed_badges: list } });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const title = (b) => t(`badges.${b.id}.title`, { defaultValue: b.title });
+  const desc = (b) => t(`badges.${b.id}.desc`, { defaultValue: b.desc });
 
   return (
-    <div className="dashboard-badges-page pb-3xl">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-xl gap-md">
+    <div className="nb-badges-page pb-3xl">
+      <header className="nb-badges-head">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-sm mb-xs">
-            <Shield size={32} className="text-accent" />
-            My Badges
-          </h1>
-          <p className="text-secondary text-sm">Unlock achievements and customize your profile.</p>
+          <h1 className="dashboard-title">{t('badges.ui.title', { defaultValue: 'Grade & badges' })}</h1>
+          <p className="dashboard-subtitle">{t('badges.ui.subtitle', { defaultValue: 'Your grade grows with XP. Badges are earned with specific actions — pin up to 3 on your shop.' })}</p>
         </div>
-        <div className="text-right bg-bg-card px-lg py-sm rounded-xl border border-border shadow-sm flex flex-col items-end">
-          <span className="text-xs text-secondary uppercase font-bold tracking-wider mb-1">Completion</span>
-          <div className="text-2xl font-black text-text-primary leading-none">
-            {unlockedBadges.length} <span className="text-lg text-secondary font-medium">/ {BADGE_CATALOG.length}</span>
+        <div className="nb-badges-count"><b>{unlocked.size}</b> / {BADGES.length} {t('badges.ui.earned', { defaultValue: 'earned' })}</div>
+      </header>
+
+      <section className="nb-grade-card">
+        <AvatarFrame level={level} xp={xp} badges={pinned} showLevel imageUrl={profile?.avatar_url || profile?.shop_settings?.profile_image_url} name={profile?.username} size="lg" />
+        <div className="nb-grade-info">
+          <div className="nb-grade-name">{t(`grades.${grade.id}`, { defaultValue: grade.label })} · {t('grades.level', { defaultValue: 'Level' })} {level}</div>
+          <div className="nb-grade-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(levelProgress(xp, level) * 100)}>
+            <i style={{ width: `${Math.round(levelProgress(xp, level) * 100)}%` }} />
           </div>
+          <div className="nb-grade-sub">
+            {xp.toLocaleString()} XP · {Math.max(0, xpForLevel(level + 1) - xp).toLocaleString()} XP {t('grades.toNextLevel', { defaultValue: 'to level' })} {level + 1}
+            {next && <> · {t(`grades.${next.id}`, { defaultValue: next.label })} {t('grades.atLevel', { defaultValue: 'at level' })} {next.level}</>}
+          </div>
+          <ol className="nb-grade-ladder" aria-label={t('badges.ui.grades', { defaultValue: 'Grades' })}>
+            {GRADES.map((g) => (
+              <li key={g.id} className={level >= g.level ? 'is-on' : ''}>
+                <span className={`nb-grade-dot grade-${g.id}`} />
+                {t(`grades.${g.id}`, { defaultValue: g.label })}<small>{g.level}</small>
+              </li>
+            ))}
+          </ol>
         </div>
-      </div>
+      </section>
 
-      {/* Future Scalability: Filters & Search */}
-      <div className="flex flex-col sm:flex-row gap-md mb-xl">
-        <div className="flex-1 max-w-md">
-          <Input 
-            iconLeft={Search}
-            placeholder="Search badges..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            clearable={true}
-            onClear={() => setSearchQuery('')}
-          />
-        </div>
-        <div className="flex gap-sm overflow-x-auto pb-sm sm:pb-0 hide-scrollbar">
-          {['all', 'sales', 'social', 'purchases', 'products', 'tenure'].map(type => (
-            <button 
-              key={type}
-              className={`px-md py-xs rounded-lg text-sm font-medium whitespace-nowrap capitalize transition-colors ${filterType === type ? 'bg-text-primary text-bg' : 'bg-bg-card border border-border text-secondary hover:text-text-primary'}`}
-              onClick={() => setFilterType(type)}
-            >
-              {type}
-            </button>
-          ))}
-        </div>
-      </div>
+      {notice && <p className="nb-badges-notice" role="status">{notice}</p>}
 
-      {/* Badges Grid */}
-      <div className="badges-grid">
-        {filteredBadges.map(badge => {
-          const isUnlocked = unlockedBadges.includes(badge.id);
-          const isEquipped = (gamificationState.displayedBadges || []).includes(badge.id);
-          
-          return (
-            <div key={badge.id} className={`badge-card ${isUnlocked ? 'unlocked' : 'locked'} group`}>
-              <div className="flex-shrink-0">
-                <BadgeIcon badge={badge} locked={!isUnlocked} size="lg" />
-              </div>
-              <div className="badge-card-content flex-1">
-                <h3 className="badge-card-title">{badge.title}</h3>
-                <p className="badge-card-desc">{isUnlocked ? badge.desc : `Locked — ${badge.desc}`}</p>
-                <div className="flex items-center justify-between mt-sm">
-                  {isUnlocked && <span className="badge-unlocked-label">Unlocked</span>}
-                  {isUnlocked && (
-                    <button
-                      onClick={async () => {
-                        try {
-                          const currentDisplayed = gamificationState.displayedBadges || [];
-                          let newDisplayed;
-                          if (isEquipped) {
-                            newDisplayed = currentDisplayed.filter(id => id !== badge.id);
-                          } else {
-                            if (currentDisplayed.length >= 3) {
-                              alert('You can only equip up to 3 badges at a time.');
-                              return;
-                            }
-                            newDisplayed = [...currentDisplayed, badge.id];
-                          }
-                          // Optimistic update handled centrally by updateProfile (works in both real and mock mode)
-                          await updateProfile({ displayed_badges: newDisplayed });
-                        } catch(e) {
-                          console.error(e);
-                        }
-                      }}
-                      className={`px-sm py-xs rounded-md text-xs font-bold transition-colors ${
-                        isEquipped 
-                          ? 'bg-accent text-white' 
-                          : 'bg-bg-secondary text-secondary hover:text-text-primary'
-                      }`}
-                    >
-                      {isEquipped ? 'Equipped' : 'Equip'}
-                    </button>
-                  )}
-                </div>
-              </div>
+      {ORDER.map((rk) => {
+        const list = BADGES.filter((b) => b.rarity === rk);
+        const got = list.filter((b) => unlocked.has(b.id)).length;
+        return (
+          <section key={rk} className="nb-rarity">
+            <h2 className="nb-rarity-head">
+              <i style={{ background: RARITIES[rk].swatch }} />
+              {t(`badges.rarity.${rk}`, { defaultValue: RARITIES[rk].label })}
+              <span>{got}/{list.length}</span>
+            </h2>
+            <div className="nb-badge-grid">
+              {list.map((b) => {
+                const on = unlocked.has(b.id);
+                const isPinned = pinned.includes(b.id);
+                return (
+                  <div key={b.id} className={`nb-badge-tile ${on ? '' : 'is-locked'}`}>
+                    <BadgeIcon badge={b} locked={!on} size="xl" showTitle={false} />
+                    <div className="nb-badge-text">
+                      <b>{title(b)}</b>
+                      <small>{desc(b)}</small>
+                    </div>
+                    {on ? (
+                      <button type="button" className={`nb-pin-btn ${isPinned ? 'is-on' : ''}`} disabled={busy === b.id} onClick={() => togglePin(b.id)}>
+                        {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
+                        {isPinned ? t('badges.ui.unpin', { defaultValue: 'Unpin' }) : t('badges.ui.pin', { defaultValue: 'Pin to shop' })}
+                      </button>
+                    ) : (
+                      <span className="nb-badge-locked">{t('badges.ui.locked', { defaultValue: 'Not earned yet' })}</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
-        {filteredBadges.length === 0 && (
-          <div className="col-span-full py-3xl text-center text-secondary">
-            <p>No badges found matching your criteria.</p>
-          </div>
-        )}
-      </div>
+          </section>
+        );
+      })}
     </div>
   );
 }

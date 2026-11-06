@@ -69,8 +69,15 @@ serve(async (req) => {
       forcePathStyle: true,
     });
 
+    // Chat attachments are private: they go to the private bucket and the
+    // message stores a 'nothi-private:' reference, signed on demand by
+    // generate-download-url for the two people in the conversation only.
+    const isPrivate = folder === 'chat-attachments';
+    const privateBucket = Deno.env.get('R2_PRODUCT_FILES_BUCKET_NAME');
+    if (isPrivate && !privateBucket) throw new Error('Missing environment variables');
+
     const command = new PutObjectCommand({
-      Bucket: bucketName,
+      Bucket: isPrivate ? privateBucket : bucketName,
       Key: path,
       ContentType: contentType,
       ContentLength: fileSize,
@@ -84,7 +91,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         uploadUrl: url,
-        publicUrl: `${publicUrlBase}/${path}`
+        publicUrl: isPrivate ? `nothi-private:${path}` : `${publicUrlBase}/${path}`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );

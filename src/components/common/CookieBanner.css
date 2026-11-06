@@ -1,123 +1,36 @@
-.cookie-banner-wrapper {
+.cookie-note {
   position: fixed;
-  bottom: var(--space-xl);
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
   z-index: 1000;
-  padding: 0 var(--space-md);
-  pointer-events: none; /* Let clicks pass through the wrapper */
-}
-
-.cookie-banner-content {
-  background-color: var(--color-bg-card);
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  width: min(560px, calc(100% - 32px));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 10px 16px;
+  background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-xl);
-  padding: var(--space-lg);
-  max-width: 600px;
-  width: 100%;
-  pointer-events: auto; /* Re-enable clicks on the banner itself */
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.cookie-banner-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.cookie-banner-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin: 0;
-}
-
-.cookie-banner-close {
-  background: transparent;
-  border: none;
-  color: var(--color-text-tertiary);
-  cursor: pointer;
-  padding: var(--space-xs);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.cookie-banner-close:hover {
-  background-color: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-}
-
-.cookie-banner-body {
-  font-size: 0.9375rem;
-  line-height: 1.5;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+  font-size: 13px;
+  line-height: 1.4;
   color: var(--color-text-secondary);
 }
-
-.cookie-banner-body p {
-  margin: 0;
+.cookie-note p { margin: 0; flex: 1; min-width: 0; }
+.cookie-note a { color: var(--color-text-primary); text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
+.cookie-note-ok {
+  flex: none;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font: 600 13px/1 var(--font-sans);
+  background: var(--color-text-primary);
+  color: var(--color-bg);
+  cursor: pointer;
 }
-
-.cookie-banner-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: var(--space-xs);
-}
-
-.cookie-banner-link {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-primary);
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.cookie-banner-link:hover {
-  color: var(--color-primary-hover);
-  text-decoration: underline;
-}
-
-@media (max-width: 640px) {
-  .cookie-banner-wrapper {
-    bottom: var(--space-md);
-  }
-  
-  .cookie-banner-content {
-    padding: var(--space-md);
-  }
-  
-  .cookie-banner-actions {
-    flex-direction: column-reverse;
-    align-items: stretch;
-    gap: var(--space-md);
-  }
-  
-  .cookie-banner-link {
-    justify-content: center;
-  }
-}
-
-/* Compact: a small card in the corner, never over the page's main content */
-.cookie-banner-wrapper { justify-content: flex-start; bottom: var(--space-lg); padding: 0 var(--space-lg); }
-.cookie-banner-content { max-width: 380px; padding: 14px 16px; gap: 8px; border-radius: 16px; }
-.cookie-banner-title { font-size: 0.9375rem; }
-.cookie-banner-body { font-size: 0.8125rem; line-height: 1.45; }
-.cookie-banner-body p + p { font-size: 0.75rem; }
-.cookie-banner-actions { margin-top: 2px; }
-@media (max-width: 640px) {
-  .cookie-banner-wrapper { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); padding: 0 12px; }
-  .cookie-banner-content { max-width: none; padding: 12px 14px; }
-  .cookie-banner-actions { flex-direction: row; align-items: center; gap: 12px; }
-  .cookie-banner-link { justify-content: flex-start; }
+.cookie-note-ok:focus-visible { outline: 2px solid var(--color-text-primary); outline-offset: 2px; }
+/* above the floating bottom bar on phones */
+@media (max-width: 768px) {
+  .cookie-note { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); font-size: 12.5px; }
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { Search, Command } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import './CommandPalette.css';

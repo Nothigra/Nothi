@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ChevronLeft, Check, CheckCircle2, Loader2, XCircle } from 'lucide-react';
 import ThemeCard from '../components/common/ThemeCard';
 import { useAuth } from '../context/AuthContext';

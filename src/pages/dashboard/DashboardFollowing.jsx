@@ -4,7 +4,8 @@ import { MOCK_CREATORS } from '../../lib/seed';
 import { Link, useNavigate } from 'react-router';
 import { Users, UserMinus, Store } from 'lucide-react';
 import AvatarFrame from '../../components/common/AvatarFrame';
-import { getPublicProducts } from '../../api/productApi';
+import { queryPublicProducts } from '../../api/productApi';
+import { supabase } from '../../lib/supabase';
 
 export default function DashboardFollowing() {
   const { profile, unfollowCreator, isMockMode } = useAuth();
@@ -13,35 +14,44 @@ export default function DashboardFollowing() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let alive = true;
     async function loadData() {
-      if (!profile?.following) {
+      const following = profile?.following || [];
+      if (following.length === 0) {
         setFollowedCreators([]);
         setIsLoading(false);
         return;
       }
-      
-      const allProducts = await getPublicProducts(isMockMode);
-      
-      const mapped = profile.following.map(f => {
-        const creator = MOCK_CREATORS.find(c => c.id === f.creatorId);
+      const ids = following.map(f => f.creatorId);
+
+      let creators = [];
+      if (isMockMode) {
+        creators = MOCK_CREATORS.filter(c => ids.includes(c.id));
+      } else {
+        const { data } = await supabase.from('public_profiles').select('id, username, avatar_url, bio, tier, level').in('id', ids);
+        creators = data || [];
+      }
+      // newest product per creator, one query for all of them
+      const { items } = await queryPublicProducts({ sellerIds: ids, sort: 'newest', limit: 200 }, isMockMode);
+      const newest = new Map();
+      for (const p of items) {
+        const sid = p.seller_id || p.creator_id;
+        if (!newest.has(sid)) newest.set(sid, new Date(p.created_at || 0).getTime());
+      }
+      const mapped = following.map(f => {
+        const creator = creators.find(c => c.id === f.creatorId);
         if (!creator) return null;
-        
-        const creatorProducts = allProducts.filter(p => p.creator_id === creator.id || p.seller_id === creator.id);
-        let hasNewProduct = false;
-        
-        if (creatorProducts.length > 0 && f.lastViewedAt) {
-          const maxDate = Math.max(...creatorProducts.map(p => new Date(p.created_at || 0).getTime()));
-          hasNewProduct = maxDate > new Date(f.lastViewedAt).getTime();
-        } else if (creatorProducts.length > 0 && !f.lastViewedAt) {
-          hasNewProduct = true;
-        }
+        const latest = newest.get(creator.id);
+        const hasNewProduct = !!latest && (!f.lastViewedAt || latest > new Date(f.lastViewedAt).getTime());
         return { ...creator, hasNewProduct, lastViewedAt: f.lastViewedAt };
       }).filter(Boolean);
-      
+
+      if (!alive) return;
       setFollowedCreators(mapped);
       setIsLoading(false);
     }
     loadData();
+    return () => { alive = false; };
   }, [profile?.following, isMockMode]);
 
   if (isLoading) {
@@ -84,7 +94,7 @@ export default function DashboardFollowing() {
               )}
               
               <Link to={`/creator/${creator.username}`} className="relative mb-md block">
-                <AvatarFrame tier={creator.tier} imageUrl={creator.avatar_url} size="lg" />
+                <AvatarFrame level={creator.level} imageUrl={creator.avatar_url} name={creator.username} size="lg" />
               </Link>
               
               <Link to={`/creator/${creator.username}`} className="font-bold text-lg hover:text-accent transition-colors">

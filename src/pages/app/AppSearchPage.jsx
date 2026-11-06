@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useDeferredValue } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Search, X, Clock, ArrowUpRight, Package, Sparkles, FolderArchive, Contrast, Volume2, ArrowRightLeft, LayoutTemplate, TerminalSquare, Layers } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { getPublicProducts, peekPublicProducts } from '../../api/productApi';
+import { getPublicProducts, peekPublicProducts, queryPublicProducts } from '../../api/productApi';
 import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { CATEGORIES } from '../../lib/seed';
@@ -60,14 +60,30 @@ export default function AppSearchPage() {
     };
   }), [products, lang]);
 
+  // The local index answers instantly; the database answers for the whole catalogue
+  const [remote, setRemote] = useState({ q: '', items: [] });
+  useEffect(() => {
+    const q = deferred.trim();
+    if (q.length < 2) return undefined;
+    const id = setTimeout(() => {
+      queryPublicProducts({ search: q, limit: 30, sort: 'popular' }, isMockMode)
+        .then(({ items }) => setRemote({ q, items }));
+    }, 250);
+    return () => clearTimeout(id);
+  }, [deferred, isMockMode]);
+
   const results = useMemo(() => {
     const words = norm(deferred).trim().split(/\s+/).filter(Boolean);
     if (!words.length) return [];
-    return index
+    const local = index
       .filter((r) => words.every((w) => r.hay.includes(w)))
-      .sort((a, b) => (norm(b.title).startsWith(words[0]) ? 1 : 0) - (norm(a.title).startsWith(words[0]) ? 1 : 0))
-      .slice(0, 30);
-  }, [deferred, index]);
+      .sort((a, b) => (norm(b.title).startsWith(words[0]) ? 1 : 0) - (norm(a.title).startsWith(words[0]) ? 1 : 0));
+    const seen = new Set(local.map((r) => r.p.id));
+    const extra = remote.q === deferred.trim()
+      ? remote.items.filter((p) => !seen.has(p.id)).map((p) => ({ p, title: getLocalizedString(p.title, lang) }))
+      : [];
+    return [...local, ...extra].slice(0, 30);
+  }, [deferred, index, remote, lang]);
 
   const remember = (term) => {
     const v = term.trim();

@@ -52,3 +52,10 @@ export function slugify(text) {
 export function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
 }
+
+/** Local placeholder avatar (first letter on a neutral disc) — no third-party request. */
+export function avatarFallback(name = '') {
+  const letter = (String(name).trim().charAt(0) || '?').toUpperCase().replace(/[<>&"']/g, '');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#26272c"/><text x="32" y="41" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="26" font-weight="600" fill="#c9cad1">${letter}</text></svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}

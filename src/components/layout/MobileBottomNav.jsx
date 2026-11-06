@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router';
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { Home, Search, Gift, Settings, User, Trophy, ChevronUp, Library as LibraryIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useGamification } from '../../context/GamificationContext';

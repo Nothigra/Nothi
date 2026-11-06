@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Zap, Shield, Flame, Lock, Gift, Check, ChevronRight, ChevronLeft, Calendar, ShoppingBag, Package, Star, MessageSquare, Award, Crown, Trophy, Medal } from 'lucide-react';
-import { motion, useSpring, useTransform } from 'framer-motion';
+import { m as motion, useSpring, useTransform } from 'framer-motion';
 import { Link } from 'react-router';
 import { BADGE_CATALOG } from '../api/gamificationApi';
 import { useGamification } from '../context/GamificationContext';
@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { getSellerSalesCount } from '../api/productApi';
 import BadgeIcon from '../components/common/BadgeIcon';
 import './RewardsPage.css';
+import { gradeFor } from '../lib/badgeArt';
 
 const getSalesTier = (sales) => {
   if (sales >= 100) return { name: "Platinum Seller", color: "var(--color-platinum)", icon: <Crown size={40} color="var(--color-platinum)" strokeWidth={1.5} />, next: null };
@@ -16,29 +17,10 @@ const getSalesTier = (sales) => {
   return { name: "Bronze Seller", color: "var(--color-bronze)", icon: <Award size={40} color="var(--color-bronze)" strokeWidth={1.5} />, next: 10 };
 };
 
+// One grade system everywhere: the ring around the profile picture (lib/badgeArt)
 const getRankInfo = (level) => {
-  if (level < 1) level = 1;
-  const rankIndex = Math.min(Math.floor((level - 1) / 3), 9);
-  const subLevel = ((level - 1) % 3) + 1;
-  
-  const ranks = [
-    { name: 'Novice', color: 'var(--rank-novice-bg)' },
-    { name: 'Apprentice', color: 'var(--rank-apprentice-bg)' },
-    { name: 'Creator', color: 'var(--rank-creator-bg)' },
-    { name: 'Craftsman', color: 'var(--rank-craftsman-bg)' },
-    { name: 'Expert', color: 'var(--rank-expert-bg)' },
-    { name: 'Master', color: 'var(--rank-master-bg)' },
-    { name: 'Grandmaster', color: 'var(--rank-grandmaster-bg)' },
-    { name: 'Epic', color: 'var(--rank-epic-bg)' },
-    { name: 'Mythic', color: 'var(--rank-mythic-bg)' },
-    { name: 'Legend', color: 'var(--rank-legend-bg)' }
-  ];
-
-  return {
-    ...ranks[rankIndex],
-    subLevel,
-    subLevelStr: 'I'.repeat(subLevel)
-  };
+  const g = gradeFor(level || 1);
+  return { name: g.label, color: g.color === 'iris' ? 'linear-gradient(135deg,#7ad8ff,#b18cff,#ff8fcf,#ffd27a)' : g.color, subLevelStr: '' };
 };
 
 const CountdownTimer = ({ lastClaimedDate, onComplete }) => {
@@ -212,11 +194,13 @@ const RewardsPage = () => {
 
   // Define milestones for the timeline
   const milestones = [
-    { level: 1, title: 'Journey Begins', desc: 'Welcome to the marketplace', type: 'start' },
-    { level: 5, title: 'Bronze Border', desc: 'Unlock the Bronze profile frame', type: 'frame', color: 'var(--rank-apprentice-bg)' },
-    { level: 10, title: 'Rising Star', desc: 'Unlock Silver frame + Badge', type: 'badge', color: 'var(--rank-expert-bg)', badgeId: 'level_10' },
-    { level: 20, title: 'Elite Status', desc: 'Unlock Gold frame + Badge', type: 'badge', color: 'var(--rank-master-bg)', badgeId: 'level_20' },
-    { level: 30, title: 'The Legend', desc: 'Unlock Diamond frame + Badge', type: 'badge', color: 'var(--rank-legend-bg)', badgeId: 'level_30' }
+    { level: 1, title: 'Rookie', desc: 'Welcome to Nothi', type: 'start' },
+    { level: 4, title: 'Bronze', desc: 'Bronze ring around your picture', type: 'frame' },
+    { level: 8, title: 'Silver', desc: 'Silver ring', type: 'frame' },
+    { level: 10, title: 'Rising Star', desc: 'Badge: Rising Star', type: 'badge', badgeId: 'level_10' },
+    { level: 13, title: 'Gold', desc: 'Gold ring', type: 'frame' },
+    { level: 18, title: 'Platinum', desc: 'Platinum ring + badge: Elite', type: 'badge', badgeId: 'level_20' },
+    { level: 24, title: 'Diamond', desc: 'Diamond ring + badge: Legend', type: 'badge', badgeId: 'level_30' }
   ];
 
   return (
@@ -225,14 +209,13 @@ const RewardsPage = () => {
       {showConfetti && (
         <div className="fixed inset-0 pointer-events-none z-50 flex-center">
           <div className="absolute inset-0 bg-accent/20 animate-pulse"></div>
-          <div className="text-6xl animate-bounce">?? +150 XP ??</div>
+          <div className="text-5xl font-black">+150 XP</div>
         </div>
       )}
 
       {/* Hero Section */}
       <div className="relative mb-xl flex flex-col items-center justify-center text-center py-xl">
-        <div className="absolute inset-0 bg-gradient-to-b from-accent/10 to-transparent rounded-3xl -z-10"></div>
-        <h1 className="text-4xl md:text-5xl font-black mb-sm bg-clip-text text-transparent bg-gradient-to-r from-accent to-purple-500">
+                <h1 className="text-4xl md:text-5xl font-black mb-sm">
           Rewards & Progression
         </h1>
         <p className="text-secondary max-w-lg">
@@ -438,7 +421,7 @@ const RewardsPage = () => {
               <div 
                 className="h-full bg-accent transition-all duration-1000 rounded-full" 
                 style={{ 
-                  width: Math.min(100, Math.max(0, (level / 30) * 100)) + '%',
+                  width: Math.min(100, Math.max(0, (level / 24) * 100)) + '%',
                   boxShadow: '0 0 10px var(--color-accent)'
                 }}
               ></div>
@@ -465,7 +448,7 @@ const RewardsPage = () => {
                     <div className={`h-40 w-full flex items-end justify-center pb-md px-sm ${isTop ? 'visible' : 'invisible'}`}>
                       <div className="card-elevated p-md w-full border-2 transition-all duration-300 relative group flex flex-col items-center text-center" style={{ borderColor: isCurrent ? 'var(--color-accent)' : 'transparent' }}>
                         <div className="flex justify-center items-center gap-sm mb-xs w-full">
-                          {badgeAsset && isPassed && <img src={badgeAsset.imageUrl} alt="Badge" className="w-8 h-8 object-contain drop-shadow-md absolute -top-4 -right-2" />}
+                          {badgeAsset && <span className="absolute -top-4 -right-2"><BadgeIcon badge={badgeAsset} size="sm" locked={!isPassed} /></span>}
                           <span className="text-xs font-bold px-xs py-[2px] rounded-sm uppercase tracking-widest bg-bg-secondary text-secondary">Level {m.level}</span>
                         </div>
                         <h4 className="font-black text-lg leading-tight whitespace-normal break-words text-center px-1" style={{ color: m.color || 'var(--color-text-primary)', minWidth: '100%' }}>{m.title}</h4>
@@ -489,7 +472,7 @@ const RewardsPage = () => {
                     <div className={`h-40 w-full flex items-start justify-center pt-md px-sm ${!isTop ? 'visible' : 'invisible'}`}>
                       <div className="card-elevated p-md w-full border-2 transition-all duration-300 relative group flex flex-col items-center text-center" style={{ borderColor: isCurrent ? 'var(--color-accent)' : 'transparent' }}>
                         <div className="flex justify-center items-center gap-sm mb-xs w-full">
-                          {badgeAsset && isPassed && <img src={badgeAsset.imageUrl} alt="Badge" className="w-8 h-8 object-contain drop-shadow-md absolute -bottom-4 -right-2" />}
+                          {badgeAsset && <span className="absolute -bottom-4 -right-2"><BadgeIcon badge={badgeAsset} size="sm" locked={!isPassed} /></span>}
                           <span className="text-xs font-bold px-xs py-[2px] rounded-sm uppercase tracking-widest bg-bg-secondary text-secondary">Level {m.level}</span>
                         </div>
                         <h4 className="font-black text-lg leading-tight whitespace-normal break-words text-center px-1" style={{ color: m.color || 'var(--color-text-primary)', minWidth: '100%' }}>{m.title}</h4>

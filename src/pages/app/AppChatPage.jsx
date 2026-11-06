@@ -11,6 +11,12 @@ import { useScreenTitle } from '../../lib/screenTitle';
 import { tap, notify, openExternal } from '../../lib/native';
 import AppSheet from './AppSheet';
 import './AppChat.css';
+import { openAttachment, useAttachmentUrl } from '../../lib/attachments';
+
+function ChatImage({ url, onOpen }) {
+  const src = useAttachmentUrl(url);
+  return src ? <img src={src} alt="" loading="lazy" onClick={onOpen} /> : <div className="bubble-img-wait" />;
+}
 
 function dayLabel(iso) {
   const d = new Date(iso), now = new Date();
@@ -152,10 +158,10 @@ export default function AppChatPage() {
                 onClick={() => { if (g.m.failed) { tap(); setFailedMenu(g.m); } }}
               >
                 {g.m.attachmentType === 'image' && g.m.attachmentUrl && (
-                  <img src={g.m.attachmentUrl} alt="" loading="lazy" onClick={() => openExternal(g.m.attachmentUrl)} />
+                  <ChatImage url={g.m.attachmentUrl} onOpen={() => openAttachment(g.m.attachmentUrl, openExternal)} />
                 )}
                 {g.m.attachmentType === 'file' && g.m.attachmentUrl && (
-                  <button type="button" className="bubble-file" onClick={() => openExternal(g.m.attachmentUrl)}>
+                  <button type="button" className="bubble-file" onClick={() => openAttachment(g.m.attachmentUrl, openExternal)}>
                     <FileText size={18} /> <span>{g.m.content.replace(/^\[File\] /, '') || 'File'}</span>
                   </button>
                 )}

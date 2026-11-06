@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Info, X } from 'lucide-react';
 import './CookieBanner.css';
 
 // ⚠️ FUTURE CONSENT SYSTEM REQUIRED:
@@ -12,27 +11,9 @@ import './CookieBanner.css';
 // Currently, since we ONLY use strictly necessary cookies (Supabase auth), a simple acknowledgment is legally sufficient.
 
 const translations = {
-  fr: {
-    title: "🍪 Respect de votre vie privée",
-    text1: "Nothi utilise uniquement des cookies strictement nécessaires au fonctionnement du site (maintien de votre connexion, sécurité). Nous n'utilisons aucun cookie de suivi publicitaire ou d'analyse pour le moment.",
-    text2: "En continuant à naviguer, vous acceptez l'utilisation de ces cookies essentiels.",
-    more: "En savoir plus",
-    accept: "J'ai compris"
-  },
-  en: {
-    title: "🍪 Respecting your privacy",
-    text1: "Nothi only uses cookies that are strictly necessary for the site to function (keeping you logged in, security). We do not use any advertising or analytics tracking cookies at this time.",
-    text2: "By continuing to browse, you accept the use of these essential cookies.",
-    more: "Learn more",
-    accept: "Got it"
-  },
-  es: {
-    title: "🍪 Respeto a tu privacidad",
-    text1: "Nothi solo utiliza cookies que son estrictamente necesarias para el funcionamiento del sitio (mantener su sesión, seguridad). No utilizamos cookies de seguimiento publicitario ni analíticas en este momento.",
-    text2: "Al continuar navegando, aceptas el uso de estas cookies esenciales.",
-    more: "Saber más",
-    accept: "Entendido"
-  }
+  fr: { text: "Nothi utilise uniquement des cookies essentiels (connexion, sécurité). Aucun cookie publicitaire ni de suivi.", more: "En savoir plus", accept: "OK" },
+  en: { text: "Nothi only uses essential cookies (sign-in, security). No advertising or tracking cookies.", more: "Learn more", accept: "OK" },
+  es: { text: "Nothi solo usa cookies esenciales (sesión, seguridad). Sin cookies publicitarias ni de seguimiento.", more: "Saber más", accept: "OK" },
 };
 
 export default function CookieBanner() {
@@ -75,43 +56,24 @@ export default function CookieBanner() {
   }
   
 
+  // One quiet line at the bottom: essential cookies only need to be explained, not accepted
   return (
     <AnimatePresence>
       {isVisible && (
-        <motion.div 
-          className="cookie-banner-wrapper"
-          initial={{ y: 100, opacity: 0 }}
+        <motion.div
+          className="cookie-note"
+          role="region"
+          aria-label="Cookies"
+          initial={{ y: 16, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          exit={{ y: 16, opacity: 0 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
         >
-          <div className="cookie-banner-content">
-            <div className="cookie-banner-header">
-              <h3 className="cookie-banner-title">{tLocal.title}</h3>
-              <button 
-                className="cookie-banner-close" 
-                onClick={handleAcknowledge}
-                aria-label="Close"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            
-            <div className="cookie-banner-body">
-              <p>{tLocal.text1}</p>
-              <p className="mt-xs text-sm text-secondary">{tLocal.text2}</p>
-            </div>
-            
-            <div className="cookie-banner-actions">
-              <Link to="/privacy" className="cookie-banner-link" onClick={() => setIsVisible(false)}>
-                <Info size={14} />
-                {tLocal.more}
-              </Link>
-              <button className="btn btn-primary btn-sm" onClick={handleAcknowledge}>
-                {tLocal.accept}
-              </button>
-            </div>
-          </div>
+          <p>
+            {tLocal.text}{' '}
+            <Link to="/privacy" onClick={() => setIsVisible(false)}>{tLocal.more}</Link>
+          </p>
+          <button className="cookie-note-ok" onClick={handleAcknowledge}>{tLocal.accept}</button>
         </motion.div>
       )}
     </AnimatePresence>

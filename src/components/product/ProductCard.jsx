@@ -15,7 +15,7 @@ import {
   X,
   Rocket, Play } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { MOCK_CREATORS } from '../../lib/seed';
+import { MOCK_CREATORS, softwareLabels } from '../../lib/seed';
 import { getLocalizedString } from '../../utils/i18nHelpers';
 import { getThumbnailUrl } from '../../utils/mediaHelpers';
 import AvatarFrame from '../common/AvatarFrame';
@@ -33,7 +33,12 @@ const CAT_STYLES = {
   'project-files': { var: '--cat-project-files', Icon: FolderOpen },
   'editing-packs': { var: '--cat-editing-packs', Icon: Package },
   'motion-graphics': { var: '--cat-motion-graphics', Icon: Wand2 },
-  'templates': { var: '--cat-templates', Icon: LayoutTemplate }
+  'templates': { var: '--cat-templates', Icon: LayoutTemplate },
+  // current category ids (lib/seed CATEGORIES)
+  'packs': { var: '--cat-editing-packs', Icon: Package },
+  'effects': { var: '--cat-motion-graphics', Icon: Wand2 },
+  'projects': { var: '--cat-project-files', Icon: FolderOpen },
+  'scripts': { var: '--cat-presets', Icon: Sliders },
 };
 
 // Asked once: only mouse devices get the hover video preview
@@ -149,7 +154,6 @@ function ProductCard({ product, cardStyle = NO_STYLE, onRemove }) {
       <div className="product-content">
         <Link to={`/creator/${creatorName}`} className="product-creator">
           <AvatarFrame 
-            tier={product.tier || 'none'} 
             imageUrl={product.creator_avatar} 
             size="sm" 
             fallbackLetter={creatorName.charAt(0).toUpperCase()} 
@@ -171,7 +175,7 @@ function ProductCard({ product, cardStyle = NO_STYLE, onRemove }) {
 
         
         <div className="product-software">
-          {product.software && product.software.slice(0, 3).map((soft, index) => (
+          {product.software && softwareLabels(product.software).slice(0, 3).map((soft, index) => (
             <span key={index} className="software-tag">
               {soft}
             </span>

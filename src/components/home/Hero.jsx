@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import TrustBar from './TestimonialsSection';
 import { useTranslation } from 'react-i18next';
@@ -191,6 +191,7 @@ export default function Hero() {
       {/* Background motion visual */}
       <video 
         className="hero-bg-visual" 
+        preload="metadata"
         autoPlay 
         loop 
         muted 

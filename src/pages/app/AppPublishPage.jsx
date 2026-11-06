@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useGamification } from '../../context/GamificationContext';
-import { CATEGORIES, SOFTWARE_LIST, STYLE_LIST } from '../../lib/seed';
+import { CATEGORIES, SOFTWARE_LIST, STYLE_LIST, SOFTWARE_ALL, SOFTWARE_ALL_LABEL, ANY_SOFTWARE_CATEGORIES, toggleSoftwareSelection } from '../../lib/seed';
 import { supabase, withTimeoutSafety } from '../../lib/supabase';
 import { isPro, getPlanLimits, formatFileSize } from '../../config/plans';
 import { activateProBoost, billingErrorMessage } from '../../api/billingApi';
@@ -359,7 +359,7 @@ export default function AppPublishPage() {
             <button type="button" className={`pub-drop ${fileError || (touched && !fileReady) ? 'error' : ''}`} onClick={() => { tap(); fileInputRef.current?.click(); }}>
               <span className="pub-drop-icon"><Upload size={26} /></span>
               <b>{editing ? 'Replace the file (optional)' : 'Choose your file'}</b>
-              <small>.zip, .aep, .prproj, .cube, .mogrt, .mp4… · up to {formatFileSize(maxFileSizeMB)}</small>
+              <small>.zip, .aep, .prproj, .cube, .wav, .mp3, .mp4… · up to {formatFileSize(maxFileSizeMB)}</small>
             </button>
           )}
           {editing && !productFile && <p className="pub-hint"><Check size={14} /> Your current file stays online unless you replace it.</p>}
@@ -398,12 +398,12 @@ export default function AppPublishPage() {
           </label>
           <div className="pub-field">
             <span className="pub-label">Category</span>
-            <Chips options={CATEGORIES.map((c) => ({ value: c.id, label: c.name, icon: c.icon }))} icons={CAT_ICONS} value={form.category} onChange={(v) => set({ category: v })} />
+            <Chips options={CATEGORIES.map((c) => ({ value: c.id, label: c.name, icon: c.icon }))} icons={CAT_ICONS} value={form.category} onChange={(v) => set({ category: v, ...(form.software.length === 0 && ANY_SOFTWARE_CATEGORIES.includes(v) ? { software: [SOFTWARE_ALL] } : {}) })} />
             {touched && !form.category && <small className="pub-error">Pick a category.</small>}
           </div>
           <div className="pub-field">
             <span className="pub-label">Works with <em>choose all that apply</em></span>
-            <Chips multiple options={SOFTWARE_LIST.map((s) => ({ value: s, label: s }))} value={form.software} onChange={(v) => set({ software: v })} />
+            <Chips multiple options={[{ value: SOFTWARE_ALL, label: SOFTWARE_ALL_LABEL }, ...SOFTWARE_LIST.map((s) => ({ value: s, label: s }))]} value={form.software} onChange={(v) => set({ software: toggleSoftwareSelection(v, form.software) })} />
             {touched && form.software.length === 0 && <small className="pub-error">Pick at least one software.</small>}
           </div>
           <div className="pub-field">

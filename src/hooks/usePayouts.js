@@ -174,6 +174,10 @@ export function usePayouts() {
       const heldNote = held
         ? ` ${held} sale${held === 1 ? ' is' : 's are'} on hold (refunded, disputed or needing a manual check) and ${held === 1 ? 'was' : 'were'} not transferred.`
         : '';
+      // Sales are paid out after a short holding period (refunds/chargebacks)
+      const waitNote = data?.held_cents > 0
+        ? ` ${formatEur(data.held_cents / 100)} from your latest sales will be ready on ${new Date(data.next_release_at).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })} (sales are paid out ${data.hold_days} days after purchase).`
+        : '';
       if (data?.not_ready) {
         setStripeMessage({ type: 'warning', text: 'Your Stripe account isn\'t fully verified yet. Please check back in a few minutes.' });
       } else if (data?.settled > 0) {
@@ -181,7 +185,7 @@ export function usePayouts() {
           type: failed ? 'warning' : 'success',
           text: `${formatEur(data.total_cents / 100)} sent to your Stripe account. Money from recent sales becomes available once Stripe settles the payment (up to ~7 days).`
             + (failed ? ` ${failed} sale${failed === 1 ? '' : 's'} could not be transferred — please try again later.` : '')
-            + heldNote,
+            + heldNote + waitNote,
         });
         setEarningsReload((n) => n + 1);
       } else if (failed) {
@@ -189,7 +193,9 @@ export function usePayouts() {
         setStripeMessage({ type: 'error', text: `The transfer failed for ${failed} sale${failed === 1 ? '' : 's'}. Please try again later or contact support.` });
         setEarningsReload((n) => n + 1);
       } else if (held) {
-        setStripeMessage({ type: 'warning', text: `Nothing was transferred.${heldNote} Contact support if this looks wrong.` });
+        setStripeMessage({ type: 'warning', text: `Nothing was transferred.${heldNote}${waitNote} Contact support if this looks wrong.` });
+      } else if (data?.held_cents > 0) {
+        setStripeMessage({ type: 'success', text: `Nothing to transfer yet.${waitNote}` });
       } else {
         setStripeMessage({ type: 'success', text: 'No pending earnings to transfer right now.' });
       }

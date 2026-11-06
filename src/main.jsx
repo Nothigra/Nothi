@@ -1,5 +1,6 @@
 import { StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
+import { LazyMotion } from 'framer-motion';
 import { RouterProvider } from 'react-router';
 import { router } from './App.jsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';
@@ -19,6 +20,7 @@ startNativeApp({ router, supabase });
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
+    <LazyMotion features={() => import('./lib/motionFeatures').then((r) => r.default)}>
     <AuthProvider>
       <ThemeProvider>
         <CartProvider>
@@ -34,5 +36,6 @@ createRoot(document.getElementById('root')).render(
         </CartProvider>
       </ThemeProvider>
     </AuthProvider>
+    </LazyMotion>
   </StrictMode>
 );

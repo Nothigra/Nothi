@@ -27,7 +27,8 @@ export function useUnifiedSearch(query, lang = 'en') {
     }
 
     let isMounted = true;
-    const lowerQuery = debouncedQuery.toLowerCase().trim();
+    // commas/parentheses would break the PostgREST `or` filter
+    const lowerQuery = debouncedQuery.toLowerCase().replace(/[%,()*\\]/g, ' ').trim().slice(0, 80);
     setIsSearching(true);
 
     async function fetchAndScore() {

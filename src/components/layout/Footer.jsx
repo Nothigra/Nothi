@@ -64,7 +64,6 @@ export default function Footer() {
                     window.dispatchEvent(new Event('openCookieBanner'));
                   }}
                   className="footer-link-button"
-                  style={{ background: 'none', border: 'none', padding: 0, color: 'inherit', font: 'inherit', cursor: 'pointer' }}
                 >
                   {t('footer.cookiePolicy')}
                 </button>

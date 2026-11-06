@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import Input from '../components/ui/Input';
 import './AuthPages.css';

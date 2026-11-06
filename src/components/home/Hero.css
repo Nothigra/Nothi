@@ -496,3 +496,14 @@
   z-index: 10;
   margin-top: var(--space-8);
 }
+
+/* Phones: products on the first screen, no background video (data + battery) */
+@media (max-width: 768px) {
+  .hero-section { padding: 88px 0 16px 0; }
+  .hero-subheadline { margin-bottom: 20px; }
+  .hero-software-banner-wrapper { margin-top: 16px; }
+  video.hero-bg-visual { display: none; }
+}
+@media (max-width: 480px) {
+  .hero-headline { font-size: 30px; }
+}

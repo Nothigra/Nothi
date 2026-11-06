@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { useGamification } from '../../context/GamificationContext';
 import { Zap, Trophy } from 'lucide-react';
 import './XPGainPopup.css';

@@ -49,14 +49,49 @@ serve(async (req) => {
       });
     }
 
-    const { productId } = await req.json();
-    if (!productId) throw new Error('Missing productId');
+    const { productId, attachment } = await req.json();
 
     // Service role for all internal lookups — DB data never forwarded to client
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+
+    // ── Private chat attachment: only the two people in that conversation ──
+    if (attachment) {
+      const ref = String(attachment);
+      if (!ref.startsWith('nothi-private:chat-attachments/')) throw new Error('Invalid attachment');
+      const { data: msg } = await supabaseAdmin
+        .from('messages')
+        .select('id')
+        .eq('attachment_url', ref)
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .limit(1)
+        .maybeSingle();
+      if (!msg) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403
+        });
+      }
+      const key = ref.slice('nothi-private:'.length);
+      const s3a = new S3Client({
+        region: 'auto',
+        endpoint: `https://${Deno.env.get('R2_ACCOUNT_ID')}.r2.cloudflarestorage.com`,
+        credentials: { accessKeyId: Deno.env.get('R2_ACCESS_KEY_ID') ?? '', secretAccessKey: Deno.env.get('R2_SECRET_ACCESS_KEY') ?? '' },
+        forcePathStyle: true,
+      });
+      const name = (key.split('/').pop() || 'file').replace(/^\d+_/, '').replace(/"/g, '');
+      const url = await getSignedUrl(s3a, new GetObjectCommand({
+        Bucket: Deno.env.get('R2_PRODUCT_FILES_BUCKET_NAME') ?? '',
+        Key: key,
+        ResponseContentDisposition: `inline; filename="${name}"`,
+      }), { expiresIn: 3600 });
+      return new Response(JSON.stringify({ downloadUrl: url }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200
+      });
+    }
+
+    if (!productId) throw new Error('Missing productId');
 
     // Fetch product's seller and file_path (internal only — never returned to client)
     const { data: product, error: productError } = await supabaseAdmin
@@ -125,16 +160,14 @@ serve(async (req) => {
       forcePathStyle: true,
     });
 
-    // Extract original filename by stripping the timestamp prefix added during upload
-    const pathParts = product.file_path.split('/');
-    const filePart = pathParts[pathParts.length - 1]; // e.g. "1730_myfile.zip"
-    const firstUnderscore = filePart.indexOf('_');
-    const originalFilename = firstUnderscore !== -1 ? filePart.substring(firstUnderscore + 1) : filePart;
+    // The object key ends with the original (sanitised) file name
+    const fileName = product.file_path.split('/').pop() || 'download';
 
     // Generate presigned GET URL — 10-minute expiry prevents link sharing/reuse
     const downloadUrl = await getSignedUrl(s3, new GetObjectCommand({
       Bucket: bucketName,
       Key: product.file_path,
+      ResponseContentDisposition: `attachment; filename="${fileName.replace(/"/g, '')}"`,
     }), { expiresIn: 600 }); // 10 minutes
 
     return new Response(

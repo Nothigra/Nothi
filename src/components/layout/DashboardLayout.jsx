@@ -2,7 +2,7 @@ import { Suspense, useState, useEffect } from 'react';
 import PageFallback from '../common/PageFallback';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, Package, ShoppingBag, BarChart3, 
   CreditCard, Settings, LogOut, Menu, X, Plus, Users, 
@@ -15,6 +15,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useGamification } from '../../context/GamificationContext';
 import MobileBottomNav from './MobileBottomNav';
 import './DashboardLayout.css';
+import { avatarFallback } from '../../utils/helpers';
 
 export default function DashboardLayout() {
   const { t } = useTranslation();
@@ -233,7 +234,7 @@ export default function DashboardLayout() {
 
             <Link to="/dashboard/settings" className="header-profile" style={{ display: 'flex', alignItems: 'center' }}>
               <img 
-                src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${profile?.username || 'User'}&background=random`} 
+                src={profile?.avatar_url || avatarFallback(profile?.username)} 
                 alt="Profile" 
                 className="profile-avatar" 
                 style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}

@@ -5,7 +5,7 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 import MobileBottomNav from './MobileBottomNav';
 import CartDrawer from '../cart/CartDrawer';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 
 /**
  * Freezes the current outlet during exit animations so the OLD page

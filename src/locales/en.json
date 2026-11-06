@@ -75,7 +75,8 @@
     "noProductsDesc": "Try adjusting your filters or search query",
     "products": "products",
     "clearFilters": "Clear Filters",
-    "apply": "Apply"
+    "apply": "Apply",
+    "loadMore": "Show more"
   },
   "product": {
     "addToCart": "Add to Cart",
@@ -352,7 +353,7 @@
     "productApproved": "Product approved"
   },
   "footer": {
-    "description": "The The marketplace for video editors. Buy and sell premium digital assets.",
+    "description": "The marketplace for video editors. Buy and sell premium digital assets.",
     "product": "Product",
     "company": "Company",
     "resources": "Resources",

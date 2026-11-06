@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Lock, Eye, EyeOff } from 'lucide-react';
 import { supabase, isMockMode, withTimeoutSafety } from '../lib/supabase';
 import Input from '../components/ui/Input';

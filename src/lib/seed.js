@@ -88,11 +88,39 @@ export const CATEGORIES = [
   { id: 'overlays', name: 'Overlays', icon: 'Layers' },
 ];
 
+// "Works with every software" (SFX, music, overlays, images…). Stored as the
+// single value 'All' on a product; it matches every software filter.
+export const SOFTWARE_ALL = 'All';
+export const SOFTWARE_ALL_LABEL = 'All software';
+
 export const SOFTWARE_LIST = [
-  'After Effects', 'CapCut', 'Premiere Pro', 'DaVinci Resolve', 
-  'Alight Motion', 'Blender', 'Cinema 4D', 'Final Cut Pro', 
-  'Filmora', 'iMovie', 'Blurrr', 'Vegas Pro'
+  'After Effects', 'Premiere Pro', 'DaVinci Resolve', 'CapCut', 'Final Cut Pro',
+  'Alight Motion', 'Photoshop', 'Lightroom', 'Blender', 'Cinema 4D', 'Motion',
+  'Vegas Pro', 'Filmora', 'iMovie', 'VN', 'KineMaster', 'Edits', 'Blurrr',
+  'HitFilm', 'Other'
 ];
+
+// Categories whose products usually work in any software
+export const ANY_SOFTWARE_CATEGORIES = ['sfx', 'overlays'];
+
+/** Picking "All software" clears the others; picking another clears "All". */
+export function toggleSoftwareSelection(next, prev = []) {
+  const added = next.filter((v) => !prev.includes(v));
+  if (added.includes(SOFTWARE_ALL)) return [SOFTWARE_ALL];
+  return next.filter((v) => v !== SOFTWARE_ALL);
+}
+
+/** Does a product work with one of the wanted software? ('All' works with everything) */
+export function worksWithSoftware(productSoftware, wanted) {
+  if (!wanted || wanted.length === 0) return true;
+  const list = productSoftware || [];
+  return list.includes(SOFTWARE_ALL) || list.some((sw) => wanted.includes(sw));
+}
+
+/** Label list for display: 'All' becomes "All software". */
+export function softwareLabels(list) {
+  return (list || []).map((sw) => (sw === SOFTWARE_ALL ? SOFTWARE_ALL_LABEL : sw));
+}
 
 export const STYLE_LIST = [
   'Movie', 'AMV', 'Football', 'Flow', 'Typography', 'Transitions', 

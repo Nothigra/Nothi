@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import ProductCard from '../product/ProductCard';
 import { supabase, isMockMode } from '../../lib/supabase';
 import { MOCK_PRODUCTS } from '../../lib/seed';
@@ -19,7 +19,7 @@ const itemVariants = {
 
 /**
  * A row of real products on the home page.
- *   sort: 'popular' (popular_rank) | 'new' (most recent)
+ *   sort: 'popular' (popular_score) | 'new' (most recent)
  */
 export default function FeaturedProducts({ sort = 'popular', title, description, compact = false }) {
   const { t } = useTranslation();
@@ -35,7 +35,7 @@ export default function FeaturedProducts({ sort = 'popular', title, description,
     }
     let alive = true;
     const query = supabase.from('public_products').select('*');
-    (sort === 'new' ? query.order('created_at', { ascending: false }) : query.order('popular_rank', { ascending: true }))
+    (sort === 'new' ? query.order('created_at', { ascending: false }) : query.order('popular_score', { ascending: false }))
       .limit(4)
       .then(({ data }) => { if (alive && data) setPopularProducts(data); })
       .catch(console.error);

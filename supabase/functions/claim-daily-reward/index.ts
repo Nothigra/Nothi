@@ -62,15 +62,24 @@ serve(async (req) => {
     }
 
     // ── Update streak and last_claimed_date ──────────────────────────────────
-    const { error: updateError } = await supabaseAdmin
+    // Conditional update: only succeeds if nobody claimed since we read the
+    // profile, so two taps at the same time can't both get the reward.
+    let claim = supabaseAdmin
       .from('profiles')
       .update({
         streak: newStreak,
         last_claimed_date: now.toISOString(),
       })
       .eq('id', user.id);
+    claim = profile.last_claimed_date
+      ? claim.eq('last_claimed_date', profile.last_claimed_date)
+      : claim.is('last_claimed_date', null);
+    const { data: claimed, error: updateError } = await claim.select('id');
 
     if (updateError) throw new Error('Failed to update streak');
+    if (!claimed || claimed.length === 0) {
+      throw new Error('You have already claimed your daily reward today. Come back tomorrow!');
+    }
 
     // ── Call add_xp_and_level_up to securely award XP ────────────────────────
     const rewardXP = 150;

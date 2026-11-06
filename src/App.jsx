@@ -58,6 +58,7 @@ import { useAuth } from './context/AuthContext';
 
 // Mobile app (Capacitor): its own shell + a few app-only screens
 import { isNativeApp } from './lib/native';
+import { useRouteTitles } from './lib/pageTitle';
 import AppShell from './components/app/AppShell';
 import AppDiscoverPage from './pages/app/AppDiscoverPage';
 import AppProfilePage from './pages/app/AppProfilePage';
@@ -99,6 +100,7 @@ function AuthCallback() {
 // AppRoot renders the Outlet so that context providers in main.jsx can wrap everything.
 function AppRoot() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  useRouteTitles();
   useEffect(() => { preloadPages(); }, []);
   return (
     <>

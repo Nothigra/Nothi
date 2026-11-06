@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, forwardRef } from 'react';
 import { ChevronDown, Check, AlertCircle, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import './Select.css';
 
 const Select = forwardRef(({

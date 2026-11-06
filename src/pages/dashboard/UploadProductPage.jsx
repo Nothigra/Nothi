@@ -5,15 +5,15 @@ import {
   AlertCircle, X, Type, Tag, Globe, Settings, ExternalLink, CheckCircle2, Eye, ChevronDown, Rocket, Loader2
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { CATEGORIES, SOFTWARE_LIST, STYLE_LIST } from '../../lib/seed';
+import { CATEGORIES, SOFTWARE_LIST, STYLE_LIST, SOFTWARE_ALL, SOFTWARE_ALL_LABEL, ANY_SOFTWARE_CATEGORIES, toggleSoftwareSelection } from '../../lib/seed';
 import Input from '../../components/ui/Input';
 import Textarea from '../../components/ui/Textarea';
 import CurrencyInput from '../../components/ui/CurrencyInput';
 import Select from '../../components/ui/Select';
 import Checkbox from '../../components/ui/Checkbox';
 import Toggle from '../../components/ui/Toggle';
-import { motion, AnimatePresence } from 'framer-motion';
-import { createProduct, requestProductFileUploadUrl, updateProduct } from '../../api/productApi';
+import { m as motion, AnimatePresence } from 'framer-motion';
+import { cleanupOldProductFiles, createProduct, requestProductFileUploadUrl, updateProduct } from '../../api/productApi';
 import { supabase, withTimeoutSafety } from '../../lib/supabase';
 import { PLAN_LIMITS, isPro, getPlanLimits, formatFileSize } from '../../config/plans';
 import { activateProBoost, startBoostCheckout, billingErrorMessage } from '../../api/billingApi';
@@ -297,6 +297,7 @@ export default function UploadProductPage() {
         // Update product metadata (and new file_path if applicable)
         const updated = await updateProduct(productId, productPayload);
         if (!updated) throw new Error('Could not save your changes. Please check the price and promotion, then try again.');
+        if (productPayload.file_path) cleanupOldProductFiles(productId);
         
       } else {
         // === CREATE NEW PRODUCT FLOW ===
@@ -553,7 +554,12 @@ export default function UploadProductPage() {
           <div className="up-field">
             <Select
               value={formData.category}
-              onChange={(val) => setFormData({...formData, category: val})}
+              onChange={(val) => setFormData({
+                ...formData,
+                category: val,
+                // SFX / overlays usually work everywhere: preselect "All software" when nothing is picked yet
+                software: formData.software.length === 0 && ANY_SOFTWARE_CATEGORIES.includes(val) ? [SOFTWARE_ALL] : formData.software,
+              })}
               options={CATEGORIES.map(c => ({ value: c.id, label: c.name }))}
               placeholder="Select Category *"
               searchable={true}
@@ -567,8 +573,8 @@ export default function UploadProductPage() {
               multiple={true}
               searchable={true}
               value={formData.software}
-              onChange={(val) => setFormData({...formData, software: val})}
-              options={SOFTWARE_LIST.map(sw => ({ value: sw, label: sw }))}
+              onChange={(val) => setFormData({...formData, software: toggleSoftwareSelection(val, formData.software)})}
+              options={[{ value: SOFTWARE_ALL, label: `${SOFTWARE_ALL_LABEL} (SFX, music, images…)` }, ...SOFTWARE_LIST.map(sw => ({ value: sw, label: sw }))]}
               placeholder="Select software tools..."
               error={showValidationErrors && formData.software.length === 0 ? "Software is required" : null}
             />

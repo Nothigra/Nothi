@@ -7,7 +7,7 @@ export default function TestimonialsSection() {
       <div className="container">
         <div className="trust-bar-track">
           <div className="trust-bar-marquee">
-            {[...SOFTWARE_LIST, ...SOFTWARE_LIST].map((name, i) => (
+            {[...SOFTWARE_LIST, ...SOFTWARE_LIST].filter((n) => n !== 'Other').map((name, i) => (
               <span key={i} className="trust-bar-item">{name}</span>
             ))}
           </div>

@@ -26,7 +26,8 @@
 //   https://wmnueemuldnhwzukckyi.supabase.co/functions/v1/stripe-webhook
 // Listening for: checkout.session.completed, checkout.session.async_payment_succeeded,
 //                customer.subscription.created, customer.subscription.updated,
-//                customer.subscription.deleted
+//                customer.subscription.deleted, charge.refunded,
+//                charge.dispute.created, charge.dispute.closed
 // Signing secret set via: npx supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
@@ -111,6 +112,13 @@ serve(async (req) => {
       } else {
         await handleCheckoutSessionCompleted(session, stripe);
       }
+    } else if (event.type === 'charge.refunded') {
+      await handleChargeRefunded(event.data.object as Stripe.Charge, stripe);
+    } else if (event.type === 'charge.dispute.created') {
+      await handleDispute(event.data.object as Stripe.Dispute, stripe, 'opened');
+    } else if (event.type === 'charge.dispute.closed') {
+      const d = event.data.object as Stripe.Dispute;
+      await handleDispute(d, stripe, d.status === 'won' ? 'won' : 'lost');
     } else if (
       event.type === 'customer.subscription.created' ||
       event.type === 'customer.subscription.updated' ||
@@ -252,7 +260,13 @@ async function handleCheckoutSessionCompleted(
   if (error) {
     if (error.code === '23505') {
       // 23505 is PostgreSQL unique_violation. We hit the unique_buyer_product constraint.
-      console.log(`Duplicate purchase blocked by DB constraint for buyer=${buyer_id} product=${product_id}`);
+      // A buyer re-buying something that was refunded before: reuse that row.
+      const revived = await reviveRefunded(supabaseAdmin, buyer_id, product_id, {
+        seller_id, price_paid: pricePaidFloat, currency: session.currency?.toUpperCase() ?? 'EUR',
+        stripe_payment_intent_id: paymentIntentId, platform_fee_cents: platformFeeCents,
+        stripe_fee_cents: stripeFeeCents, seller_amount_cents: sellerAmountCents,
+      });
+      if (!revived) console.log(`Duplicate purchase blocked by DB constraint for buyer=${buyer_id} product=${product_id}`);
       return; // Acknowledge success to Stripe so it stops retrying this event
     }
     console.error('Failed to insert purchase:', error);
@@ -360,6 +374,12 @@ async function handleCartPaid(session: Stripe.Checkout.Session, stripe: Stripe) 
 
     if (error) {
       if (error.code === '23505') {
+        const revived = await reviveRefunded(supabaseAdmin, cart.buyer_id, item.product_id, {
+          seller_id: item.seller_id, price_paid: item.price_cents / 100, currency: 'EUR',
+          stripe_payment_intent_id: paymentIntentId, platform_fee_cents: platformFeeCents,
+          stripe_fee_cents: stripeFeeCents, seller_amount_cents: sellerAmountCents,
+        });
+        if (revived) continue;
         // Already owned: either a webhook retry (row already created) or the
         // buyer bought it twice in parallel checkouts.
         const { data: existing } = await supabaseAdmin
@@ -503,4 +523,99 @@ async function syncSubscription(eventSub: Stripe.Subscription, stripe: Stripe, u
 
   if (error) throw new Error(`Failed to sync subscription: ${error.message}`);
   console.log(`Subscription synced: user=${userId} best=${best.id} status=${best.status} plan=${isActive ? 'pro' : 'free'} (event sub ${eventSub.id})`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Refunds and disputes
+// ─────────────────────────────────────────────────────────────────────────
+// A refunded or disputed sale must not stay in the buyer's library, and the
+// seller must not keep money Nothi gave back. Rows still waiting for payout are
+// simply never paid (settle-pending-payouts only pays 'completed' rows). Rows
+// already paid get their transfer reversed.
+const admin = () => createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+const piOf = (x: string | { id: string } | null | undefined) => (typeof x === 'string' ? x : x?.id ?? null);
+
+async function reverseTransfer(stripe: Stripe, row: { id: string; stripe_transfer_id: string | null; seller_amount_cents: number | null }) {
+  const tr = row.stripe_transfer_id;
+  if (!tr || !tr.startsWith('tr_')) return null;
+  try {
+    const rev = await stripe.transfers.createReversal(tr, {
+      amount: row.seller_amount_cents ?? undefined,
+      metadata: { purchase_id: row.id },
+    }, { idempotencyKey: `reverse-${row.id}` });
+    return rev.id;
+  } catch (err) {
+    // Already reversed, or the seller's balance is empty: Stripe keeps the
+    // negative balance on their account; log it for a manual look.
+    console.error(`Could not reverse transfer ${tr} for purchase ${row.id}: ${(err as Error).message}`);
+    return null;
+  }
+}
+
+async function handleChargeRefunded(charge: Stripe.Charge, stripe: Stripe) {
+  const pi = piOf(charge.payment_intent as any);
+  if (!pi) return;
+  const db = admin();
+  const { data: rows, error } = await db.from('purchases')
+    .select('id, status, price_paid, stripe_transfer_id, seller_amount_cents')
+    .eq('stripe_payment_intent_id', pi);
+  if (error) throw new Error(`refund lookup failed: ${error.message}`);
+  if (!rows?.length) return;
+
+  const full = (charge.amount_refunded ?? 0) >= charge.amount;
+  let targets = rows.filter((r) => r.status === 'completed');
+  if (!full) {
+    // Partial refund of a cart: refund the items whose prices add up to the
+    // refunded amount (largest first). Anything that doesn't match is logged.
+    let left = charge.amount_refunded ?? 0;
+    const already = rows.filter((r) => r.status === 'refunded').reduce((s, r) => s + Math.round(Number(r.price_paid) * 100), 0);
+    left -= already;
+    const picked: typeof targets = [];
+    for (const r of [...targets].sort((a, b) => Number(b.price_paid) - Number(a.price_paid))) {
+      const c = Math.round(Number(r.price_paid) * 100);
+      if (c <= left) { picked.push(r); left -= c; }
+    }
+    if (left !== 0) console.error(`Partial refund on ${pi} does not match item prices (${left}¢ left) — review manually`);
+    targets = picked;
+  }
+  for (const r of targets) {
+    await reverseTransfer(stripe, r);
+    await db.from('purchases').update({ status: 'refunded', refunded_at: new Date().toISOString() }).eq('id', r.id);
+  }
+  console.log(`Refund on ${pi}: ${targets.length} purchase(s) marked refunded`);
+}
+
+async function handleDispute(dispute: Stripe.Dispute, stripe: Stripe, state: 'opened' | 'won' | 'lost') {
+  const db = admin();
+  let pi = piOf(dispute.payment_intent as any);
+  if (!pi && dispute.charge) {
+    const ch = await stripe.charges.retrieve(typeof dispute.charge === 'string' ? dispute.charge : dispute.charge.id);
+    pi = piOf(ch.payment_intent as any);
+  }
+  if (!pi) return;
+  const { data: rows } = await db.from('purchases')
+    .select('id, status, stripe_transfer_id, seller_amount_cents')
+    .eq('stripe_payment_intent_id', pi);
+  for (const r of rows ?? []) {
+    if (state === 'opened' && r.status === 'completed') {
+      const rev = await reverseTransfer(stripe, r);
+      await db.from('purchases').update({ status: 'disputed', ...(rev ? { stripe_transfer_id: null } : {}) }).eq('id', r.id);
+    } else if (state === 'won' && r.status === 'disputed') {
+      await db.from('purchases').update({ status: 'completed' }).eq('id', r.id);
+    } else if (state === 'lost' && r.status === 'disputed') {
+      await db.from('purchases').update({ status: 'refunded', refunded_at: new Date().toISOString() }).eq('id', r.id);
+    }
+  }
+  console.log(`Dispute ${dispute.id} ${state} on ${pi}: ${rows?.length ?? 0} purchase(s)`);
+}
+
+// A product bought again after a refund: the old row (unique per buyer+product)
+// becomes the new purchase.
+async function reviveRefunded(db: any, buyerId: string, productId: string, fields: Record<string, unknown>) {
+  const { data } = await db.from('purchases')
+    .update({ ...fields, status: 'completed', is_free: false, refunded_at: null, stripe_transfer_id: null,
+              purchased_at: new Date().toISOString() })
+    .eq('buyer_id', buyerId).eq('product_id', productId).eq('status', 'refunded')
+    .select('id');
+  return !!(data && data.length);
 }

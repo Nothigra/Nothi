@@ -4,7 +4,13 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // When credentials are missing, we run in "mock mode"
-export const isMockMode = !supabaseUrl || !supabaseAnonKey;
+// Demo data ("mock mode") only ever runs in local development. A production
+// build without the Supabase settings must fail loudly, never show fake
+// products and reviews to real visitors.
+export const isMockMode = import.meta.env.DEV && (!supabaseUrl || !supabaseAnonKey);
+if (!import.meta.env.DEV && (!supabaseUrl || !supabaseAnonKey)) {
+  console.error('Nothi: VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY are missing from this build.');
+}
 
 let supabase = null;
 
@@ -67,7 +73,7 @@ const resilientLock = async (name, acquireTimeout, fn) => {
   }
 };
 
-if (!isMockMode) {
+if (supabaseUrl && supabaseAnonKey) {
   const options = {
     auth: { lock: resilientLock },
   };

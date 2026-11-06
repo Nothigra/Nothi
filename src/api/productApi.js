@@ -48,10 +48,13 @@ export async function getPublicProducts(isMockMode, forceFresh = false) {
     return publicProductsCache;
   }
   
+  // Capped: screens that need more page through queryPublicProducts().
   const { data, error } = await withTimeoutSafety(() =>
     supabase
       .from('public_products')
       .select('*')
+      .order('popular_score', { ascending: false })
+      .limit(120)
   );
 
   if (error) {
@@ -64,6 +67,74 @@ export async function getPublicProducts(isMockMode, forceFresh = false) {
   publicProductsCache = list;
   publicProductsCacheTime = Date.now();
   return list;
+}
+
+/**
+ * Server-side catalogue query: filters, sort and paging run in the database,
+ * so the page stays fast whatever the size of the catalogue.
+ * Returns { items, count } — count only on the first page (offset 0).
+ *
+ * opts: { category, software[], style[], free: true|false|undefined,
+ *         priceMin, priceMax, minRating, search, sellerIds[], excludeId,
+ *         sort: 'newest'|'popular'|'priceLow'|'priceHigh', limit, offset }
+ */
+export async function queryPublicProducts(opts = {}, isMockMode = false) {
+  const {
+    category, software = [], style = [], free, priceMin, priceMax, minRating,
+    search, sellerIds, excludeId, sort = 'newest', limit = 24, offset = 0,
+  } = opts;
+
+  if (isMockMode) {
+    let list = [...MOCK_PRODUCTS];
+    const price = (p) => p.sale_price ?? p.salePrice ?? p.price ?? 0;
+    if (category && category !== 'all') list = list.filter((p) => p.category === category);
+    if (software.length) list = list.filter((p) => (p.software || []).includes('All') || (p.software || []).some((s) => software.includes(s)));
+    if (style.length) list = list.filter((p) => (p.style || []).some((s) => style.includes(s)));
+    if (free === true) list = list.filter((p) => price(p) === 0);
+    if (free === false) list = list.filter((p) => price(p) > 0);
+    if (priceMin != null) list = list.filter((p) => price(p) >= priceMin);
+    if (priceMax != null) list = list.filter((p) => price(p) <= priceMax);
+    if (minRating) list = list.filter((p) => (p.rating || 0) >= minRating);
+    if (excludeId) list = list.filter((p) => p.id !== excludeId);
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter((p) => JSON.stringify([p.title, p.description, p.software]).toLowerCase().includes(q));
+    }
+    if (sort === 'priceLow') list.sort((a, b) => price(a) - price(b));
+    if (sort === 'priceHigh') list.sort((a, b) => price(b) - price(a));
+    if (sort === 'popular') list.sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0));
+    return { items: list.slice(offset, offset + limit), count: list.length };
+  }
+
+  let q = supabase
+    .from('public_products')
+    .select('*', offset === 0 ? { count: 'exact' } : undefined);
+
+  if (category && category !== 'all') q = q.eq('category', category);
+  // a product marked 'All' works with every software
+  if (software.length) q = q.overlaps('software', [...new Set([...software, 'All'])]);
+  if (style.length) q = q.overlaps('style', style);
+  if (free === true) q = q.eq('effective_price', 0);
+  if (free === false) q = q.gt('effective_price', 0);
+  if (priceMin != null) q = q.gte('effective_price', priceMin);
+  if (priceMax != null) q = q.lte('effective_price', priceMax);
+  if (minRating) q = q.gte('rating', minRating);
+  if (sellerIds?.length) q = q.in('seller_id', sellerIds);
+  if (excludeId) q = q.neq('id', excludeId);
+  const term = (search || '').trim().replace(/[%,()*\\]/g, ' ').slice(0, 80);
+  if (term) q = q.or(`title.ilike.%${term}%,description.ilike.%${term}%,creator_username.ilike.%${term}%`);
+
+  if (sort === 'popular') q = q.order('popular_score', { ascending: false }).order('created_at', { ascending: false });
+  else if (sort === 'priceLow') q = q.order('effective_price', { ascending: true }).order('created_at', { ascending: false });
+  else if (sort === 'priceHigh') q = q.order('effective_price', { ascending: false }).order('created_at', { ascending: false });
+  else q = q.order('created_at', { ascending: false });
+
+  const { data, error, count } = await withTimeoutSafety(() => q.range(offset, offset + limit - 1));
+  if (error) {
+    console.error('Error querying products:', error);
+    return { items: [], count: 0, error };
+  }
+  return { items: data || [], count: count ?? null };
 }
 
 /** Last loaded catalogue, even if stale — lets screens paint instantly and refresh in the background. */
@@ -166,6 +237,15 @@ export async function requestProductFileUploadUrl({ productId, filename, content
 }
 
 /**
+ * After a new product file is saved, remove the older uploads of that product
+ * from storage (best effort, never blocks the seller).
+ */
+export function cleanupOldProductFiles(productId) {
+  if (!productId) return;
+  invokeFunction('generate-product-file-upload-url', { action: 'finalize', productId }).catch(() => {});
+}
+
+/**
  * Requests a short-lived (10-minute) presigned GET URL for a purchased product's file.
  * Returns { downloadUrl } on success, or throws with { error, message } on 403/404.
  */
@@ -210,6 +290,7 @@ export async function getMyProducts(sellerId) {
       .from('products')
       .select('*')
       .eq('seller_id', sellerId)
+      .neq('status', 'archived')
       .order('created_at', { ascending: false })
   );
   if (error) {
@@ -285,10 +366,8 @@ export async function getUserPurchases(userId, isMockMode) {
   ] = await Promise.all([
     productIds.length > 0
       ? withTimeoutSafety(() =>
-          supabase
-            .from('public_products')
-            .select('id, title, price, images, media, category')
-            .in('id', productIds)
+          // Bought products stay in the library even if the seller archived them
+          supabase.rpc('get_library_products', { p_ids: productIds })
         )
       : Promise.resolve({ data: [], error: null }),
     sellerIds.length > 0

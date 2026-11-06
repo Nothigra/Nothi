@@ -23,7 +23,10 @@
 //           without it Stripe draws from the platform's AVAILABLE balance and
 //           fails for any sale still inside the ~7-day settlement window.
 //        d. Replace the marker with the real transfer id.
-//   6. Return { settled, total_cents, skipped, not_ready, errors }.
+//   6. Return { settled, total_cents, held_cents, next_release_at, skipped, not_ready, errors }.
+//
+// Holding period (PAYOUT_HOLD_DAYS, default 7): a sale is only paid once it is
+// that old, so early refunds and chargebacks don't come out of Nothi's pocket.
 //
 // Why the claim marker: Stripe idempotency keys expire after 24h. If a
 // transfer succeeded but saving its id failed, a retry the next day would pay
@@ -54,6 +57,9 @@ const corsHeaders = {
 };
 
 const MARKER_PREFIX = 'pending:';
+// Sales become payable after a holding period, so a refund or a chargeback in
+// the first days can still be taken back before the seller has the money.
+const HOLD_DAYS = Number(Deno.env.get('PAYOUT_HOLD_DAYS') ?? '7');
 // A claimed row older than this whose transfer can't be found is released.
 const STALE_MARKER_SECONDS = 15 * 60;
 
@@ -181,9 +187,9 @@ serve(async (req) => {
     await recoverStaleClaims(supabaseAdmin, stripe, user.id, errors);
 
     // ── 5. Unsettled PAID purchases written by the verified webhook ──────────
-    const { data: pendingPurchases, error: fetchError } = await supabaseAdmin
+    const { data: unpaid, error: fetchError } = await supabaseAdmin
       .from('purchases')
-      .select('id, seller_amount_cents, stripe_payment_intent_id')
+      .select('id, seller_amount_cents, stripe_payment_intent_id, purchased_at')
       .eq('seller_id', user.id)
       .eq('status', 'completed')
       .eq('is_free', false)
@@ -193,10 +199,18 @@ serve(async (req) => {
 
     if (fetchError) throw new Error(`Failed to fetch pending purchases: ${fetchError.message}`);
 
+    // Holding period: only sales older than HOLD_DAYS are paid now.
+    const releaseOf = (p: { purchased_at: string }) => new Date(p.purchased_at).getTime() + HOLD_DAYS * 86400000;
+    const now = Date.now();
+    const pendingPurchases = (unpaid ?? []).filter((p) => releaseOf(p) <= now);
+    const held = (unpaid ?? []).filter((p) => releaseOf(p) > now);
+    const heldCents = held.reduce((s, p) => s + (p.seller_amount_cents || 0), 0);
+    const nextReleaseAt = held.length ? new Date(Math.min(...held.map(releaseOf))).toISOString() : null;
+
     let settledCount = 0;
     let totalTransferredCents = 0;
 
-    for (const purchase of pendingPurchases ?? []) {
+    for (const purchase of pendingPurchases) {
       const sellerCents: number = purchase.seller_amount_cents;
       let marker: string | null = null;
 
@@ -273,6 +287,10 @@ serve(async (req) => {
       settled:     settledCount,
       total_cents: totalTransferredCents,
       not_ready:   false,
+      held_cents:  heldCents,
+      held_count:  held.length,
+      hold_days:   HOLD_DAYS,
+      next_release_at: nextReleaseAt,
       skipped:     skipped.length > 0 ? skipped : undefined,
       errors:      errors.length > 0 ? errors : undefined,
     });

@@ -74,7 +74,8 @@
     "noProductsDesc": "Essayez d'ajuster vos filtres ou votre recherche",
     "products": "produits",
     "clearFilters": "Effacer les Filtres",
-    "apply": "Appliquer"
+    "apply": "Appliquer",
+    "loadMore": "Voir plus"
   },
   "product": {
     "addToCart": "Ajouter au Panier",
@@ -574,5 +575,118 @@
     "useProBoost": "Utiliser 1 boost Pro",
     "welcomePro": "Bienvenue dans Nothi Pro ! Tous tes avantages sont actifs.",
     "yearly": "Annuel"
+  },
+  "badges": {
+    "first_purchase": {
+      "title": "Premier achat",
+      "desc": "Acheter un premier produit"
+    },
+    "one_week": {
+      "title": "Bienvenue",
+      "desc": "7 jours sur Nothi"
+    },
+    "first_sale": {
+      "title": "Première vente",
+      "desc": "Vendre un premier produit"
+    },
+    "one_month": {
+      "title": "Habitué",
+      "desc": "30 jours sur Nothi"
+    },
+    "week_streak": {
+      "title": "En feu",
+      "desc": "7 jours de récompenses d'affilée"
+    },
+    "boosted": {
+      "title": "Projecteur",
+      "desc": "Booster un produit"
+    },
+    "level_10": {
+      "title": "Étoile montante",
+      "desc": "Atteindre le niveau 10"
+    },
+    "collector": {
+      "title": "Collectionneur",
+      "desc": "Acheter chez 10 créateurs"
+    },
+    "prolific_creator": {
+      "title": "Créateur prolifique",
+      "desc": "Publier 10 produits"
+    },
+    "six_months": {
+      "title": "Vétéran",
+      "desc": "6 mois sur Nothi"
+    },
+    "top_50": {
+      "title": "Top 50",
+      "desc": "Entrer dans le top 50 des vendeurs"
+    },
+    "half_century": {
+      "title": "Demi-siècle",
+      "desc": "Atteindre 50 ventes"
+    },
+    "month_streak": {
+      "title": "Inarrêtable",
+      "desc": "30 jours de récompenses d'affilée"
+    },
+    "level_20": {
+      "title": "Élite",
+      "desc": "Atteindre le niveau 18"
+    },
+    "top_10": {
+      "title": "Top 10",
+      "desc": "Entrer dans le top 10 des vendeurs"
+    },
+    "century_seller": {
+      "title": "Club des 100",
+      "desc": "Atteindre 100 ventes"
+    },
+    "master_creator": {
+      "title": "Maître créateur",
+      "desc": "Publier 50 produits"
+    },
+    "level_30": {
+      "title": "Légende",
+      "desc": "Atteindre le niveau 24"
+    },
+    "one_year": {
+      "title": "Membre fondateur",
+      "desc": "1 an sur Nothi"
+    },
+    "number_one": {
+      "title": "Numéro 1",
+      "desc": "Devenir le vendeur n°1"
+    },
+    "ui": {
+      "title": "Grade et badges",
+      "subtitle": "Ton grade monte avec l'XP. Les badges se gagnent avec des actions précises : épingles-en jusqu'à 3 sur ta boutique.",
+      "earned": "gagnés",
+      "maxPinned": "Tu peux épingler 3 badges maximum. Retire-en un d'abord.",
+      "pin": "Épingler",
+      "unpin": "Retirer",
+      "locked": "Pas encore gagné",
+      "pinned": "Badges épinglés",
+      "grades": "Grades"
+    },
+    "rarity": {
+      "common": "Commune",
+      "uncommon": "Peu commune",
+      "rare": "Rare",
+      "epic": "Épique",
+      "legendary": "Légendaire",
+      "mythic": "Mythique"
+    }
+  },
+  "grades": {
+    "rookie": "Recrue",
+    "bronze": "Bronze",
+    "silver": "Argent",
+    "gold": "Or",
+    "platinum": "Platine",
+    "diamond": "Diamant",
+    "level": "Niveau",
+    "lv": "Niv.",
+    "toNextLevel": "avant le niveau",
+    "atLevel": "au niveau"
   }
 }

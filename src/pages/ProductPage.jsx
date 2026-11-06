@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { useParams, Link, useNavigate, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { 
   Star, ShoppingCart, Check, Heart, ShieldCheck, 
   Download, RefreshCw, Eye, MessageSquare, ArrowLeft,
-  PlayCircle, MoreHorizontal, UserPlus, CheckCircle2, ThumbsUp, Flag
+  PlayCircle, MoreHorizontal, UserPlus, CheckCircle2, ThumbsUp, Flag,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { getLocalizedString } from '../utils/i18nHelpers';
 import { useWishlist } from '../context/WishlistContext';
@@ -15,8 +16,8 @@ import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { useGamification } from '../context/GamificationContext';
 import ReportModal from '../components/common/ReportModal';
-import { MOCK_PRODUCTS, MOCK_CREATORS } from '../lib/seed';
-import { getProductById, getPublicProducts, createPurchase, checkHasPurchased, getReviews, submitReview, getUserReviewForProduct } from '../api/productApi';
+import { MOCK_PRODUCTS, MOCK_CREATORS, CATEGORIES, softwareLabels } from '../lib/seed';
+import { getProductById, queryPublicProducts, createPurchase, checkHasPurchased, getReviews, submitReview, getUserReviewForProduct } from '../api/productApi';
 import { detectTrafficSource, detectDeviceType } from '../utils/analyticsTracking';
 import { supabase, isMockMode as supabaseMockMode, invokeFunction, withTimeoutSafety } from '../lib/supabase';
 import ProductCard from '../components/product/ProductCard';
@@ -24,6 +25,8 @@ import ProBadge from '../components/common/ProBadge';
 import './ProductPage.css';
 import Textarea from '../components/ui/Textarea';
 import { isNativeApp } from '../lib/native';
+import { usePageTitle } from '../lib/pageTitle';
+import { avatarFallback } from '../utils/helpers';
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -78,24 +81,23 @@ export default function ProductPage() {
         setRawProduct(data || profile?.products?.find(p => String(p.id) === String(id)));
       }
       
-      const allProds = await getPublicProducts(isMockMode);
-      // Real creator numbers, from their published products
+      // Creator numbers + related products, asked from the database (not the whole catalogue)
       const sellerId = data?.seller_id || data?.creator_id || initialProduct?.seller_id || initialProduct?.creator_id;
-      if (sellerId) {
-        const theirs = allProds.filter(p => (p.seller_id || p.creator_id) === sellerId);
+      const cat = data?.category || initialProduct?.category;
+      const [theirsRes, relatedRes] = await Promise.all([
+        sellerId ? queryPublicProducts({ sellerIds: [sellerId], limit: 200, sort: 'popular' }, isMockMode) : Promise.resolve(null),
+        (data || initialProduct) && cat ? queryPublicProducts({ category: cat, excludeId: id, limit: 4, sort: 'popular' }, isMockMode) : Promise.resolve(null),
+      ]);
+      if (theirsRes) {
+        const theirs = isMockMode ? theirsRes.items.filter(p => (p.seller_id || p.creator_id) === sellerId) : theirsRes.items;
         const rated = theirs.filter(p => Number(p.reviews_count ?? p.reviews ?? 0) > 0 && Number(p.rating) > 0);
         const totalReviews = rated.reduce((n, p) => n + Number(p.reviews_count ?? p.reviews ?? 0), 0);
         setCreatorStats({
-          products: theirs.length,
+          products: theirsRes.count ?? theirs.length,
           rating: totalReviews ? rated.reduce((n, p) => n + Number(p.rating) * Number(p.reviews_count ?? p.reviews ?? 0), 0) / totalReviews : null,
         });
       }
-      if (data || initialProduct) {
-        const cat = data?.category || initialProduct?.category;
-        setRelatedProducts(
-          allProds.filter(p => p.category === cat && String(p.id) !== String(id)).slice(0, 4)
-        );
-      }
+      if (relatedRes) setRelatedProducts(relatedRes.items);
       setLoading(false);
       
       // Phase 2: Log a real analytics event (view count + source/device) in real mode
@@ -122,6 +124,7 @@ export default function ProductPage() {
   } : null;
 
   // STRIP SALES COUNT FROM PUBLIC PAYLOAD FOR SECURITY
+  usePageTitle(product ? getLocalizedString(product.title, baseLang) : null);
   if (product && 'sales' in product) delete product.sales;
   if (product && 'sales_count' in product) delete product.sales_count;
 
@@ -341,7 +344,7 @@ export default function ProductPage() {
   };
 
   return (
-    <div className="product-page" style={{ paddingTop: isNativeApp ? '8px' : '120px' }}>
+    <div className={`product-page ${isNativeApp ? 'is-app-page' : ''}`}>
       <div className="container pb-xl">
         <Link to="/marketplace" className="back-to-marketplace mb-lg">
           <ArrowLeft size={18} />
@@ -369,7 +372,8 @@ export default function ProductPage() {
                 )
               ) : (
                 <div className="video-player-placeholder">
-                  <p>No media available</p>
+                  <ImageIcon size={40} strokeWidth={1.5} aria-hidden="true" />
+                  <p>{t('product.noPreview', 'No preview yet')}</p>
                 </div>
               )}
             </div>
@@ -392,7 +396,7 @@ export default function ProductPage() {
             <div className="product-header">
               <h1 className="product-page-title">{getLocalizedString(product.title, baseLang)}</h1>
               <div className="flex items-center gap-md mt-sm">
-                <span className="badge bg-bg-secondary text-primary inline-block">{product.category}</span>
+                <span className="badge bg-bg-secondary text-primary inline-block">{CATEGORIES.find(c => c.id === product.category)?.name || product.category}</span>
                 <div className="stat-group cursor-pointer hover:text-primary transition-colors flex items-center gap-xs" onClick={() => setActiveTab('reviews')}>
                   <Star size={16} fill="#F59E0B" color="#F59E0B" />
                   <span className="product-stat-value font-bold">{product.rating}</span>
@@ -450,7 +454,7 @@ export default function ProductPage() {
                   <div className="product-facts-row">
                     <span className="product-facts-label">Works with</span>
                     <div className="product-facts-chips">
-                      {product.software.map(sw => <span key={sw} className="product-facts-chip">{sw}</span>)}
+                      {softwareLabels(product.software).map(sw => <span key={sw} className="product-facts-chip">{sw}</span>)}
                     </div>
                   </div>
                 )}
@@ -510,7 +514,7 @@ export default function ProductPage() {
                     <>
                       <h3 className="text-xl font-bold text-primary mt-xl mb-md">Compatibility</h3>
                       <div className="flex gap-sm flex-wrap mb-xl">
-                        {product.software.map(sw => (
+                        {softwareLabels(product.software).map(sw => (
                           <span key={sw} className="px-md py-sm bg-secondary rounded-md text-sm font-medium">{sw}</span>
                         ))}
                       </div>
@@ -646,7 +650,7 @@ export default function ProductPage() {
                             {review.buyer?.avatar_url ? (
                               <img src={review.buyer.avatar_url} alt={review.buyer?.username} className="w-10 h-10 rounded-full object-cover" />
                             ) : (
-                              <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(review.buyer?.username || 'User')}&background=random`} alt={review.buyer?.username} className="w-10 h-10 rounded-full" />
+                              <img src={avatarFallback(review.buyer?.username)} alt={review.buyer?.username} className="w-10 h-10 rounded-full" />
                             )}
                             <div>
                               <div className="font-bold flex items-center gap-sm">

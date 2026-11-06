@@ -42,7 +42,7 @@ export default function AppDiscoverPage() {
 
   const { trending, fresh, onSale, creators } = useMemo(() => {
     const list = products || [];
-    const byRank = [...list].sort((a, b) => (a.popular_rank ?? 9e9) - (b.popular_rank ?? 9e9) || (b.sales_count || 0) - (a.sales_count || 0));
+    const byRank = [...list].sort((a, b) => (b.popular_score ?? 0) - (a.popular_score ?? 0) || (b.sales_count || 0) - (a.sales_count || 0));
     const byDate = [...list].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const sale = list.filter((p) => (p.sale_price ?? p.salePrice) != null);
     const seen = new Map();

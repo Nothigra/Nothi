@@ -1,7 +1,17 @@
 name = "nothiapp"
-compatibility_date = "2024-09-01"
+main = "worker/index.js"
+compatibility_date = "2025-09-01"
 
 [assets]
 directory = "dist"
+binding = "ASSETS"
 not_found_handling = "single-page-application"
+# The worker only runs for pages that need real link previews (and for
+# robots.txt / sitemap.xml); every other request is served as a static file.
+run_worker_first = ["/", "/marketplace", "/product/*", "/creator/*", "/robots.txt", "/sitemap.xml"]
 
+# Public values (same as the site's .env.production): used to read product
+# titles and images for link previews.
+[vars]
+SUPABASE_URL = "https://wmnueemuldnhwzukckyi.supabase.co"
+SUPABASE_ANON_KEY = "sb_publishable_PippdEzKrvMHawqqoWmluQ_5io2T5LO"

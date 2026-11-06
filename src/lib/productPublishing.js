@@ -6,7 +6,7 @@
  *  - product count per plan: DB trigger
  *  - promotion rule: DB constraint products_sale_price_valid
  */
-import { createProduct, requestProductFileUploadUrl, updateProduct } from '../api/productApi';
+import { cleanupOldProductFiles, createProduct, requestProductFileUploadUrl, updateProduct } from '../api/productApi';
 import { PLAN_LIMITS } from '../config/plans';
 
 export const formatEur = (amount) =>
@@ -66,11 +66,16 @@ export const BOOST_PLANS = [
 ];
 
 // Must mirror the server-side allowlist in generate-product-file-upload-url
+// Keep in sync with supabase/functions/generate-product-file-upload-url
 export const ALLOWED_EXTENSIONS = new Set([
   '.zip', '.rar', '.7z',
-  '.aep', '.prproj', '.mogrt', '.drp', '.blend', '.c4d', '.fcpxml',
-  '.mp4', '.mov', '.png',
-  '.lut', '.cube', '.xmp', '.dng', '.ffx',
+  '.aep', '.aet', '.prproj', '.mogrt', '.drp', '.drfx', '.setting', '.comp',
+  '.blend', '.c4d', '.fcpxml', '.motn', '.veg', '.capcut',
+  '.ffx', '.prfpset', '.xmp', '.lrtemplate', '.dng', '.atn', '.abr',
+  '.cube', '.3dl', '.look', '.lut', '.csp',
+  '.wav', '.mp3', '.aiff', '.aif', '.flac', '.ogg', '.m4a',
+  '.mp4', '.mov', '.webm', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.psd', '.svg', '.exr',
+  '.otf', '.ttf', '.aex', '.pdf',
 ]);
 
 /** '' when the file is acceptable, otherwise a readable reason. */
@@ -140,6 +145,7 @@ export async function saveProduct({ editingId, draftId, sellerId, payload, produ
     onPhase?.('publishing');
     const updated = await updateProduct(editingId, updates);
     if (!updated) throw new Error('Could not save your changes. Check the price and promotion, then try again.');
+    if (productFile) cleanupOldProductFiles(editingId);
     return editingId;
   }
 

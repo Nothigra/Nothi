@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { SOCIAL_LINKS } from '../config/links';
 import { User, CheckCircle, Clock, PlayCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';

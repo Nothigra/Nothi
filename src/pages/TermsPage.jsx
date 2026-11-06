@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { termsContent } from '../data/legal/termsContent';
 import './ContactPage.css'; // Reuse static page layout classes

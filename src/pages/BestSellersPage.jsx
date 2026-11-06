@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Star, Crown } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { getTopSellers } from '../api/leaderboardApi';
 import { useAuth } from '../context/AuthContext';
 import './BestSellersPage.css';
+import { avatarFallback } from '../utils/helpers';
 
 export default function BestSellersPage() {
   const { t } = useTranslation();
@@ -81,7 +82,7 @@ export default function BestSellersPage() {
               >
                 <div className="podium-avatar-wrapper">
                   <img 
-                    src={creator.avatar_url || `https://ui-avatars.com/api/?name=${creator.name}&background=random`} 
+                    src={creator.avatar_url || avatarFallback(creator.name)} 
                     alt={creator.name} 
                     className={`podium-avatar ${me ? 'border-accent shadow-[0_0_15px_var(--color-accent)]' : ''}`} 
                   />
@@ -135,7 +136,7 @@ export default function BestSellersPage() {
                 
                 <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
                   <img 
-                    src={creator.avatar_url || `https://ui-avatars.com/api/?name=${creator.name}&background=random`} 
+                    src={creator.avatar_url || avatarFallback(creator.name)} 
                     alt={creator.name} 
                     className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover" 
                   />

@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import { XCircle, ArrowLeft, ShoppingBag } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 
 export default function CheckoutCancel() {
   return (
