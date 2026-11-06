@@ -614,5 +614,6 @@
 .product-page { padding-top: 120px; }
 .product-page.is-app-page { padding-top: 8px; }
 @media (max-width: 768px) {
-  .product-page { padding-top: 84px; }
+  /* the layout already starts below the phone header */
+  .product-page { padding-top: 16px; }
 }

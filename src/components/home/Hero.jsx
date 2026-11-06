@@ -239,11 +239,11 @@ export default function Hero() {
 
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-md mt-lg mb-xl">
-            <Link to="/marketplace" className="btn btn-primary btn-lg btn-pill w-full sm:w-auto text-center justify-center">
+          <div className="hero-ctas">
+            <Link to="/marketplace" className="btn btn-primary btn-lg btn-pill text-center justify-center">
               Browse Marketplace
             </Link>
-            <Link to="/login" className="btn btn-outline btn-lg btn-pill w-full sm:w-auto text-center justify-center">
+            <Link to="/login" className="btn btn-outline btn-lg btn-pill text-center justify-center">
               Start Selling
             </Link>
           </div>

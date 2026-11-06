@@ -499,11 +499,18 @@
 
 /* Phones: products on the first screen, no background video (data + battery) */
 @media (max-width: 768px) {
-  .hero-section { padding: 88px 0 16px 0; }
+  .hero-section { padding: 32px 0 16px 0; }
   .hero-subheadline { margin-bottom: 20px; }
   .hero-software-banner-wrapper { margin-top: 16px; }
   video.hero-bg-visual { display: none; }
 }
 @media (max-width: 480px) {
   .hero-headline { font-size: 30px; }
+}
+
+/* CTA row: side by side, also on phones (two compact buttons, not two full-width bars) */
+.hero-ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 24px 0 32px; }
+@media (max-width: 768px) {
+  .hero-ctas { margin: 16px 0 12px; gap: 8px; }
+  .hero-ctas .btn { padding: 12px 18px; font-size: 15px; }
 }

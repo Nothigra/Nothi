@@ -295,3 +295,4 @@
 }
 
 .mobile-signin { padding: 6px 12px; font-size: 13px; white-space: nowrap; }
+@media (min-width: 769px) { .navbar .mobile-signin { display: none !important; } }

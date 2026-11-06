@@ -1,10 +1,11 @@
 .cookie-note {
   position: fixed;
   z-index: 1000;
-  left: 50%;
+  left: 16px;
+  right: 16px;
+  margin: 0 auto;
+  max-width: 560px;
   bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  transform: translateX(-50%);
-  width: min(560px, calc(100% - 32px));
   display: flex;
   align-items: center;
   gap: 12px;
