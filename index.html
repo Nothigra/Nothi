@@ -60,6 +60,17 @@
         var preview = /[?&]app-preview=1/.test(location.search) || (get('nothi-app-preview') === '1' && !/[?&]app-preview=0/.test(location.search));
         if (native || preview) { root.classList.add('app-boot'); window.__nothiSplashStart = Date.now(); }
       })();
+      // A page opened just before a new release can point at files that no
+      // longer exist: reload once to get the new version instead of a blank screen.
+      window.addEventListener('error', function (e) {
+        var t = e.target, src = t && (t.src || t.href) || '';
+        if (!/\/assets\//.test(src)) return;
+        try {
+          if (sessionStorage.getItem('nothi-chunk-reload')) return;
+          sessionStorage.setItem('nothi-chunk-reload', '1');
+        } catch (err) { return; }
+        location.reload();
+      }, true);
     </script>
   </head>
   <body>

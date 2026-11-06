@@ -73,7 +73,9 @@ async function withMeta(env, request, url, meta) {
     ))
     .transform(page);
   const out = new Response(res.body, res);
-  out.headers.set('Cache-Control', 'public, max-age=60');
+  // The page must never be kept by the browser: after a release it would point
+  // at files that no longer exist. The edge copy (cf.cacheTtl) stays short.
+  out.headers.set('Cache-Control', 'no-cache');
   return out;
 }
 
