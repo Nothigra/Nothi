@@ -359,6 +359,11 @@ export default function DashboardOverview() {
             <h3 className="card-title text-lg">Recent Orders</h3>
           </div>
           <div className="card-body p-0 flex-1">
+            {displayOrders.length === 0 ? (
+              <p className="text-sm text-secondary" style={{ padding: '24px', textAlign: 'center' }}>
+                No orders yet. Your sales will show up here.
+              </p>
+            ) : (
             <table className="dashboard-table w-full recent-orders-table">
               <thead>
                 <tr>
@@ -380,6 +385,7 @@ export default function DashboardOverview() {
                 ))}
               </tbody>
             </table>
+            )}
           </div>
         </div>
 

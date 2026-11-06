@@ -15,6 +15,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useGamification } from '../../context/GamificationContext';
 import MobileBottomNav from './MobileBottomNav';
 import './DashboardLayout.css';
+import '../../pages/dashboard/DashboardPages.css'; // shared by every dashboard page (Overview used to render without it)
 import { avatarFallback } from '../../utils/helpers';
 
 export default function DashboardLayout() {
