@@ -82,7 +82,7 @@ export default function DashboardAnalytics() {
       </div>
 
       {/* Main KPI Cards */}
-      <div className="stats-grid mb-xl" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+      <div className="stats-grid mb-xl" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))' }}>
         <div className="premium-stat-card">
           <p className="text-sm text-secondary font-medium mb-xs uppercase tracking-wider">Revenue</p>
           <h3 className="text-3xl font-bold font-display">{formatPrice(totalRevenue)}</h3>
