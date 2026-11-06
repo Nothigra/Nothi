@@ -568,3 +568,55 @@
 @keyframes grid-fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .grid-more { display: flex; justify-content: center; padding: var(--space-xl, 32px) 0; }
 @media (prefers-reduced-motion: reduce) { .grid-fade-in { animation: none; } }
+
+/* ── Filters: never squash the items of the panel ─────────────────────── */
+.marketplace-sidebar > * { flex-shrink: 0; }
+.filter-clear-btn { margin-top: var(--space-2); min-height: 44px; }
+
+/* ── Phone: floating bottom sheet (Revolut-like) ──────────────────────── */
+@media (max-width: 768px) {
+  .marketplace-sidebar {
+    left: 8px;
+    right: 8px;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    max-height: min(78vh, 640px);
+    border-radius: 28px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-strong, var(--color-border));
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    padding: var(--space-3) var(--space-5) var(--space-5);
+    transform: translateY(calc(100% + 24px));
+    transition: transform 0.42s cubic-bezier(0.32, 0.72, 0, 1);
+    scrollbar-width: none;
+  }
+  .marketplace-sidebar::-webkit-scrollbar { display: none; }
+  .marketplace-sidebar.open { transform: translateY(0); }
+  .marketplace-layout.filters-closed .marketplace-sidebar { width: auto; }
+
+  /* Header stays visible while the sheet scrolls */
+  .marketplace-sidebar .sidebar-header {
+    position: sticky;
+    top: calc(-1 * var(--space-3));
+    z-index: 2;
+    margin: 0 calc(-1 * var(--space-5)) var(--space-2);
+    padding: var(--space-2) var(--space-5);
+    background: var(--color-bg-secondary);
+  }
+
+  /* Whole page dimmed and blurred behind the sheet */
+  .mobile-overlay {
+    top: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: calc(var(--z-modal-priority) - 1);
+  }
+
+  .filter-nav-btn {
+    background: var(--color-bg-card);
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .filter-nav-btn:active { transform: scale(0.98); }
+}

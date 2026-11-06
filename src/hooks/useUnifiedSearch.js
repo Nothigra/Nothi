@@ -97,7 +97,7 @@ export function useUnifiedSearch(query, lang = 'en') {
 
         // Sort by score descending and return top 6
         combinedResults.sort((a, b) => b.score - a.score);
-        setResults(combinedResults.slice(0, 6));
+        setResults(combinedResults.slice(0, 12));
       } catch (err) {
         console.error('Unified search error:', err);
       } finally {
@@ -112,5 +112,8 @@ export function useUnifiedSearch(query, lang = 'en') {
     };
   }, [debouncedQuery, lang]);
 
-  return { results, debouncedQuery, isSearching };
+  // "Still searching" from the first keystroke until the matching results
+  // are in — so the list never flashes "No results" before it fills in.
+  const pending = query.trim() !== '' && (query !== debouncedQuery || isSearching);
+  return { results, debouncedQuery, isSearching: pending };
 }

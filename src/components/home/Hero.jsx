@@ -25,7 +25,7 @@ function AnimatedSearch() {
   const navigate = useNavigate();
   const { i18n } = useTranslation();
   const baseLang = i18n.language.split('-')[0];
-  const { results: searchResults, debouncedQuery } = useUnifiedSearch(query, baseLang);
+  const { results: searchResults, debouncedQuery, isSearching: searchPending } = useUnifiedSearch(query, baseLang);
 
   useEffect(() => {
     if (query || isFocused) return;
@@ -83,6 +83,7 @@ function AnimatedSearch() {
         query={query}
         debouncedQuery={debouncedQuery}
         results={searchResults}
+        isSearching={searchPending}
         isVisible={isFocused}
         onClose={() => setIsFocused(false)}
       />

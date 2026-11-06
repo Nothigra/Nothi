@@ -1,6 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router';
 import { Package, Sparkles, FolderArchive, Contrast, Music, MoveRight, LayoutTemplate, TerminalSquare, Layers, ChevronDown } from 'lucide-react';
+
+const MotionLink = motion.create(Link);
+const PHONE = '(max-width: 640px)';
 import { useTranslation } from 'react-i18next';
 import './Categories.css';
 
@@ -19,6 +23,15 @@ const categories = [
 export default function Categories() {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
+  const [isPhone, setIsPhone] = useState(() => typeof window !== 'undefined' && window.matchMedia(PHONE).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(PHONE);
+    const on = () => setIsPhone(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  // Phones start with 6 categories; the rest slide in (and out) on demand.
+  const visible = isPhone && !expanded ? categories.slice(0, 6) : categories;
 
   return (
     <section className="categories-section section">
@@ -28,15 +41,21 @@ export default function Categories() {
           <p className="text-muted">{t('sections.browseCategoriesDesc', 'Find the perfect assets for your next video project.')}</p>
         </div>
         
-        <div className={`categories-grid ${expanded ? 'expanded' : ''}`}>
-          {categories.map((category, index) => {
+        <div className="categories-grid expanded">
+          <AnimatePresence initial={false}>
+          {visible.map((category, index) => {
             const Icon = category.icon;
             return (
-              <Link 
+              <MotionLink 
                 key={category.id}
                 to={`/marketplace?category=${category.id}`} 
                 className="category-card"
                 data-index={index}
+                initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.28, delay: index >= 6 ? (index - 6) * 0.05 : 0, ease: [0.16, 1, 0.3, 1] } }}
+                exit={{ opacity: 0, y: 8, scale: 0.97, transition: { duration: 0.18 } }}
+                whileHover={{ y: -4, transition: { duration: 0.25 } }}
+                whileTap={{ scale: 0.97 }}
               >
                 <div className="category-icon-wrapper">
                   <Icon size={20} className="cat-icon" />
@@ -45,20 +64,21 @@ export default function Categories() {
                   <h3 className="category-name">{t(`categories.${category.id}`, category.name)}</h3>
                   <span className="category-desc">{t(`categories.${category.id}Desc`, category.description)}</span>
                 </div>
-              </Link>
+              </MotionLink>
             );
           })}
+          </AnimatePresence>
         </div>
 
-        {!expanded && (
-          <button
-            type="button"
-            className="categories-show-more"
-            onClick={() => setExpanded(true)}
-          >
-            Show more categories <ChevronDown size={16} />
-          </button>
-        )}
+        <button
+          type="button"
+          className={`categories-show-more ${expanded ? 'is-open' : ''}`}
+          onClick={() => setExpanded(v => !v)}
+          aria-expanded={expanded}
+        >
+          {expanded ? t('sections.showFewerCategories', 'Show fewer categories') : t('sections.showMoreCategories', 'Show more categories')}
+          <ChevronDown size={16} className="categories-show-more-icon" />
+        </button>
       </div>
     </section>
   );

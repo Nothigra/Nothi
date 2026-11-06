@@ -46,7 +46,9 @@
     "howItWorks": "How It Works",
     "howItWorksDesc": "Start selling or buying in minutes",
     "viewAll": "View All",
-    "nextDrop": "Next drop in"
+    "nextDrop": "Next drop in",
+    "showMoreCategories": "Show more categories",
+    "showFewerCategories": "Show fewer categories"
   },
   "howItWorks": {
     "step1Title": "Create Your Store",

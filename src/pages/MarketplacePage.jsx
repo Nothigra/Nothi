@@ -93,7 +93,7 @@ export default function MarketplacePage() {
   const [sortBy, setSortBy] = useState(savedFilters?.sortBy || 'newest');
   
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const { results: searchResults, debouncedQuery } = useUnifiedSearch(searchTerm, baseLang);
+  const { results: searchResults, debouncedQuery, isSearching: searchPending } = useUnifiedSearch(searchTerm, baseLang);
   
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
@@ -103,6 +103,13 @@ export default function MarketplacePage() {
   // The filter sheet is portaled: close it when this screen is hidden (app tabs stay mounted)
   const { active: screenActive } = useScreenFocus();
   useEffect(() => { if (!screenActive) setIsFiltersOpen(false); }, [screenActive]);
+  // Phone: the page behind the filter sheet doesn't scroll
+  useEffect(() => {
+    if (!(isFiltersOpen && isMobileFilterViewport)) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [isFiltersOpen, isMobileFilterViewport]);
   const [hasInitializedFilters, setHasInitializedFilters] = useState(!!savedFilters || !!profile?.software);
 
   // Coming from the mobile header's search icon: jump straight into the search field
@@ -265,6 +272,7 @@ export default function MarketplacePage() {
               query={searchTerm}
               debouncedQuery={debouncedQuery}
               results={searchResults}
+              isSearching={searchPending}
               isVisible={isSearchFocused}
               onClose={() => setIsSearchFocused(false)}
             />
@@ -339,30 +347,9 @@ export default function MarketplacePage() {
           </div>
 
           {/* Desktop/tablet: every section visible at once (plenty of room) */}
+          {/* (categories are already the pills above the grid) */}
           <div className="filter-sections-flat">
           <div className="filter-group">
-            <h4 className="filter-title">{t('upload.category', 'Category')}</h4>
-            <div className="filter-options">
-              <button 
-                className={`filter-btn ${selectedCategory === 'all' ? 'active' : ''}`}
-                onClick={() => handleCategoryChange('all')}
-              >
-                {t('marketplace.allCategories', 'All Categories')}
-              </button>
-              {categories.map(cat => {
-                const count = products.filter(p => p.category === cat.id).length;
-                return (
-                  <button 
-                    key={cat.id}
-                    className={`filter-btn ${selectedCategory === cat.id ? 'active' : ''}`}
-                    onClick={() => handleCategoryChange(cat.id)}
-                  >
-                    {cat.name} <span className="text-muted">({count})</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>          <div className="filter-group">
             <h4 className="filter-title">Software</h4>
             <div className="filter-options">
               {softwareList.map(sw => (
@@ -396,8 +383,9 @@ export default function MarketplacePage() {
           {/* Mobile: Category/Software/Style tucked behind a 3-button menu,
               drilling into one at a time instead of a long single scroll */}
           <div className="filter-sections-drilldown">
+            <AnimatePresence mode="wait" initial={false}>
             {filterView === 'main' && (
-              <div className="filter-group">
+              <motion.div key="main" className="filter-group" initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}>
                 <div className="filter-nav-list">
                   <button className="filter-nav-btn" onClick={() => setFilterView('category')}>
                     <span>Category</span>
@@ -421,11 +409,11 @@ export default function MarketplacePage() {
                     </span>
                   </button>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {filterView === 'category' && (
-              <div className="filter-group">
+              <motion.div key="category" className="filter-group" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 24 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}>
                 <button className="filter-back-btn" onClick={() => setFilterView('main')}>
                   <ArrowLeft size={16} /> Category
                 </button>
@@ -449,11 +437,11 @@ export default function MarketplacePage() {
                     );
                   })}
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {filterView === 'software' && (
-              <div className="filter-group">
+              <motion.div key="software" className="filter-group" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 24 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}>
                 <button className="filter-back-btn" onClick={() => setFilterView('main')}>
                   <ArrowLeft size={16} /> Software
                 </button>
@@ -468,11 +456,11 @@ export default function MarketplacePage() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {filterView === 'style' && (
-              <div className="filter-group">
+              <motion.div key="style" className="filter-group" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 24 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}>
                 <button className="filter-back-btn" onClick={() => setFilterView('main')}>
                   <ArrowLeft size={16} /> Style
                 </button>
@@ -487,8 +475,9 @@ export default function MarketplacePage() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </motion.div>
             )}
+          </AnimatePresence>
           </div>
 
           <div className="filter-group">
@@ -521,7 +510,7 @@ export default function MarketplacePage() {
             </div>
           </div>
 
-          <button className="btn btn-outline w-full mt-6" onClick={clearFilters}>
+          <button className="btn btn-outline w-full filter-clear-btn" onClick={clearFilters}>
             {t('marketplace.clearFilters')}
           </button>
         </aside>

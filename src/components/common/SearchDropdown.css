@@ -27,7 +27,10 @@
 .search-dropdown-list {
   display: flex;
   flex-direction: column;
+  min-height: 0; /* lets the list scroll inside the 400px box */
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .search-dropdown-item {

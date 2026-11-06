@@ -44,7 +44,9 @@
     "howItWorks": "Cómo Funciona",
     "howItWorksDesc": "Comienza a vender o comprar en minutos",
     "viewAll": "Ver Todo",
-    "nextDrop": "Próximo lanzamiento en"
+    "nextDrop": "Próximo lanzamiento en",
+    "showMoreCategories": "Ver más categorías",
+    "showFewerCategories": "Ver menos categorías"
   },
   "howItWorks": {
     "step1Title": "Crea Tu Tienda",

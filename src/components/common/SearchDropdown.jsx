@@ -4,9 +4,10 @@ import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useCurrency } from '../../context/CurrencyContext';
 import { getLocalizedString } from '../../utils/i18nHelpers';
+import { getThumbnailUrl } from '../../utils/mediaHelpers';
 import './SearchDropdown.css';
 
-const SearchDropdown = ({ query, debouncedQuery, results, isVisible, onClose }) => {
+const SearchDropdown = ({ query, debouncedQuery, results, isSearching: searching, isVisible, onClose }) => {
   const { i18n, t } = useTranslation();
   const { formatPrice } = useCurrency();
   const dropdownRef = useRef(null);
@@ -28,7 +29,7 @@ const SearchDropdown = ({ query, debouncedQuery, results, isVisible, onClose }) 
 
   if (!isVisible || query.trim() === '') return null;
 
-  const isSearching = query !== debouncedQuery;
+  const isSearching = searching ?? (query !== debouncedQuery);
 
   return (
     <div className="search-dropdown-container card-elevated" ref={dropdownRef}>
@@ -58,8 +59,8 @@ const SearchDropdown = ({ query, debouncedQuery, results, isVisible, onClose }) 
                   onClick={onClose}
                 >
                   <div className="search-item-thumb">
-                    {product.images && product.images[0] ? (
-                      <img src={product.images[0]} alt={title} className="w-full h-full object-cover" />
+                    {getThumbnailUrl(product) ? (
+                      <img src={getThumbnailUrl(product)} alt={title} className="w-full h-full object-cover" loading="lazy" />
                     ) : (
                       <div className="w-full h-full bg-bg-tertiary flex items-center justify-center text-xs text-muted">Img</div>
                     )}
@@ -80,8 +81,8 @@ const SearchDropdown = ({ query, debouncedQuery, results, isVisible, onClose }) 
                   onClick={onClose}
                 >
                   <div className="search-item-thumb seller-thumb">
-                    {seller.avatar ? (
-                      <img src={seller.avatar} alt={seller.name} className="w-full h-full object-cover rounded-full" />
+                    {(seller.avatar_url || seller.avatar) ? (
+                      <img src={seller.avatar_url || seller.avatar} alt={seller.username} className="w-full h-full object-cover rounded-full" />
                     ) : (
                       <div className="w-full h-full bg-accent-subtle text-accent flex items-center justify-center rounded-full">
                         <User size={18} />
@@ -90,7 +91,7 @@ const SearchDropdown = ({ query, debouncedQuery, results, isVisible, onClose }) 
                   </div>
                   <div className="search-item-content">
                     <span className="search-item-title line-clamp-1 flex items-center gap-xs">
-                      {seller.name}
+                      {seller.name || seller.username}
                       <span className="text-xs font-normal text-secondary bg-bg-secondary px-1 rounded">Seller</span>
                     </span>
                     <span className="search-item-meta">@{seller.username}</span>

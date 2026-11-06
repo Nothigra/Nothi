@@ -45,7 +45,9 @@
     "howItWorks": "Comment Ça Marche",
     "howItWorksDesc": "Commencez à vendre ou acheter en quelques minutes",
     "viewAll": "Tout Voir",
-    "nextDrop": "Prochaine sortie dans"
+    "nextDrop": "Prochaine sortie dans",
+    "showMoreCategories": "Voir plus de catégories",
+    "showFewerCategories": "Voir moins de catégories"
   },
   "howItWorks": {
     "step1Title": "Créez Votre Boutique",

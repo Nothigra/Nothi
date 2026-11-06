@@ -155,6 +155,7 @@ function ProductCard({ product, cardStyle = NO_STYLE, onRemove }) {
         <Link to={`/creator/${creatorName}`} className="product-creator">
           <AvatarFrame 
             imageUrl={product.creator_avatar} 
+            level={Number(product.creator_level) || undefined}
             size="sm" 
             fallbackLetter={creatorName.charAt(0).toUpperCase()} 
           />
