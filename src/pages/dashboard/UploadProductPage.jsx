@@ -464,7 +464,7 @@ export default function UploadProductPage() {
             <Textarea
               name="description"
               minRows={8}
-              placeholder="Bio / Description * (What's included? Who is it for?)"
+              placeholder="Description * (What's included? Who is it for?)"
               value={formData.description || ''}
               onChange={handleChange}
               error={showValidationErrors && formData.description.length === 0 ? "Description is required" : null}

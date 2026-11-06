@@ -450,7 +450,10 @@
     width: 100%;
     flex-direction: row;
     overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
+  .settings-tabs::-webkit-scrollbar { display: none; }
   .settings-tab {
     white-space: nowrap;
     width: auto;

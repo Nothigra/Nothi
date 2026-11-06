@@ -101,7 +101,8 @@
   border: none;
   background: transparent;
   color: var(--color-text-primary);
-  font-family: var(--font-mono, monospace);
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
   font-size: var(--font-size-lg);
   outline: none;
   padding: 0 var(--space-4);

@@ -449,7 +449,7 @@ export default function DashboardSettings() {
                 <div className="form-group mb-xl max-w-md">
                   <Input
                     label="Username"
-                    prefix="Nothi.com/"
+                    prefix="@"
                     value={username}
                     onChange={handleUsernameChange}
                     maxLength={20}
