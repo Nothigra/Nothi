@@ -439,7 +439,7 @@ export default function ProductPage() {
                   <Heart size={20} fill={isInWishlist(product.id) ? "currentColor" : "none"} />
                 </button>
               </div>
-              {!isNativeApp && (
+              {!isNativeApp && !(product.salePrice === 0 || product.price === 0) && (
                 <div className="secure-badge flex-center gap-xs text-xs text-secondary justify-center">
                   <ShieldCheck size={14} className="text-success" />
                   Secure payment via Stripe
@@ -472,10 +472,12 @@ export default function ProductPage() {
                 <Download size={16} className="text-accent" />
                 <span>Instant Digital Download</span>
               </div>
+              {!(product.salePrice === 0 || product.price === 0) && (
               <div className="feature-item text-sm font-medium mb-sm flex gap-sm items-center">
                 <ShieldCheck size={16} className="text-success" />
                 <span>Secure payment by Stripe</span>
               </div>
+              )}
               <div className="feature-item text-sm font-medium flex gap-sm items-center">
                 <RefreshCw size={16} className="text-primary" />
                 <span>Re-download anytime from your library</span>
