@@ -193,7 +193,7 @@ function ProductCard({ product, cardStyle = NO_STYLE, onRemove }) {
                 <span className="price-current">{formatPrice(salePrice)}</span>
               </>
             ) : (
-              <span className="price-current">{formatPrice(product.price)}</span>
+              <span className="price-current">{Number(product.price) === 0 ? t('common.free', { defaultValue: 'Free' }) : formatPrice(product.price)}</span>
             )}
           </div>
           {reviewCount > 0 ? (

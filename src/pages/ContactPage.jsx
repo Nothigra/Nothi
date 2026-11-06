@@ -10,7 +10,7 @@ import Textarea from '../components/ui/Textarea';
 const DISCORD_INVITE_URL = null; // null triggers the 'Coming soon' disabled state
 
 // TODO: replace with real contact email before launch
-const CONTACT_EMAIL = 'contact@nothi.io';
+const CONTACT_EMAIL = 'nothicontact@gmail.com';
 
 export default function ContactPage() {
   const { t } = useTranslation();

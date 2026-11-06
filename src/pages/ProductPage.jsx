@@ -398,11 +398,15 @@ export default function ProductPage() {
               <h1 className="product-page-title">{getLocalizedString(product.title, baseLang)}</h1>
               <div className="flex items-center gap-md mt-sm">
                 <span className="badge bg-bg-secondary text-primary inline-block">{CATEGORIES.find(c => c.id === product.category)?.name || product.category}</span>
-                <div className="stat-group cursor-pointer hover:text-primary transition-colors flex items-center gap-xs" onClick={() => setActiveTab('reviews')}>
-                  <Star size={16} fill="#F59E0B" color="#F59E0B" />
-                  <span className="product-stat-value font-bold">{product.rating}</span>
-                  <span className="text-muted underline-hover">({product.reviews} {t('product.reviews')})</span>
-                </div>
+                {Number(product.reviews) > 0 ? (
+                  <div className="stat-group cursor-pointer hover:text-primary transition-colors flex items-center gap-xs" onClick={() => setActiveTab('reviews')}>
+                    <Star size={16} fill="#F59E0B" color="#F59E0B" />
+                    <span className="product-stat-value font-bold">{Number(product.rating).toFixed(1)}</span>
+                    <span className="text-muted underline-hover">({product.reviews} {t('product.reviews')})</span>
+                  </div>
+                ) : (
+                  <span className="text-sm text-muted">{t('product.noReviewsYet', { defaultValue: 'No reviews yet' })}</span>
+                )}
               </div>
             </div>
 
@@ -414,7 +418,7 @@ export default function ProductPage() {
                   <span className="save-badge">-{Math.round((1 - product.salePrice / product.price) * 100)}%</span>
                 </>
               ) : (
-                <span className="current">{formatPrice(product.price)}</span>
+                <span className="current">{Number(product.price) === 0 ? t('common.free', { defaultValue: 'Free' }) : formatPrice(product.price)}</span>
               )}
             </div>
             {product.salePrice && product.saleEndsAt && (
@@ -822,7 +826,7 @@ export default function ProductPage() {
                   <span className="sticky-buy-bar-was">{formatPrice(product.price)}</span>
                 </>
               ) : (
-                <span className="sticky-buy-bar-current">{formatPrice(product.price)}</span>
+                <span className="sticky-buy-bar-current">{Number(product.price) === 0 ? t('common.free', { defaultValue: 'Free' }) : formatPrice(product.price)}</span>
               )}
             </div>
             <div className="sticky-buy-bar-action">

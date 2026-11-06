@@ -27,6 +27,12 @@ const TITLES = [
   [/^\/dashboard\/analytics/, 'Analytics'],
   [/^\/dashboard\/settings/, 'Settings'],
   [/^\/dashboard\/badges/, 'Badges'],
+  [/^\/dashboard\/purchases/, 'My purchases'],
+  [/^\/dashboard\/wishlist/, 'Wishlist'],
+  [/^\/dashboard\/following/, 'Following'],
+  [/^\/dashboard\/subscription/, 'Nothi Pro'],
+  [/^\/wishlist/, 'Wishlist'],
+  [/^\/checkout\/cancel/, 'Payment cancelled'],
   [/^\/dashboard/, 'Dashboard'],
 ];
 

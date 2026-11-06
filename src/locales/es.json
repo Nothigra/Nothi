@@ -101,7 +101,8 @@
     "noReviewsDesc": "Sé el primero en reseñar este producto",
     "verified": "Compra Verificada",
     "chargedInEur": "Cobrado en EUR: {{amount}}",
-    "saleEndsOn": "La oferta termina el {{date}}"
+    "saleEndsOn": "La oferta termina el {{date}}",
+    "noReviewsYet": "Aún no hay reseñas"
   },
   "cart": {
     "title": "Carrito de Compras",

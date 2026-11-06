@@ -1,7 +1,9 @@
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '../lib/pageTitle';
 
 export default function NotFoundPage() {
+  usePageTitle('Page not found');
   const { t } = useTranslation();
   return (
     <div className="container flex-center" style={{ minHeight: '60vh', flexDirection: 'column', textAlign: 'center' }}>

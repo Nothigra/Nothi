@@ -240,10 +240,11 @@
 }
 
 .trust-features {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-10);
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-6, 24px);
+  max-width: 960px;
+  margin: 0 auto;
 }
 
 .trust-item {
@@ -256,6 +257,7 @@
 }
 
 .trust-dot {
+  flex-shrink: 0;
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -269,9 +271,9 @@
   }
   
   .trust-features {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     gap: var(--space-4);
-    align-items: center;
+    max-width: 360px;
   }
 }
 
