@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Zap, Shield, Flame, Lock, Gift, Check, ChevronRight, ChevronLeft, Calendar, ShoppingBag, Package, Star, MessageSquare, Award, Crown, Trophy, Medal } from 'lucide-react';
-import { m as motion, useSpring, useTransform } from 'framer-motion';
+import { m as motion, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router';
 import { BADGE_CATALOG } from '../api/gamificationApi';
 import { useGamification } from '../context/GamificationContext';
@@ -147,7 +147,7 @@ const RewardsPage = () => {
     try {
       await claimReward();
       setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 3000);
+      setTimeout(() => setShowConfetti(false), 3500);
     } catch (e) {
       console.error(e);
       // Optional: alert user if they already claimed
@@ -204,14 +204,8 @@ const RewardsPage = () => {
   ];
 
   return (
-    <div className="page-container pb-2xl overflow-x-hidden">
+    <div className="page-container rewards-page-wrap pb-2xl overflow-x-hidden">
       
-      {showConfetti && (
-        <div className="fixed inset-0 pointer-events-none z-50 flex-center">
-          <div className="absolute inset-0 bg-accent/20 animate-pulse"></div>
-          <div className="text-5xl font-black">+150 XP</div>
-        </div>
-      )}
 
       {/* Hero Section */}
       <div className="relative mb-xl flex flex-col items-center justify-center text-center py-xl">
@@ -324,8 +318,18 @@ const RewardsPage = () => {
           <h2 className="text-2xl font-black mb-xs relative z-10">Daily Reward</h2>
           <p className="text-secondary mb-lg relative z-10">Claim your free 150 XP every 24 hours.</p>
           
-          {isClaimed ? (
-            <CountdownTimer lastClaimedDate={lastClaimedDate} onComplete={handleCountdownComplete} />
+          <AnimatePresence mode="wait" initial={false}>
+          {showConfetti ? (
+            <motion.div key="done" className="daily-claimed relative z-10"
+              initial={{ opacity: 0, scale: 0.9, y: 6 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 24 }}>
+              <span className="daily-claimed-check"><Check size={18} /></span>
+              <span><strong>+150 XP</strong> added — see you tomorrow</span>
+            </motion.div>
+          ) : isClaimed ? (
+            <motion.div key="wait" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10">
+              <CountdownTimer lastClaimedDate={lastClaimedDate} onComplete={handleCountdownComplete} />
+            </motion.div>
           ) : (
             <button 
               className="btn btn-claim-animated w-full py-md text-lg rounded-xl transition-all hover:-translate-y-1 relative z-10"
@@ -337,6 +341,7 @@ const RewardsPage = () => {
                : 'Claim 150 XP'}
             </button>
           )}
+          </AnimatePresence>
         </div>
 
         {/* Ways to Earn XP */}
@@ -366,11 +371,11 @@ const RewardsPage = () => {
       {/* VISUAL TIMELINE CENTERPIECE */}
       <div className="max-w-6xl mx-auto w-full mb-xl">
         <div className="text-center mb-xl px-md">
-          <h2 className="text-3xl font-black mb-sm bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-secondary">The Road to Legend</h2>
+          <h2 className="text-3xl font-black mb-sm">The Road to Legend</h2>
           <p className="text-secondary">Track your upcoming milestones and unlocked rewards.</p>
         </div>
         
-        <div className="relative group">
+        <div className="relative group rewards-timeline">
           {/* Navigation Arrows (Desktop) */}
           <button 
             onClick={scrollTimelineLeft} 

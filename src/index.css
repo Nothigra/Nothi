@@ -1483,3 +1483,10 @@ a, button { -webkit-tap-highlight-color: transparent; }
 
 /* Text on the accent colour (white in dark mode, black in light mode) */
 .text-on-accent { color: var(--color-accent-text) !important; }
+
+/* ".section" sets padding: X 0 and used to wipe the side padding of
+   ".container" on the same element → content touching the screen edges */
+.container.section { padding-left: var(--space-6); padding-right: var(--space-6); }
+@media (max-width: 768px) {
+  .container.section { padding-left: 16px; padding-right: 16px; }
+}

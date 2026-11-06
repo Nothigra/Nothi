@@ -617,3 +617,35 @@
   /* the layout already starts below the phone header */
   .product-page { padding-top: 16px; }
 }
+
+/* ── Two independent columns: gallery + description on the left,
+      buy box + creator + details on the right (no empty hole) ── */
+.product-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: var(--space-12);
+  align-items: start;
+  margin-bottom: var(--space-12);
+}
+.pl-left, .pl-right {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+  min-width: 0;
+}
+.pl-left .product-main-content { margin-top: 0; }
+.pl-right .product-sidebar { display: flex; flex-direction: column; gap: var(--space-6); }
+
+@media (max-width: 1024px) {
+  /* Phone/tablet order: gallery → buy box → description → creator/details */
+  .product-layout { display: flex; flex-direction: column; gap: var(--space-8); }
+  .pl-left, .pl-right { display: contents; }
+  .product-gallery-modern { order: 1; }
+  .product-info { order: 2; }
+  .product-main-content { order: 3; }
+  .product-sidebar { order: 4; }
+}
+
+/* Breathing room before the related products / footer */
+.product-page .related-products { margin-bottom: var(--space-12); }
+.product-page { padding-bottom: var(--space-16, 64px); }

@@ -173,3 +173,43 @@
   /* Centering trick that does not clip the left side on overflow */
   justify-content: safe center;
 }
+
+/* Cards never touch the screen edges */
+.rewards-page-wrap { padding-left: 16px; padding-right: 16px; }
+@media (min-width: 768px) { .rewards-page-wrap { padding-left: 32px; padding-right: 32px; } }
+
+/* Soft fade on both ends of the timeline instead of a hard cut */
+.rewards-timeline > div[class*="overflow-x-auto"] {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 12%, #000 88%, transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, #000 12%, #000 88%, transparent 100%);
+}
+@media (max-width: 767px) {
+  .rewards-timeline > div[class*="overflow-x-auto"] {
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%);
+  }
+}
+
+/* Daily reward: claimed state */
+.daily-claimed {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.daily-claimed strong { color: var(--color-text-primary); }
+.daily-claimed-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-success, #22c55e);
+  color: #fff;
+}

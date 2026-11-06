@@ -353,7 +353,8 @@ export default function ProductPage() {
           {t('common.backToMarketplace') || 'Back to Marketplace'}
         </Link>
         
-        <div className="product-top-section">
+        <div className="product-layout">
+          <div className="pl-left">
           {/* Gallery Area */}
           <div className="product-gallery-modern">
             <div className="main-media-area">
@@ -392,108 +393,6 @@ export default function ProductPage() {
               ))}
             </div>
           </div>
-
-          {/* Info Panel */}
-          <div className="product-info flex flex-col gap-lg">
-            <div className="product-header">
-              <h1 className="product-page-title">{getLocalizedString(product.title, baseLang)}</h1>
-              <div className="flex items-center gap-md mt-sm">
-                <span className="badge bg-bg-secondary text-primary inline-block">{CATEGORIES.find(c => c.id === product.category)?.name || product.category}</span>
-                {Number(product.reviews) > 0 ? (
-                  <div className="stat-group cursor-pointer hover:text-primary transition-colors flex items-center gap-xs" onClick={() => setActiveTab('reviews')}>
-                    <Star size={16} fill="#F59E0B" color="#F59E0B" />
-                    <span className="product-stat-value font-bold">{Number(product.rating).toFixed(1)}</span>
-                    <span className="text-muted underline-hover">({product.reviews} {t('product.reviews')})</span>
-                  </div>
-                ) : (
-                  <span className="text-sm text-muted">{t('product.noReviewsYet', { defaultValue: 'No reviews yet' })}</span>
-                )}
-              </div>
-            </div>
-
-            <div className="product-page-price">
-              {product.salePrice ? (
-                <>
-                  <span className="current">{formatPrice(product.salePrice)}</span>
-                  <span className="original">{formatPrice(product.price)}</span>
-                  <span className="save-badge">-{Math.round((1 - product.salePrice / product.price) * 100)}%</span>
-                </>
-              ) : (
-                <span className="current">{Number(product.price) === 0 ? t('common.free', { defaultValue: 'Free' }) : formatPrice(product.price)}</span>
-              )}
-            </div>
-            {product.salePrice && product.saleEndsAt && (
-              <p className="product-sale-ends">
-                {t('product.saleEndsOn', { date: new Date(product.saleEndsAt).toLocaleDateString(i18n.language), defaultValue: 'Sale ends on {{date}}' })}
-              </p>
-            )}
-            {isConverted && product.price > 0 && (
-              <p className="product-charged-in-eur">
-                {t('product.chargedInEur', { amount: formatEur(product.salePrice ?? product.price), defaultValue: 'Charged in EUR: {{amount}}' })}
-              </p>
-            )}
-
-            <div className="purchase-actions flex flex-col gap-sm w-full" ref={purchaseActionsRef}>
-              <div className="flex w-full gap-sm items-stretch" style={{ height: '56px' }}>
-                {renderMainActionButton()}
-                <button 
-                  className={`btn flex-center ${isInWishlist(product.id) ? 'btn-secondary text-accent' : 'btn-outline text-secondary hover:text-primary'}`}
-                  onClick={(e) => { e.preventDefault(); toggleWishlist(product); }}
-                  aria-label="Toggle Wishlist"
-                  style={{ width: '56px', height: '100%', padding: 0 }}
-                >
-                  <Heart size={20} fill={isInWishlist(product.id) ? "currentColor" : "none"} />
-                </button>
-              </div>
-              {!isNativeApp && !(product.salePrice === 0 || product.price === 0) && (
-                <div className="secure-badge flex-center gap-xs text-xs text-secondary justify-center">
-                  <ShieldCheck size={14} className="text-success" />
-                  Secure payment via Stripe
-                </div>
-              )}
-            </div>
-
-            {/* What a buyer checks before paying: does it work with my software, what do I get */}
-            {(product.software?.length > 0 || product.format || product.file_size) && (
-              <div className="product-facts">
-                {product.software?.length > 0 && (
-                  <div className="product-facts-row">
-                    <span className="product-facts-label">Works with</span>
-                    <div className="product-facts-chips">
-                      {softwareLabels(product.software).map(sw => <span key={sw} className="product-facts-chip">{sw}</span>)}
-                    </div>
-                  </div>
-                )}
-                {(product.format || product.file_size) && (
-                  <div className="product-facts-row">
-                    <span className="product-facts-label">You get</span>
-                    <span className="product-facts-value">{[product.format && `${product.format} file`, product.file_size].filter(Boolean).join(' · ')}</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="product-features p-md rounded-xl bg-secondary">
-              <div className="feature-item text-sm font-medium mb-sm flex gap-sm items-center">
-                <Download size={16} className="text-accent" />
-                <span>Instant Digital Download</span>
-              </div>
-              {!(product.salePrice === 0 || product.price === 0) && (
-              <div className="feature-item text-sm font-medium mb-sm flex gap-sm items-center">
-                <ShieldCheck size={16} className="text-success" />
-                <span>Secure payment by Stripe</span>
-              </div>
-              )}
-              <div className="feature-item text-sm font-medium flex gap-sm items-center">
-                <RefreshCw size={16} className="text-primary" />
-                <span>Re-download anytime from your library</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Layout Grid for Details and Sidebar */}
-        <div className="product-grid-layout mt-2xl" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--space-10)', alignItems: 'start' }}>
           
           <div className="product-main-content">
             <div className="tabs-header border-b mb-xl flex gap-lg">
@@ -688,6 +587,106 @@ export default function ProductPage() {
               )}
             </div>
           </div>
+          </div>
+          <div className="pl-right">
+
+          {/* Info Panel */}
+          <div className="product-info flex flex-col gap-lg">
+            <div className="product-header">
+              <h1 className="product-page-title">{getLocalizedString(product.title, baseLang)}</h1>
+              <div className="flex items-center gap-md mt-sm">
+                <span className="badge bg-bg-secondary text-primary inline-block">{CATEGORIES.find(c => c.id === product.category)?.name || product.category}</span>
+                {Number(product.reviews) > 0 ? (
+                  <div className="stat-group cursor-pointer hover:text-primary transition-colors flex items-center gap-xs" onClick={() => setActiveTab('reviews')}>
+                    <Star size={16} fill="#F59E0B" color="#F59E0B" />
+                    <span className="product-stat-value font-bold">{Number(product.rating).toFixed(1)}</span>
+                    <span className="text-muted underline-hover">({product.reviews} {t('product.reviews')})</span>
+                  </div>
+                ) : (
+                  <span className="text-sm text-muted">{t('product.noReviewsYet', { defaultValue: 'No reviews yet' })}</span>
+                )}
+              </div>
+            </div>
+
+            <div className="product-page-price">
+              {product.salePrice ? (
+                <>
+                  <span className="current">{formatPrice(product.salePrice)}</span>
+                  <span className="original">{formatPrice(product.price)}</span>
+                  <span className="save-badge">-{Math.round((1 - product.salePrice / product.price) * 100)}%</span>
+                </>
+              ) : (
+                <span className="current">{Number(product.price) === 0 ? t('common.free', { defaultValue: 'Free' }) : formatPrice(product.price)}</span>
+              )}
+            </div>
+            {product.salePrice && product.saleEndsAt && (
+              <p className="product-sale-ends">
+                {t('product.saleEndsOn', { date: new Date(product.saleEndsAt).toLocaleDateString(i18n.language), defaultValue: 'Sale ends on {{date}}' })}
+              </p>
+            )}
+            {isConverted && product.price > 0 && (
+              <p className="product-charged-in-eur">
+                {t('product.chargedInEur', { amount: formatEur(product.salePrice ?? product.price), defaultValue: 'Charged in EUR: {{amount}}' })}
+              </p>
+            )}
+
+            <div className="purchase-actions flex flex-col gap-sm w-full" ref={purchaseActionsRef}>
+              <div className="flex w-full gap-sm items-stretch" style={{ height: '56px' }}>
+                {renderMainActionButton()}
+                <button 
+                  className={`btn flex-center ${isInWishlist(product.id) ? 'btn-secondary text-accent' : 'btn-outline text-secondary hover:text-primary'}`}
+                  onClick={(e) => { e.preventDefault(); toggleWishlist(product); }}
+                  aria-label="Toggle Wishlist"
+                  style={{ width: '56px', height: '100%', padding: 0 }}
+                >
+                  <Heart size={20} fill={isInWishlist(product.id) ? "currentColor" : "none"} />
+                </button>
+              </div>
+              {!isNativeApp && !(product.salePrice === 0 || product.price === 0) && (
+                <div className="secure-badge flex-center gap-xs text-xs text-secondary justify-center">
+                  <ShieldCheck size={14} className="text-success" />
+                  Secure payment via Stripe
+                </div>
+              )}
+            </div>
+
+            {/* What a buyer checks before paying: does it work with my software, what do I get */}
+            {(product.software?.length > 0 || product.format || product.file_size) && (
+              <div className="product-facts">
+                {product.software?.length > 0 && (
+                  <div className="product-facts-row">
+                    <span className="product-facts-label">Works with</span>
+                    <div className="product-facts-chips">
+                      {softwareLabels(product.software).map(sw => <span key={sw} className="product-facts-chip">{sw}</span>)}
+                    </div>
+                  </div>
+                )}
+                {(product.format || product.file_size) && (
+                  <div className="product-facts-row">
+                    <span className="product-facts-label">You get</span>
+                    <span className="product-facts-value">{[product.format && `${product.format} file`, product.file_size].filter(Boolean).join(' · ')}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="product-features p-md rounded-xl bg-secondary">
+              <div className="feature-item text-sm font-medium mb-sm flex gap-sm items-center">
+                <Download size={16} className="text-accent" />
+                <span>Instant Digital Download</span>
+              </div>
+              {!(product.salePrice === 0 || product.price === 0) && (
+              <div className="feature-item text-sm font-medium mb-sm flex gap-sm items-center">
+                <ShieldCheck size={16} className="text-success" />
+                <span>Secure payment by Stripe</span>
+              </div>
+              )}
+              <div className="feature-item text-sm font-medium flex gap-sm items-center">
+                <RefreshCw size={16} className="text-primary" />
+                <span>Re-download anytime from your library</span>
+              </div>
+            </div>
+          </div>
 
           {/* Sidebar */}
           <div className="product-sidebar">
@@ -786,7 +785,7 @@ export default function ProductPage() {
               </button>
             </div>
           </div>
-
+          </div>
         </div>
 
         {/* Related Products */}
