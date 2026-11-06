@@ -194,7 +194,7 @@ export default function Navbar() {
                     <Link to={`/creator/${profile?.username}`} className="nav-link" style={{ display: 'block', padding: '8px 12px' }} onClick={() => setIsProfileOpen(false)}>{t('profile.myShop', 'My Shop')}</Link>
                     <Link to="/dashboard/settings" className="nav-link" style={{ display: 'block', padding: '8px 12px' }} onClick={() => setIsProfileOpen(false)}>{t('nav.settings', 'Settings')}</Link>
                     <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '8px 0' }}></div>
-                    <button onClick={() => { if(window.confirm(t('nav.confirmSignOut', 'Are you sure you want to sign out?'))) { logout(); setIsProfileOpen(false); } }} className="nav-link" style={{ width: '100%', textAlign: 'left', padding: '8px 12px', color: 'var(--color-error, #ef4444)' }}>
+                    <button onClick={() => { logout(); setIsProfileOpen(false); }} className="nav-link" style={{ width: '100%', textAlign: 'left', padding: '8px 12px', color: 'var(--color-error, #ef4444)' }}>
                       {t('nav.signOut', 'Log Out')}
                     </button>
                   </div>

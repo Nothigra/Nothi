@@ -15,6 +15,7 @@ import './MessagesPage.css';
 
 import ProBadge from '../components/common/ProBadge';
 import { openAttachment, useAttachmentUrl } from '../lib/attachments';
+import { notify } from '../components/common/ConfirmHost';
 
 function AttachmentImage({ url, ...rest }) {
   const src = useAttachmentUrl(url);
@@ -166,7 +167,7 @@ export default function MessagesPage() {
 
     // Optional: add some frontend validation
     if (file.size > 25 * 1024 * 1024) {
-      alert('File is too large. Maximum size is 25MB.');
+      notify('File is too large. Maximum size is 25MB.');
       return;
     }
 
@@ -213,7 +214,7 @@ export default function MessagesPage() {
       }
     } catch (err) {
       console.error('Attachment upload failed:', err);
-      alert(err.message || 'Failed to upload attachment');
+      notify(err.message || 'Failed to upload attachment');
     } finally {
       setIsUploadingAttachment(false);
       // Reset input

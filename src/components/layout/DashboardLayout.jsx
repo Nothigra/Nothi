@@ -83,10 +83,8 @@ export default function DashboardLayout() {
   }, [location.pathname]);
 
   const handleLogout = () => {
-    if (window.confirm(t('nav.confirmSignOut', 'Are you sure you want to sign out?'))) {
-      logout();
-      navigate('/');
-    }
+    logout();
+    navigate('/');
   };
 
   if (isLoading) {

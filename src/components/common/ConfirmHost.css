@@ -1,0 +1,62 @@
+.nb-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.55);
+  animation: nb-confirm-fade 0.15s ease-out;
+}
+
+.nb-confirm {
+  width: 100%;
+  max-width: 380px;
+  padding: 20px;
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  animation: nb-confirm-pop 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+}
+
+.nb-confirm h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.nb-confirm p {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+.nb-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.nb-confirm-actions .btn {
+  min-height: 40px;
+  padding: 0 16px;
+}
+
+.nb-confirm-danger {
+  background: var(--color-danger);
+  color: #fff;
+  border: 1px solid transparent;
+}
+.nb-confirm-danger:hover { filter: brightness(1.08); }
+
+@keyframes nb-confirm-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes nb-confirm-pop { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .nb-confirm-backdrop, .nb-confirm { animation: none; }
+}

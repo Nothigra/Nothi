@@ -15,6 +15,7 @@ import { PLAN_LIMITS, isPro } from '../../config/plans';
 import { getMyProducts } from '../../api/productApi';
 import { isMockMode, supabase, withTimeoutSafety } from '../../lib/supabase';
 import './DashboardProducts.css';
+import { askConfirm, notify } from '../../components/common/ConfirmHost';
 import { isNativeApp } from '../../lib/native';
 
 // Same rule as the DB function active_sale_price()
@@ -116,7 +117,13 @@ export default function DashboardProducts() {
   };
 
   const handleDelete = async (productId) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+    const ok = await askConfirm({
+      title: 'Delete this product?',
+      message: 'It disappears from the marketplace. People who already bought it keep it in their library.',
+      confirmLabel: 'Delete',
+      danger: true,
+    });
+    if (!ok) return;
     
     if (isMockMode) {
       const updated = myProducts.filter(p => p.id !== productId);
@@ -124,7 +131,7 @@ export default function DashboardProducts() {
     } else {
       const { error } = await withTimeoutSafety(() => supabase.from('products').delete().eq('id', productId));
       if (error) {
-        alert("Failed to delete product.");
+        notify("Failed to delete product.");
         return;
       }
     }

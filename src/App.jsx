@@ -27,6 +27,7 @@ const CheckoutCancel = lazyPage(() => import('./pages/CheckoutCancel'));
 
 import CookieBanner from './components/common/CookieBanner';
 import XPGainPopup from './components/common/XPGainPopup';
+import ConfirmHost from './components/common/ConfirmHost';
 import CommandPalette from './components/ui/CommandPalette';
 
 // Auth Pages
@@ -107,6 +108,7 @@ function AppRoot() {
       <Outlet />
       {!isNativeApp && <CookieBanner />}
       <XPGainPopup />
+      <ConfirmHost />
       {!isNativeApp && <CommandPalette isOpen={isCommandPaletteOpen} setIsOpen={setIsCommandPaletteOpen} />}
     </>
   );

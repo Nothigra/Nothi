@@ -27,6 +27,7 @@ import Textarea from '../components/ui/Textarea';
 import { isNativeApp } from '../lib/native';
 import { usePageTitle } from '../lib/pageTitle';
 import { avatarFallback } from '../utils/helpers';
+import { notify } from '../components/common/ConfirmHost';
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -238,7 +239,7 @@ export default function ProductPage() {
       navigate('/dashboard/purchases');
     } catch (err) {
       console.error('Download error:', err);
-      alert(err.message);
+      notify(err.message);
     } finally {
       setIsDownloading(false);
     }

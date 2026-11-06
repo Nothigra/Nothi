@@ -27,6 +27,7 @@ import './CreatorProfilePage.css';
 import ProBadge from '../components/common/ProBadge';
 import Checkbox from '../components/ui/Checkbox';
 import { usePageTitle } from '../lib/pageTitle';
+import { notify } from '../components/common/ConfirmHost';
 export default function CreatorProfilePage() {
   const { username } = useParams();
   const navigate = useNavigate();
@@ -351,7 +352,7 @@ export default function CreatorProfilePage() {
       }
     } catch (err) {
       console.error(err);
-      alert("Failed to save changes: " + err.message);
+      notify("Failed to save changes: " + err.message);
       // Revert to initial settings on error so we don't render broken blob previews
       if (initialSettings) setShopSettings(initialSettings);
       setPendingUploads({ banner: null, avatar: null });

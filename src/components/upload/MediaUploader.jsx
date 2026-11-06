@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Upload, X, Video, Image as ImageIcon, Loader2, PlayCircle, ImagePlus, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import { supabase, withTimeoutSafety, isMockMode, invokeFunction } from '../../lib/supabase';
 import './MediaUploader.css';
+import { notify } from '../common/ConfirmHost';
 
 /**
  * Small WebP copy of an image for product lists (cards, search, rails).
@@ -145,11 +146,11 @@ export default function MediaUploader({ mediaItems, setMediaItems, maxImages = 1
       if (!isVideo && !isImage) continue;
 
       if (isVideo && file.size > 100 * 1024 * 1024) {
-        alert(`${file.name} is larger than 100MB.`);
+        notify(`${file.name} is larger than 100MB.`);
         continue;
       }
       if (isImage && file.size > 15 * 1024 * 1024) {
-        alert(`${file.name} is larger than 15MB.`);
+        notify(`${file.name} is larger than 15MB.`);
         continue;
       }
 
@@ -248,7 +249,7 @@ export default function MediaUploader({ mediaItems, setMediaItems, maxImages = 1
     if (!file || !videoId) return;
 
     if (file.size > 15 * 1024 * 1024) {
-      alert("Poster image must be less than 15MB.");
+      notify("Poster image must be less than 15MB.");
       return;
     }
 
@@ -270,7 +271,7 @@ export default function MediaUploader({ mediaItems, setMediaItems, maxImages = 1
       ));
     } catch (err) {
       console.error("Custom poster upload error:", err);
-      alert("Failed to upload custom poster");
+      notify("Failed to upload custom poster");
       setMediaItems(prev => prev.map(item => 
         item.id === videoId ? { ...item, isUploading: false } : item
       ));

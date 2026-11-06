@@ -106,7 +106,7 @@ export default function MobileMenu({ isOpen, onClose, navLinks }) {
                 {t('nav.dashboard')}
               </Link>
               <button 
-                onClick={() => { if(window.confirm(t('nav.confirmSignOut', 'Are you sure you want to sign out?'))) { logout(); onClose(); } }} 
+                onClick={() => { logout(); onClose(); }} 
                 className="btn btn-outline w-full flex-center gap-sm mt-sm"
               >
                 {t('nav.signOut')}
