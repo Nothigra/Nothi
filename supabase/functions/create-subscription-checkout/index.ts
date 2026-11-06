@@ -36,7 +36,8 @@ const ALLOWED_ORIGINS = [
 
 function getAppUrl(req: Request): string {
   const origin = req.headers.get('origin') ?? '';
-  if (ALLOWED_ORIGINS.includes(origin)) return origin;
+  // Our own branch previews (only this Cloudflare account can create them)
+  if (ALLOWED_ORIGINS.includes(origin) || /^https:\/\/[a-z0-9-]+-nothiapp\.noahthirion67\.workers\.dev$/.test(origin)) return origin;
   return Deno.env.get('APP_URL') ?? ALLOWED_ORIGINS[0];
 }
 
