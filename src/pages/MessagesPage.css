@@ -257,3 +257,19 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Phone: show either the conversation list or the open chat, never both
+   (the page's own display:flex used to beat the utility class). */
+.messages-sidebar.hidden,
+.chat-area.hidden {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Keep the message box above the floating bottom bar */
+  .messages-container.h-full,
+  .messages-layout.h-full {
+    height: calc(100dvh - var(--navbar-height, 64px) - 120px - env(safe-area-inset-bottom, 0px));
+    min-height: 360px;
+  }
+}
