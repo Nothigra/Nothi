@@ -1480,3 +1480,6 @@ a, button { -webkit-tap-highlight-color: transparent; }
   .btn, .sidebar-link { transition: none; }
   .btn:hover, .btn:active { transform: none !important; }
 }
+
+/* Text on the accent colour (white in dark mode, black in light mode) */
+.text-on-accent { color: var(--color-accent-text) !important; }

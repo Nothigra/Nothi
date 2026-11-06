@@ -72,7 +72,7 @@ export default function DashboardCollections() {
             <button
               key={col.id}
               className={`flex justify-between items-center px-md py-sm rounded-md transition-colors ${
-                selectedCol === col.id ? 'bg-accent text-white' : 'text-secondary hover:bg-secondary'
+                selectedCol === col.id ? 'bg-accent text-on-accent' : 'text-secondary hover:bg-secondary'
               }`}
               onClick={() => setSelectedCol(col.id)}
             >

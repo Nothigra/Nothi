@@ -709,7 +709,7 @@ export default function DashboardSettings() {
                         className={`flex items-center gap-md p-md border rounded-lg transition-all ${isSelected ? 'border-accent bg-accent-subtle shadow-sm' : 'border-border bg-bg-card hover:border-tertiary'}`}
                         onClick={() => handleCurrencyChange(curr.code)}
                       >
-                        <div className={`w-10 h-10 rounded-full flex-center font-bold text-lg ${isSelected ? 'bg-accent text-white' : 'bg-bg-tertiary text-primary'}`}>
+                        <div className={`w-10 h-10 rounded-full flex-center font-bold text-lg ${isSelected ? 'bg-accent text-on-accent' : 'bg-bg-tertiary text-primary'}`}>
                           {curr.symbol}
                         </div>
                         <div className="text-left flex-1">

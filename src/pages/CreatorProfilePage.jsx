@@ -1200,7 +1200,7 @@ export default function CreatorProfilePage() {
                 {isEditing && (
                   <div className="flex gap-sm items-center z-40 relative">
                     <button 
-                      className={`flex-center gap-sm px-md py-sm rounded-full text-sm font-bold shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 border ${shopSettings.show_featured === false ? 'bg-bg-secondary text-text-primary border-border hover:bg-bg-tertiary' : 'bg-accent text-white border-transparent hover:shadow-md'}`}
+                      className={`flex-center gap-sm px-md py-sm rounded-full text-sm font-bold shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 border ${shopSettings.show_featured === false ? 'bg-bg-secondary text-text-primary border-border hover:bg-bg-tertiary' : 'bg-accent text-on-accent border-transparent hover:shadow-md'}`}
                       onClick={() => setShopSettings(prev => ({...prev, show_featured: prev.show_featured === false ? true : false}))}
                       title={shopSettings.show_featured === false ? 'Click to make Visible' : 'Click to Hide'}
                     >

@@ -122,12 +122,19 @@
     grid-template-columns: 1fr 1fr;
     column-gap: var(--space-6, 24px);
     row-gap: var(--space-8, 32px);
-    text-align: left;
+    text-align: center;
+    justify-items: center;
   }
   .footer-brand {
     grid-column: span 2;
     margin-bottom: 0;
+    align-items: center;
+    text-align: center;
   }
+  .footer-col { align-items: center; }
+  .social-links { justify-content: center; }
+  /* leave room for the floating bottom bar */
+  .footer { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
   .footer-bottom {
     flex-direction: column;
     gap: var(--space-4);
