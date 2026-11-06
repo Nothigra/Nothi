@@ -11,6 +11,7 @@ import {
 } from '../../api/billingApi';
 import './BoostModal.css';
 import { isNativeApp } from '../../lib/native';
+import { askConfirm } from '../common/ConfirmHost';
 
 const formatEur = (amount, lang) =>
   new Intl.NumberFormat(lang || 'fr-BE', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -28,6 +29,8 @@ export default function BoostModal({ isOpen, onClose, product, onBoost, onBooste
   const userIsPro = isPro(profile);
 
   const [mode, setMode] = useState(userIsPro ? 'pro' : 'paid');
+  // The profile can arrive after the modal opened: Pro members start on their pack.
+  useEffect(() => { if (userIsPro) setMode('pro'); }, [userIsPro]);
   const [selectedDays, setSelectedDays] = useState(3);
   const [quota, setQuota] = useState(null);
   const [quotaLoading, setQuotaLoading] = useState(false);
@@ -87,6 +90,20 @@ export default function BoostModal({ isOpen, onClose, product, onBoost, onBooste
     setIsProcessing(true);
     try {
       if (mode === 'pro') {
+        // First boost of the month picks the pack for the whole month: say it clearly.
+        if (lockedPack === null) {
+          const pack = PRO_BOOST_PACKS.find(p => p.days === selectedDays);
+          const others = PRO_BOOST_PACKS.filter(p => p.days !== selectedDays).map(p => p.label).join(' / ');
+          const ok = await askConfirm({
+            title: t('billing.packConfirmTitle', 'Use the {{pack}} pack this month?', { pack: pack?.label }),
+            message: t('billing.packConfirmMsg', 'Your first boost chooses your pack until {{date}}. You won’t be able to use {{others}} this month.', {
+              date: resetsAt ? resetsAt.toLocaleDateString(lang) : t('billing.nextMonth', 'next month'),
+              others,
+            }),
+            confirmLabel: t('billing.packConfirmOk', 'Yes, boost'),
+          });
+          if (!ok) { setIsProcessing(false); return; }
+        }
         const result = await activateProBoost(product.id, selectedDays);
         onBoosted?.(product.id, result.boosted_until);
         onClose();

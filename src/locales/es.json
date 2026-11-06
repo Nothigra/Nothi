@@ -574,7 +574,11 @@
     "upgradeYearly": "{{price}}/año (ahorra {{pct}}%)",
     "useProBoost": "Usar 1 boost Pro",
     "welcomePro": "¡Bienvenido a Nothi Pro! Todas tus ventajas están activas.",
-    "yearly": "Anual"
+    "yearly": "Anual",
+    "packConfirmTitle": "¿Usar el pack {{pack}} este mes?",
+    "packConfirmMsg": "Tu primer boost elige tu pack hasta el {{date}}. No podrás usar {{others}} este mes.",
+    "packConfirmOk": "Sí, impulsar",
+    "nextMonth": "el mes que viene"
   },
   "badges": {
     "first_purchase": {

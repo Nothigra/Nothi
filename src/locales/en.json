@@ -576,6 +576,10 @@
     "aaViewsPerDay": "views/day",
     "aaVsUsual": "vs usual",
     "aaNoBoosts": "No boosts in this period. Boost a product to measure its effect here.",
-    "proBadgeTitle": "Nothi Pro member"
+    "proBadgeTitle": "Nothi Pro member",
+    "packConfirmTitle": "Use the {{pack}} pack this month?",
+    "packConfirmMsg": "Your first boost chooses your pack until {{date}}. You won’t be able to use {{others}} this month.",
+    "packConfirmOk": "Yes, boost",
+    "nextMonth": "next month"
   }
 }
