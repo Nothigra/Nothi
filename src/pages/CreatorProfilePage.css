@@ -251,6 +251,7 @@
 
 .creator-modal-card {
   position: relative;
+  max-width: min(480px, calc(100vw - 32px)) !important;
   background-color: var(--color-bg-card);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-xl);
@@ -786,9 +787,11 @@
 
 /* Animated Edit Action Panel */
 .edit-action-panel-wrapper {
-  position: absolute;
-  top: 0;
-  right: -210px;
+  /* Pinned to the screen (it used to hang 210px outside the card and
+     disappear off the right edge on most laptop screens) */
+  position: fixed;
+  top: calc(var(--navbar-height, 72px) + 24px);
+  right: 24px;
   padding: 3px;
   border-radius: var(--radius-xl);
   background: linear-gradient(90deg, #8b5cf6, #3b82f6, #10b981, #f59e0b, #ec4899, #8b5cf6);
@@ -846,3 +849,57 @@
 .shop-pinned-chip { display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-bg-card); text-align: left; }
 .shop-pinned-chip b { display: block; font: 700 13px/1.15 var(--font-display); }
 .shop-pinned-chip small { font-size: 11.5px; color: var(--color-text-secondary); }
+
+/* ── Social links ─────────────────────────────────────────────── */
+.social-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.2s ease, background 0.2s ease;
+}
+.social-chip:hover { transform: translateY(-2px); border-color: var(--color-text-tertiary); }
+.social-chip:active { transform: scale(0.95); }
+
+.social-edit-list { display: flex; flex-direction: column; gap: 8px; }
+.social-edit-row {
+  display: grid;
+  grid-template-columns: 32px 120px minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 6px;
+}
+.social-edit-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--color-bg-secondary); color: var(--color-text-primary);
+}
+.social-edit-select,
+.social-edit-url {
+  height: 36px;
+  min-width: 0;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  font-size: 13px;
+}
+.social-edit-url.is-invalid { border-color: var(--color-danger, #ef4444); }
+.social-edit-remove {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--color-border); background: transparent; color: var(--color-text-secondary);
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.social-edit-remove:hover { color: var(--color-danger, #ef4444); border-color: var(--color-danger, #ef4444); }
+@media (max-width: 480px) {
+  .social-edit-row { grid-template-columns: 32px minmax(0, 1fr) 32px; }
+  .social-edit-select { grid-column: 2; }
+  .social-edit-url { grid-column: 1 / span 3; }
+  .social-edit-remove { grid-column: 3; grid-row: 1; }
+}

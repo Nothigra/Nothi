@@ -128,6 +128,14 @@ export const STYLE_LIST = [
   'Warp', 'Hard Shake', 'Trend', 'Agony'
 ];
 
+/** "All styles": the product fits any editing style (works like "All software"). */
+export const STYLE_ALL = 'All';
+export const STYLE_ALL_LABEL = 'All styles';
+export const toggleStyleSelection = toggleSoftwareSelection;
+export function styleLabels(list) {
+  return (list || []).map((st) => (st === STYLE_ALL ? STYLE_ALL_LABEL : st));
+}
+
 export const CURRENCY_LIST = [
   { code: 'EUR', name: 'Euro', symbol: '€' },
   { code: 'USD', name: 'US Dollar', symbol: '$' },

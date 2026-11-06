@@ -28,6 +28,8 @@ import ProBadge from '../components/common/ProBadge';
 import Checkbox from '../components/ui/Checkbox';
 import { usePageTitle } from '../lib/pageTitle';
 import { notify } from '../components/common/ConfirmHost';
+import SocialIcon from '../components/common/SocialIcon';
+import { SOCIAL_PLATFORMS, MAX_SOCIAL_LINKS, normalizeUrl, detectPlatform, cleanLinks } from '../lib/socialLinks';
 export default function CreatorProfilePage() {
   const { username } = useParams();
   const navigate = useNavigate();
@@ -45,14 +47,6 @@ export default function CreatorProfilePage() {
   // The edit-mode action panel becomes position:fixed at <=1200px (see CSS) —
   // portal it on mobile/tablet so it can escape Layout's page-transition
   // stacking context and correctly sit above the floating bottom nav.
-  const [isCompactEditPanel, setIsCompactEditPanel] = useState(
-    typeof window !== 'undefined' ? window.innerWidth <= 1200 : false
-  );
-  useEffect(() => {
-    const handleResize = () => setIsCompactEditPanel(window.innerWidth <= 1200);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -295,7 +289,8 @@ export default function CreatorProfilePage() {
     setIsSaving(true);
     try {
       if (isOwner) {
-        let finalSettings = { ...shopSettings };
+        // Only valid web links are saved (empty rows and junk are dropped)
+        let finalSettings = { ...shopSettings, links: cleanLinks(shopSettings.links).map(({ platform, url }) => ({ platform, url })) };
 
         const uploadImage = async (original, folder) => {
           // Small copies: 512px for the profile photo, 1920px for the banner
@@ -420,9 +415,16 @@ export default function CreatorProfilePage() {
 
   const handlePointerMove = (e) => {
     if (!dragStart.current || dragStart.current.id !== e.pointerId) return;
+    // Keep the panel inside the screen while it is dragged
+    const card = e.currentTarget.closest('.creator-modal-card');
+    const w = card?.offsetWidth || 400;
+    const h = card?.offsetHeight || 400;
+    const maxX = Math.max(0, (window.innerWidth - w) / 2 - 8);
+    const maxY = Math.max(0, (window.innerHeight - h) / 2 - 8);
+    const clamp = (v, m) => Math.min(m, Math.max(-m, v));
     setModalPos({
-      x: e.clientX - dragStart.current.startX,
-      y: e.clientY - dragStart.current.startY
+      x: clamp(e.clientX - dragStart.current.startX, maxX),
+      y: clamp(e.clientY - dragStart.current.startY, maxY)
     });
   };
 
@@ -543,18 +545,59 @@ export default function CreatorProfilePage() {
               )}
               {activeEditSection === 'links' && (
                 <div className="creator-form-group">
-                  <label className="creator-form-label">External Links</label>
-                  <p className="text-sm text-secondary mb-sm">Add links to your social media or personal website.</p>
-                  <div className="flex flex-col gap-sm">
-                    {(shopSettings.links || []).map((link, i) => (
-                      <div key={i} className="flex gap-xs">
-                         <Input value={link.title} readOnly placeholder="Title" />
-                         <Input value={link.url} readOnly placeholder="URL" />
-                      </div>
-                    ))}
-                    <button className="btn btn-outline btn-sm w-full flex-center gap-xs mt-xs">
-                      <Plus size={14} /> Add Link
-                    </button>
+                  <label className="creator-form-label">Social links</label>
+                  <p className="text-sm text-secondary mb-sm">Paste your profile links — TikTok, YouTube, Instagram, X, Discord… The logo is picked automatically.</p>
+                  <div className="social-edit-list">
+                    {(shopSettings.links || []).map((link, i) => {
+                      const valid = !link.url || normalizeUrl(link.url);
+                      const updateLink = (patch) => setShopSettings(prev => {
+                        const next = [...(prev.links || [])];
+                        next[i] = { ...next[i], ...patch };
+                        return { ...prev, links: next };
+                      });
+                      return (
+                        <div key={i} className="social-edit-row">
+                          <span className="social-edit-icon"><SocialIcon platform={link.platform || detectPlatform(normalizeUrl(link.url) || '')} size={16} /></span>
+                          <select
+                            className="social-edit-select"
+                            value={link.platform || 'website'}
+                            onChange={(e) => updateLink({ platform: e.target.value })}
+                            aria-label="Platform"
+                          >
+                            {SOCIAL_PLATFORMS.map(pl => <option key={pl.id} value={pl.id}>{pl.label}</option>)}
+                          </select>
+                          <input
+                            className={`social-edit-url ${valid ? '' : 'is-invalid'}`}
+                            value={link.url || ''}
+                            placeholder="https://tiktok.com/@you"
+                            inputMode="url"
+                            onChange={(e) => {
+                              const url = e.target.value;
+                              const norm = normalizeUrl(url);
+                              const auto = norm ? detectPlatform(norm) : null;
+                              updateLink({ url, ...(auto && auto !== 'website' ? { platform: auto } : {}) });
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="social-edit-remove"
+                            aria-label="Remove link"
+                            onClick={() => setShopSettings(prev => ({ ...prev, links: (prev.links || []).filter((_, j) => j !== i) }))}
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                    {(shopSettings.links || []).length < MAX_SOCIAL_LINKS && (
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm w-full flex-center gap-xs mt-xs"
+                        onClick={() => setShopSettings(prev => ({ ...prev, links: [...(prev.links || []), { platform: 'tiktok', url: '' }] }))}
+                      >
+                        <Plus size={14} /> Add a link
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -979,7 +1022,7 @@ export default function CreatorProfilePage() {
         >
           
           {isEditing && (
-            <PortalWhen active={isCompactEditPanel}>
+            <PortalWhen active>
             <div className="edit-action-panel-wrapper">
               <div className="edit-action-panel-inner">
                 <button 
@@ -1000,13 +1043,6 @@ export default function CreatorProfilePage() {
             </PortalWhen>
           )}
           
-          {!isEditing && isOwner && (
-            <div className="hidden md:block absolute top-md right-md">
-               <button className="btn btn-outline flex-center gap-sm rounded-full" onClick={() => setIsEditing(true)}>
-                 <Edit2 size={16} /> Edit My Shop
-               </button>
-            </div>
-          )}
 
           <div className={`profile-avatar-large relative ${isEditing ? 'edit-mode-wrapper group' : ''}`} style={{ background: 'transparent' }}>
             <AvatarFrame level={shopSettings.profile_frame?.enabled !== false ? creator.level : undefined} xp={creator.xp} badges={creator.displayed_badges || []} showLevel imageUrl={shopSettings.profile_image_url || creator.avatar_url} name={creator.username} size="xl" />
@@ -1035,6 +1071,14 @@ export default function CreatorProfilePage() {
             </p>
             )}
             
+            {/* Owner: edit button sits in the action row (it used to float over the stats) */}
+            {!isEditing && isOwner && (
+              <div className="mt-md hidden md:flex justify-start gap-sm">
+                <button className="btn btn-sm btn-outline flex-center gap-xs" onClick={() => setIsEditing(true)}>
+                  <Edit2 size={14} /> Edit My Shop
+                </button>
+              </div>
+            )}
             {!isOwner && user && (
               <div className="mt-md flex justify-center md:justify-start gap-sm">
                 <button 
@@ -1134,15 +1178,15 @@ export default function CreatorProfilePage() {
           )}
 
           {/* Links Placeholder inside Header Card (Optional) */}
-          {(isOwner || (shopSettings.links && shopSettings.links.length > 0)) && (
+          {(isOwner || cleanLinks(shopSettings.links).length > 0) && (
           <div className={`w-full mt-md pt-md border-t border-border relative rounded-lg p-xs -mx-xs border border-transparent transition-colors ${isEditing ? 'edit-mode-wrapper group hover:border-dashed hover:border-border' : ''}`}>
              <div className="flex flex-wrap gap-sm justify-center md:justify-start">
-               {(!shopSettings.links || shopSettings.links.length === 0) ? (
-                 <span className="text-secondary text-sm italic py-xs">No external links added.</span>
+               {cleanLinks(shopSettings.links).length === 0 ? (
+                 <span className="text-secondary text-sm italic py-xs">Add your TikTok, YouTube, Instagram… so people can follow you.</span>
                ) : (
-                 shopSettings.links.map((link, i) => (
-                   <a key={i} href={link.url} target="_blank" rel="noreferrer" className="text-accent hover:underline text-sm font-medium">
-                     {link.title}
+                 cleanLinks(shopSettings.links).map((link, i) => (
+                   <a key={i} href={link.url} target="_blank" rel="noopener noreferrer nofollow" className="social-chip" title={link.title} aria-label={link.title}>
+                     <SocialIcon platform={link.platform} size={18} />
                    </a>
                  ))
                )}

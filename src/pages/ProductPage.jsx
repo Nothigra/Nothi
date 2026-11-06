@@ -17,7 +17,7 @@ import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { useGamification } from '../context/GamificationContext';
 import ReportModal from '../components/common/ReportModal';
-import { MOCK_PRODUCTS, MOCK_CREATORS, CATEGORIES, softwareLabels } from '../lib/seed';
+import { MOCK_PRODUCTS, MOCK_CREATORS, CATEGORIES, softwareLabels, styleLabels } from '../lib/seed';
 import { getProductById, queryPublicProducts, createPurchase, checkHasPurchased, getReviews, submitReview, getUserReviewForProduct } from '../api/productApi';
 import { detectTrafficSource, detectDeviceType } from '../utils/analyticsTracking';
 import { supabase, isMockMode as supabaseMockMode, invokeFunction, withTimeoutSafety } from '../lib/supabase';
@@ -431,7 +431,7 @@ export default function ProductPage() {
                     <>
                       <h3 className="text-xl font-bold text-primary mt-xl mb-md">Style</h3>
                       <div className="flex gap-sm flex-wrap mb-xl">
-                        {product.style.map(st => (
+                        {styleLabels(product.style).map(st => (
                           <span key={st} className="px-md py-sm bg-secondary rounded-md text-sm font-medium">{st}</span>
                         ))}
                       </div>

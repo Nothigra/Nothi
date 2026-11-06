@@ -89,7 +89,7 @@ export async function queryPublicProducts(opts = {}, isMockMode = false) {
     const price = (p) => p.sale_price ?? p.salePrice ?? p.price ?? 0;
     if (category && category !== 'all') list = list.filter((p) => p.category === category);
     if (software.length) list = list.filter((p) => (p.software || []).includes('All') || (p.software || []).some((s) => software.includes(s)));
-    if (style.length) list = list.filter((p) => (p.style || []).some((s) => style.includes(s)));
+    if (style.length) list = list.filter((p) => (p.style || []).includes('All') || (p.style || []).some((s) => style.includes(s)));
     if (free === true) list = list.filter((p) => price(p) === 0);
     if (free === false) list = list.filter((p) => price(p) > 0);
     if (priceMin != null) list = list.filter((p) => price(p) >= priceMin);
@@ -113,7 +113,8 @@ export async function queryPublicProducts(opts = {}, isMockMode = false) {
   if (category && category !== 'all') q = q.eq('category', category);
   // a product marked 'All' works with every software
   if (software.length) q = q.overlaps('software', [...new Set([...software, 'All'])]);
-  if (style.length) q = q.overlaps('style', style);
+  // a product marked 'All' fits every editing style
+  if (style.length) q = q.overlaps('style', [...new Set([...style, 'All'])]);
   if (free === true) q = q.eq('effective_price', 0);
   if (free === false) q = q.gt('effective_price', 0);
   if (priceMin != null) q = q.gte('effective_price', priceMin);

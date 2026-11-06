@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useGamification } from '../../context/GamificationContext';
-import { CATEGORIES, SOFTWARE_LIST, STYLE_LIST, SOFTWARE_ALL, SOFTWARE_ALL_LABEL, ANY_SOFTWARE_CATEGORIES, toggleSoftwareSelection } from '../../lib/seed';
+import { CATEGORIES, SOFTWARE_LIST, STYLE_LIST, SOFTWARE_ALL, SOFTWARE_ALL_LABEL, ANY_SOFTWARE_CATEGORIES, toggleSoftwareSelection, STYLE_ALL, STYLE_ALL_LABEL, toggleStyleSelection } from '../../lib/seed';
 import { supabase, withTimeoutSafety } from '../../lib/supabase';
 import { isPro, getPlanLimits, formatFileSize } from '../../config/plans';
 import { activateProBoost, billingErrorMessage } from '../../api/billingApi';
@@ -408,7 +408,7 @@ export default function AppPublishPage() {
           </div>
           <div className="pub-field">
             <span className="pub-label">Style</span>
-            <Chips multiple options={STYLE_LIST.map((s) => ({ value: s, label: s }))} value={form.style} onChange={(v) => set({ style: v })} />
+            <Chips multiple options={[{ value: STYLE_ALL, label: STYLE_ALL_LABEL }, ...STYLE_LIST.map((s) => ({ value: s, label: s }))]} value={form.style} onChange={(v) => set({ style: toggleStyleSelection(v, form.style) })} />
             {touched && form.style.length === 0 && <small className="pub-error">Pick at least one style.</small>}
           </div>
         </section>

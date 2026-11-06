@@ -5,7 +5,7 @@ import {
   AlertCircle, X, Type, Tag, Globe, Settings, ExternalLink, CheckCircle2, Eye, ChevronDown, Rocket, Loader2
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { CATEGORIES, SOFTWARE_LIST, STYLE_LIST, SOFTWARE_ALL, SOFTWARE_ALL_LABEL, ANY_SOFTWARE_CATEGORIES, toggleSoftwareSelection } from '../../lib/seed';
+import { CATEGORIES, SOFTWARE_LIST, STYLE_LIST, SOFTWARE_ALL, SOFTWARE_ALL_LABEL, ANY_SOFTWARE_CATEGORIES, toggleSoftwareSelection, STYLE_ALL, STYLE_ALL_LABEL, toggleStyleSelection } from '../../lib/seed';
 import Input from '../../components/ui/Input';
 import Textarea from '../../components/ui/Textarea';
 import CurrencyInput from '../../components/ui/CurrencyInput';
@@ -599,8 +599,8 @@ export default function UploadProductPage() {
               multiple={true}
               searchable={true}
               value={formData.style}
-              onChange={(val) => setFormData({...formData, style: val})}
-              options={STYLE_LIST.map(st => ({ value: st, label: st }))}
+              onChange={(val) => setFormData({...formData, style: toggleStyleSelection(val, formData.style)})}
+              options={[{ value: STYLE_ALL, label: STYLE_ALL_LABEL }, ...STYLE_LIST.map(st => ({ value: st, label: st }))]}
               placeholder="Select editing styles..."
               error={showValidationErrors && formData.style.length === 0 ? "Style is required" : null}
             />
