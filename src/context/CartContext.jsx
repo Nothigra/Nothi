@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import { supabase, isMockMode } from '../lib/supabase';
 
 const CartContext = createContext();
 
@@ -12,6 +14,22 @@ export function CartProvider({ children }) {
     }
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const { user } = useAuth();
+
+  // Products already owned (bought on another tab or device, or the payment
+  // came back to another page) never stay in the cart.
+  const cartKey = items.map(i => i.id).join(',');
+  useEffect(() => {
+    if (isMockMode || !user?.id || !cartKey) return undefined;
+    let cancelled = false;
+    supabase.from('purchases').select('product_id').eq('buyer_id', user.id).in('product_id', cartKey.split(','))
+      .then(({ data }) => {
+        if (cancelled || !data?.length) return;
+        const owned = new Set(data.map(r => r.product_id));
+        setItems(prev => prev.filter(item => !owned.has(item.id)));
+      });
+    return () => { cancelled = true; };
+  }, [user?.id, cartKey, isCartOpen]);
   const openCart = () => setIsCartOpen(true);
   const closeCart = () => setIsCartOpen(false);
   useEffect(() => {
