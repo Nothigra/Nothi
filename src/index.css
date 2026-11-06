@@ -600,8 +600,11 @@ h6 {
   .btn-icon { 
     width: 44px; 
     height: 44px; 
+    padding: 0; /* the .btn padding above used to squash icons to a dot */
   }
 }
+
+.btn svg { flex-shrink: 0; }
 
 .w-full {
   width: 100%;
