@@ -11,21 +11,14 @@ export default function XPGainPopup() {
   const prevXpRef = useRef(gamificationState?.xp);
   const prevLevelRef = useRef(gamificationState?.level);
 
-  useEffect(() => {
-    console.log("[XPGainPopup] MOUNTED. Initial ref:", prevXpRef.current);
-    return () => console.log("[XPGainPopup] UNMOUNTED");
-  }, []);
-
   // We use a queue in case multiple XP bumps happen quickly.
   // We'll show them sequentially or stacked. Here we just show the active one.
   const activePopup = popupQueue.length > 0 ? popupQueue[0] : null;
 
   useEffect(() => {
-    console.log("XPGainPopup gamificationState changed:", gamificationState?.xp, "prev:", prevXpRef.current);
     if (!gamificationState) return;
 
     if (prevXpRef.current !== undefined && gamificationState.xp > prevXpRef.current) {
-      console.log("XPGainPopup DETECTED GAIN!", gamificationState.xp - prevXpRef.current);
       const delta = gamificationState.xp - prevXpRef.current;
       const didLevelUp = gamificationState.level > prevLevelRef.current;
       const newLevel = gamificationState.level;
@@ -38,8 +31,6 @@ export default function XPGainPopup() {
       };
 
       setPopupQueue(prev => [...prev, newPopup]);
-    } else if (prevXpRef.current !== undefined && gamificationState.xp < prevXpRef.current) {
-      console.warn("XPGainPopup DETECTED LOSS!", prevXpRef.current - gamificationState.xp);
     }
     
     prevXpRef.current = gamificationState.xp;
@@ -48,7 +39,6 @@ export default function XPGainPopup() {
 
   // Handle popup duration
   useEffect(() => {
-    console.log("XPGainPopup activePopup changed:", activePopup);
     if (activePopup) {
       const timer = setTimeout(() => {
         setPopupQueue(prev => prev.slice(1));

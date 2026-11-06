@@ -170,7 +170,6 @@ export async function getProductById(id, isMockMode) {
 }
 
 export async function createProduct(productData) {
-  console.log("PAYLOAD TO SUPABASE:", productData);
   try {
     // No withTimeoutSafety here: it retries, and a retried insert creates a duplicate product.
     const { data, error } = await supabase
@@ -178,7 +177,6 @@ export async function createProduct(productData) {
       .insert([productData])
       .select()
       .single();
-    console.log("SUPABASE RESPONSE DATA:", data, "ERROR:", error);
       
     if (error) {
       console.error('Error creating product:', error);

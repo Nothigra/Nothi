@@ -37,13 +37,6 @@ const Textarea = forwardRef(({
 
   const hasValue = value !== undefined && value !== null && value !== '';
 
-  useEffect(() => {
-    console.log('[DEBUG] Textarea MOUNTED');
-    return () => console.log('[DEBUG] Textarea UNMOUNTED');
-  }, []);
-
-  console.log('[DEBUG] Textarea RENDERED, value:', value);
-
   // Auto-grow logic
   useEffect(() => {
     if (autoGrow && ref && ref.current) {

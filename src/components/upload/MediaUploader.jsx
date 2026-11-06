@@ -130,18 +130,10 @@ export default function MediaUploader({ mediaItems, setMediaItems, maxImages = 1
 
       return publicUrl;
     } catch (err) {
-      console.warn("Real upload failed or timed out. Falling back to local preview mode.", err);
-      // Fallback for local development when edge functions aren't deployed
-      if (onProgress) {
-        onProgress(30);
-        await new Promise(r => setTimeout(r, 400));
-        onProgress(70);
-        await new Promise(r => setTimeout(r, 400));
-        onProgress(100);
-      } else {
-        await new Promise(r => setTimeout(r, 800));
-      }
-      return URL.createObjectURL(file);
+      // Never fall back to a local blob: URL here — it would be saved on the
+      // product and nobody else could see the picture.
+      console.error('Media upload failed:', err);
+      throw new Error('Upload failed. Check your connection and try again.');
     }
   };
 

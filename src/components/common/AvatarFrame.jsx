@@ -46,7 +46,8 @@ export default function AvatarFrame({
         />
       )}
       {pinned.map((id, i) => {
-        const a = ((-30 + i * 32) * Math.PI) / 180;
+        // upper-left arc: clear of the name (right), the Pro tick (bottom-right) and the level plate (bottom)
+        const a = ((-158 + i * 32) * Math.PI) / 180;
         const r = ringBox / 2 - 2;
         return (
           <span key={id} className="nb-avatar-pin" style={{ left: px / 2 + r * Math.cos(a), top: px / 2 + r * Math.sin(a) }}>

@@ -13,7 +13,7 @@ import Input from '../../components/ui/Input';
 import BoostModal from '../../components/dashboard/BoostModal';
 import { PLAN_LIMITS, isPro } from '../../config/plans';
 import { getMyProducts } from '../../api/productApi';
-import { isMockMode } from '../../lib/supabase';
+import { isMockMode, supabase, withTimeoutSafety } from '../../lib/supabase';
 import './DashboardProducts.css';
 import { isNativeApp } from '../../lib/native';
 
@@ -121,7 +121,6 @@ export default function DashboardProducts() {
       const updated = myProducts.filter(p => p.id !== productId);
       await updateProfile({ products: updated });
     } else {
-      const { supabase, withTimeoutSafety } = await import('../../lib/supabase');
       const { error } = await withTimeoutSafety(() => supabase.from('products').delete().eq('id', productId));
       if (error) {
         alert("Failed to delete product.");

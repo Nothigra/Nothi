@@ -32,7 +32,6 @@ export default function ReportModal({ isOpen, onClose, type, targetId }) {
 
   // Reset state when modal opens/closes
   useEffect(() => {
-    console.log('[DEBUG] ReportModal useEffect [isOpen] fired, isOpen:', isOpen);
     if (isOpen) {
       setSelectedReason(null);
       setComment('');
@@ -41,13 +40,6 @@ export default function ReportModal({ isOpen, onClose, type, targetId }) {
       setError('');
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    console.log('[DEBUG] ReportModal MOUNTED');
-    return () => console.log('[DEBUG] ReportModal UNMOUNTED');
-  }, []);
-
-  console.log('[DEBUG] ReportModal RENDERED, comment:', comment);
 
   if (!isOpen) return null;
 
@@ -173,7 +165,6 @@ export default function ReportModal({ isOpen, onClose, type, targetId }) {
                   placeholder="Provide more details about your report..."
                   value={comment}
                   onChange={(e) => {
-                    console.log('Textarea onChange fired, new value:', e.target.value);
                     setComment(e.target.value);
                     if (error) setError('');
                   }}

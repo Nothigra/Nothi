@@ -70,6 +70,7 @@ export default function UploadProductPage() {
 
   const thumbnailInputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const draftIdRef = useRef(null);
   
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [mediaItems, setMediaItems] = useState([]);
@@ -304,10 +305,22 @@ export default function UploadProductPage() {
         productPayload.status = 'draft';
         productPayload.seller_id = profile?.id;
         
-        const res = await createProduct(productPayload);
-        if (!res) throw new Error('Failed to create product record.');
-        if (res.limitReached) {
-          throw new Error(`The Free plan allows ${PLAN_LIMITS.free.maxProducts} products. Go Pro for unlimited products.`);
+        // A retry after a failed upload reuses the draft made by the first try
+        // instead of leaving one orphan draft per attempt.
+        let res;
+        if (draftIdRef.current) {
+          const edits = { ...productPayload };
+          delete edits.status;
+          delete edits.seller_id;
+          await updateProduct(draftIdRef.current, edits);
+          res = { id: draftIdRef.current };
+        } else {
+          res = await createProduct(productPayload);
+          if (!res) throw new Error('Failed to create product record.');
+          if (res.limitReached) {
+            throw new Error(`The Free plan allows ${PLAN_LIMITS.free.maxProducts} products. Go Pro for unlimited products.`);
+          }
+          draftIdRef.current = res.id;
         }
         
         // Upload the required file
@@ -325,7 +338,7 @@ export default function UploadProductPage() {
           method: 'PUT',
           headers: { 'Content-Type': productFile.type || 'application/octet-stream' },
           body: productFile,
-        });
+        }).catch(() => { throw new Error('The file could not be uploaded. Check your connection and try again.'); });
         
         if (!uploadRes.ok) throw new Error(`File upload failed (HTTP ${uploadRes.status})`);
         setFileUploadProgress(100);
