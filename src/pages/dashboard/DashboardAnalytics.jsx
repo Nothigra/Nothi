@@ -21,7 +21,8 @@ const SOURCE_LABELS = {
 
 export default function DashboardAnalytics() {
   const { profile, isMockMode } = useAuth();
-  const { formatPrice } = useCurrency();
+  // Earnings and charged amounts are real euros, whatever display currency is picked.
+  const { formatEur: formatPrice } = useCurrency();
   const [timeRange, setTimeRange] = useState('30d');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);

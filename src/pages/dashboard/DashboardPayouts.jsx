@@ -9,7 +9,7 @@ import './DashboardPages.css';
 import { usePayouts } from '../../hooks/usePayouts';
 
 export default function DashboardPayouts() {
-  const { balance, earnings, formatEur, formatPrice, handleConnectStripe, handleManageStripe, handleMax, handleRequestPayout, handleWithdraw, isDetailsSubmitted, isFullyConnected, isManagingStripe, isPendingVerify, isProcessing, isSettling, loadingTransfers, message, pendingBalanceCents, profile, stripeConnecting, stripeMessage, stripeStatusLoading, transfers, withdrawAmount, setWithdrawAmount } = usePayouts();
+  const { balance, earnings, formatEur, handleConnectStripe, handleManageStripe, handleMax, handleRequestPayout, handleWithdraw, isDetailsSubmitted, isFullyConnected, isManagingStripe, isPendingVerify, isProcessing, isSettling, loadingTransfers, message, pendingBalanceCents, profile, stripeConnecting, stripeMessage, stripeStatusLoading, transfers, withdrawAmount, setWithdrawAmount } = usePayouts();
 
   return (
     <div className="dashboard-page pb-2xl">
@@ -24,7 +24,7 @@ export default function DashboardPayouts() {
       <div className="stats-grid mb-xl" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
         <div className="premium-stat-card">
           <p className="text-sm text-secondary font-medium mb-xs uppercase tracking-wider">Available Balance</p>
-          <h3 className="text-3xl font-bold font-display text-primary">{formatPrice(balance)}</h3>
+          <h3 className="text-3xl font-bold font-display text-primary">{formatEur(balance)}</h3>
           <p className="text-sm text-secondary mt-sm">Ready to withdraw (demo)</p>
         </div>
       </div>
@@ -117,7 +117,7 @@ export default function DashboardPayouts() {
               </div>
               <div className="flex justify-between mt-sm text-sm">
                 <span className="text-secondary">Minimum withdrawal: $20.00</span>
-                <span className="text-accent font-medium">Remaining: {formatPrice(Math.max(0, balance - (parseFloat(withdrawAmount) || 0)))}</span>
+                <span className="text-accent font-medium">Remaining: {formatEur(Math.max(0, balance - (parseFloat(withdrawAmount) || 0)))}</span>
               </div>
             </div>
 

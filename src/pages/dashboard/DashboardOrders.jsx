@@ -10,7 +10,8 @@ import './DashboardPages.css';
 
 export default function DashboardOrders() {
   const { t } = useTranslation();
-  const { formatPrice } = useCurrency();
+  // Earnings and charged amounts are real euros, whatever display currency is picked.
+  const { formatEur: formatPrice } = useCurrency();
   const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState('all');
   const [realOrders, setRealOrders] = useState([]);

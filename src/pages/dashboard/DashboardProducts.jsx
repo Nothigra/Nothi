@@ -26,7 +26,8 @@ const isSaleActive = (p) =>
 
 export default function DashboardProducts() {
   const { profile, updateProfile, isLoading: isAuthLoading } = useAuth();
-  const { formatPrice } = useCurrency();
+  // Earnings and charged amounts are real euros, whatever display currency is picked.
+  const { formatEur: formatPrice } = useCurrency();
   const { i18n } = useTranslation();
   const baseLang = (i18n.language || 'en').split('-')[0];
   

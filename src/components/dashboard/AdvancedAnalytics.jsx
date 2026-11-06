@@ -60,7 +60,8 @@ function LockedTeaser() {
 export default function AdvancedAnalytics({ isPro, rangeDays }) {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || 'en').split('-')[0];
-  const { formatPrice } = useCurrency();
+  // Earnings and charged amounts are real euros, whatever display currency is picked.
+  const { formatEur: formatPrice } = useCurrency();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);

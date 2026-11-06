@@ -123,7 +123,7 @@ export async function uploadChatAttachment(file) {
     method: 'PUT',
     headers: { 'Content-Type': file.type || 'application/octet-stream' },
     body: file,
-  });
+  }).catch(() => { throw new Error('The file could not be uploaded. Check your connection and try again.'); });
 
   if (!uploadRes.ok) {
     throw new Error(`File upload failed (HTTP ${uploadRes.status})`);

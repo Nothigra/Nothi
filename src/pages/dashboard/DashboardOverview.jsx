@@ -16,7 +16,8 @@ import './DashboardOverview.css';
 
 export default function DashboardOverview() {
   const { profile, isMockMode } = useAuth();
-  const { formatPrice } = useCurrency();
+  // Earnings and charged amounts are real euros, whatever display currency is picked.
+  const { formatEur: formatPrice } = useCurrency();
   const [timeRange, setTimeRange] = useState('30d');
   const [realProducts, setRealProducts] = useState([]);
   const [realOrders, setRealOrders] = useState([]);

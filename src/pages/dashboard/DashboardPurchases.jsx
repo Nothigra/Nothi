@@ -22,7 +22,8 @@ function writeLibraryCache(key, list) {
 
 export default function DashboardPurchases() {
   const { profile, isMockMode } = useAuth();
-  const { formatPrice } = useCurrency();
+  // Earnings and charged amounts are real euros, whatever display currency is picked.
+  const { formatEur: formatPrice } = useCurrency();
   const { i18n } = useTranslation();
   const baseLang = (i18n.language || 'en').split('-')[0];
   const navigate = useNavigate();

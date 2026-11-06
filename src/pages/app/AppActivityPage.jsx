@@ -25,7 +25,7 @@ export default function AppActivityPage() {
   const { i18n } = useTranslation();
   const lang = (i18n.language || 'en').split('-')[0];
   const { profile, isMockMode } = useAuth();
-  const { formatPrice } = useCurrency();
+  const { formatEur: formatPrice } = useCurrency(); // earnings are real euros
   const { conversations } = useChat();
   const navigate = useNavigate();
   const [rows, setRows] = useState(null);
