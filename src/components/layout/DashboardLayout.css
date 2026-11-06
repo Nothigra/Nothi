@@ -301,3 +301,12 @@
   line-height: 1;
 }
 
+
+/* The menu takes the free height and scrolls on short screens, so the
+   Log Out button at the bottom is always reachable. */
+.dashboard-sidebar .sidebar-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
