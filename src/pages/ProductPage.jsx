@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { useParams, Link, useNavigate, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { createPortal } from 'react-dom';
 import { 
   Star, ShoppingCart, Check, Heart, ShieldCheck, 
   Download, RefreshCw, Eye, MessageSquare, ArrowLeft,
@@ -810,6 +811,9 @@ export default function ProductPage() {
 
       {/* Sticky mobile buy bar — appears once the real purchase actions
           scroll out of view, so buying never requires scrolling back up */}
+      {/* Portalled: the page-transition wrapper has a transform, which would
+          pin a position:fixed bar to the page instead of the screen. */}
+      {createPortal(
       <AnimatePresence>
         {showStickyBar && (
           <motion.div
@@ -834,7 +838,9 @@ export default function ProductPage() {
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body,
+      )}
     </div>
   );
 }
