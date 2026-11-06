@@ -747,3 +747,80 @@
   color: var(--color-text-primary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
+
+/* ── Payouts: method switch, PayPal panel, fees ─────────────────── */
+.payout-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: var(--space-lg, 20px);
+}
+.payout-switch-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius-lg, 12px);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+.payout-switch-opt:hover { border-color: var(--color-text-tertiary); }
+.payout-switch-opt:active { transform: scale(0.98); }
+.payout-switch-opt.active {
+  border-color: var(--color-text-primary);
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
+}
+.payout-switch-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--color-bg-tertiary, var(--color-bg-secondary));
+  color: var(--color-text-primary);
+  flex-shrink: 0;
+}
+.payout-switch-text { display: flex; flex-direction: column; line-height: 1.25; }
+.payout-switch-text strong { font-size: 14px; }
+.payout-switch-text small { font-size: 12px; color: var(--color-text-secondary); }
+
+.payout-input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+.payout-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-bg-secondary);
+  font-size: 13px;
+}
+.payout-preview > div { display: flex; justify-content: space-between; color: var(--color-text-secondary); }
+.payout-preview-total { padding-top: 6px; border-top: 1px solid var(--color-border); color: var(--color-text-primary) !important; font-weight: 700; }
+
+.fees-box {
+  padding: 14px 16px;
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  font-size: 13px;
+}
+.fees-box-title { display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 10px; }
+.fees-row { display: flex; justify-content: space-between; gap: 16px; padding: 4px 0; color: var(--color-text-secondary); }
+.fees-row span:last-child { color: var(--color-text-primary); text-align: right; }
+.fees-sep { height: 1px; background: var(--color-border); margin: 8px 0; }
+.fees-note { margin: 10px 0 0; font-size: 12px; color: var(--color-text-secondary); }
+@media (max-width: 480px) {
+  .fees-row { flex-direction: column; gap: 2px; }
+  .fees-row span:last-child { text-align: left; }
+}

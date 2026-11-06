@@ -114,7 +114,9 @@ export async function getSellerEarnings(sellerId) {
     acc.feesCents += gross - net;
     // Only a real Stripe transfer id counts as paid out. settle-pending-payouts
     // temporarily writes 'pending:<ts>' while a transfer is in flight.
-    if (String(row.stripe_transfer_id || '').startsWith('tr_')) acc.transferredCents += net;
+    // 'tr_' = Stripe transfer, 'pp_' = PayPal payout (in-flight markers stay pending)
+    const tid = String(row.stripe_transfer_id || '');
+    if (tid.startsWith('tr_') || tid.startsWith('pp_')) acc.transferredCents += net;
     else acc.pendingCents += net;
     acc.paidSales += 1;
     return acc;

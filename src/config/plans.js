@@ -48,3 +48,21 @@ export function getPlanLimits(profile) {
 export function formatFileSize(mb) {
   return mb >= 1024 ? `${mb / 1024} GB` : `${mb} MB`;
 }
+
+// ── Fees shown to sellers ─────────────────────────────────────────────────
+// Keep in sync with the edge functions (stripe-webhook, paypal-payout).
+export const PLATFORM_FEE_PCT = 5;
+// What the buyer's payment costs (taken from the sale before the seller's share)
+export const PAYMENT_FEES = {
+  card: { label: 'Card', text: 'about 1.5% + €0.25 (Stripe)' },
+  paypal: { label: 'PayPal', text: '0.2% + €0.10 (Stripe) + PayPal’s own fee' },
+};
+// What a payout costs the seller
+export const PAYOUT_FEES = {
+  stripe: { pct: 0, label: 'Stripe → your bank', text: 'Free for you — Nothi pays Stripe’s payout costs.', delay: '2–7 business days to your bank' },
+  paypal: { pct: 2, label: 'PayPal', text: '2% of the amount, taken from the payout (PayPal’s payout fee).', delay: 'usually within minutes' },
+};
+export function payoutFeeCents(method, grossCents) {
+  const pct = PAYOUT_FEES[method]?.pct || 0;
+  return Math.round((grossCents * pct) / 100);
+}

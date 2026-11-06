@@ -30,6 +30,14 @@ export function usePayouts() {
   const pendingBalanceCents = isMockMode ? (profile?.balance || 0) : (earnings ? earnings.pendingCents : null);
   const [isSettling, setIsSettling] = useState(false);
   const [transfers, setTransfers] = useState([]);
+  // Where the seller wants to be paid: 'stripe' (bank) or 'paypal'
+  const [payoutMethod, setPayoutMethodState] = useState(profile?.payout_method || 'stripe');
+  const [paypalEmail, setPaypalEmail] = useState(profile?.paypal_email || '');
+  const [isSavingPayout, setIsSavingPayout] = useState(false);
+  useEffect(() => {
+    if (profile?.payout_method) setPayoutMethodState(profile.payout_method);
+    if (profile?.paypal_email != null) setPaypalEmail(profile.paypal_email || '');
+  }, [profile?.payout_method, profile?.paypal_email]);
   const [loadingTransfers, setLoadingTransfers] = useState(true);
 
   useEffect(() => {
@@ -38,19 +46,30 @@ export function usePayouts() {
         setLoadingTransfers(false);
         return;
       }
-      const { data } = await withTimeoutSafety(() =>
-        supabase
-          .from('purchases')
-          .select('id, purchased_at, seller_amount_cents, stripe_transfer_id, product:products(title)')
-          .eq('seller_id', profile.id)
-          .like('stripe_transfer_id', 'tr_%') // real transfers only, not in-flight claims
-          .order('purchased_at', { ascending: false })
-      ).catch((err) => {
-        console.error('Error fetching transfers:', err);
-        return { data: null };
-      });
+      const [{ data }, { data: pp }] = await Promise.all([
+        withTimeoutSafety(() =>
+          supabase
+            .from('purchases')
+            .select('id, purchased_at, seller_amount_cents, stripe_transfer_id, product:products(title)')
+            .eq('seller_id', profile.id)
+            .like('stripe_transfer_id', 'tr_%') // real transfers only, not in-flight claims
+            .order('purchased_at', { ascending: false })
+        ).catch((err) => { console.error('Error fetching transfers:', err); return { data: null }; }),
+        withTimeoutSafety(() =>
+          supabase
+            .from('paypal_payouts')
+            .select('id, created_at, net_cents, fee_cents, status')
+            .eq('seller_id', profile.id)
+            .neq('status', 'failed')
+            .order('created_at', { ascending: false })
+        ).catch(() => ({ data: null })),
+      ]);
 
-      if (data) setTransfers(data);
+      const rows = [
+        ...(data || []).map((t) => ({ id: t.id, date: t.purchased_at, cents: t.seller_amount_cents, method: 'Stripe', status: 'completed' })),
+        ...(pp || []).map((p) => ({ id: p.id, date: p.created_at, cents: p.net_cents, feeCents: p.fee_cents, method: 'PayPal', status: p.status === 'success' || p.status === 'pending' ? 'sent' : p.status })),
+      ].sort((a, b) => new Date(b.date) - new Date(a.date));
+      setTransfers(rows);
       setLoadingTransfers(false);
     };
     fetchTransfers();
@@ -163,12 +182,51 @@ export function usePayouts() {
     }
   };
 
+  const savePayoutSettings = async ({ method, email }) => {
+    setIsSavingPayout(true);
+    setStripeMessage(null);
+    try {
+      const patch = {};
+      if (method) patch.payout_method = method;
+      if (email !== undefined) {
+        const clean = String(email || '').trim().toLowerCase();
+        if (clean && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(clean)) throw new Error('Please enter a valid PayPal email address.');
+        patch.paypal_email = clean || null;
+      }
+      const { error } = await supabase.from('profiles').update(patch).eq('id', profile.id);
+      if (error) throw error;
+      if (method) setPayoutMethodState(method);
+      if (email !== undefined) setStripeMessage({ type: 'success', text: patch.paypal_email ? 'PayPal email saved.' : 'PayPal email removed.' });
+      refreshProfile?.();
+    } catch (err) {
+      setStripeMessage({ type: 'error', text: err.message || 'Could not save. Please try again.' });
+    } finally {
+      setIsSavingPayout(false);
+    }
+  };
+
   const handleRequestPayout = async () => {
     setIsSettling(true);
     setStripeMessage(null);
     try {
-      const data = await invokeFunction('settle-pending-payouts');
-      if (data?.error) throw new Error(data.error);
+      const viaPaypal = payoutMethod === 'paypal';
+      const data = await invokeFunction(viaPaypal ? 'paypal-payout' : 'settle-pending-payouts');
+      if (data?.not_configured) throw new Error('PayPal payouts are not available yet. Please use Stripe for now.');
+      if (data?.error === 'no_paypal_email') throw new Error('Add your PayPal email first.');
+      if (data?.error === 'payout_in_progress') throw new Error('A PayPal payout is already on its way. Please wait a moment.');
+      if (data?.error) throw new Error(String(data.error).replace(/^paypal_refused: /, 'PayPal refused the payout: '));
+      if (viaPaypal && data?.settled > 0) {
+        setStripeMessage({
+          type: 'success',
+          text: `${formatEur(data.total_cents / 100)} sent to your PayPal (${formatEur((data.gross_cents || 0) / 100)} minus ${formatEur((data.fee_cents || 0) / 100)} PayPal fee).`,
+        });
+        setEarningsReload((n) => n + 1);
+        return;
+      }
+      if (viaPaypal && data?.below_minimum) {
+        setStripeMessage({ type: 'warning', text: `PayPal payouts start at ${formatEur(1)}. Sell a bit more and try again.` });
+        return;
+      }
       const failed = data?.errors?.length || 0;
       const held = data?.skipped?.length || 0;
       const heldNote = held
@@ -240,5 +298,5 @@ export function usePayouts() {
     setWithdrawAmount(balance.toString());
   };
 
-  return { balance, earnings, formatEur, formatPrice, handleConnectStripe, handleManageStripe, handleMax, handleRequestPayout, handleWithdraw, hasStripeAccount, isDetailsSubmitted, isFullyConnected, isManagingStripe, isPendingVerify, isProcessing, isSettling, isTransfersActive, loadingTransfers, message, pendingBalanceCents, profile, stripeConnecting, stripeMessage, stripeStatus, stripeStatusLoading, transfers, withdrawAmount, setWithdrawAmount, setStripeMessage, setMessage };
+  return { payoutMethod, paypalEmail, setPaypalEmail, savePayoutSettings, isSavingPayout, balance, earnings, formatEur, formatPrice, handleConnectStripe, handleManageStripe, handleMax, handleRequestPayout, handleWithdraw, hasStripeAccount, isDetailsSubmitted, isFullyConnected, isManagingStripe, isPendingVerify, isProcessing, isSettling, isTransfersActive, loadingTransfers, message, pendingBalanceCents, profile, stripeConnecting, stripeMessage, stripeStatus, stripeStatusLoading, transfers, withdrawAmount, setWithdrawAmount, setStripeMessage, setMessage };
 }

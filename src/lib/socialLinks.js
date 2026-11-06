@@ -2,7 +2,7 @@
 import {
   siTiktok, siYoutube, siInstagram, siX, siDiscord, siTwitch, siFacebook,
   siBehance, siVimeo, siPatreon, siSnapchat, siPinterest, siThreads,
-  siKick, siSpotify, siSoundcloud, siArtstation, siDribbble, siBluesky, siLinktree,
+  siKick, siSpotify, siSoundcloud, siArtstation, siDribbble, siBluesky, siLinktree, siPaypal,
 } from 'simple-icons';
 
 export const SOCIAL_PLATFORMS = [
@@ -26,6 +26,7 @@ export const SOCIAL_PLATFORMS = [
   { id: 'spotify', label: 'Spotify', icon: siSpotify, hosts: ['spotify.com'] },
   { id: 'soundcloud', label: 'SoundCloud', icon: siSoundcloud, hosts: ['soundcloud.com'] },
   { id: 'linktree', label: 'Linktree', icon: siLinktree, hosts: ['linktr.ee'] },
+  { id: 'paypal', label: 'PayPal', icon: siPaypal, hosts: ['paypal.me', 'paypal.com'] },
   { id: 'website', label: 'Website', icon: null, hosts: [] },
 ];
 

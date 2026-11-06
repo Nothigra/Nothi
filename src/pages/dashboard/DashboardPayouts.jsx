@@ -7,9 +7,11 @@ import { isMockMode } from '../../lib/supabase';
 import CurrencyInput from '../../components/ui/CurrencyInput';
 import './DashboardPages.css';
 import { usePayouts } from '../../hooks/usePayouts';
+import { PLATFORM_FEE_PCT, PAYMENT_FEES, PAYOUT_FEES, payoutFeeCents } from '../../config/plans';
+import SocialIcon from '../../components/common/SocialIcon';
 
 export default function DashboardPayouts() {
-  const { balance, earnings, formatEur, handleConnectStripe, handleManageStripe, handleMax, handleRequestPayout, handleWithdraw, isDetailsSubmitted, isFullyConnected, isManagingStripe, isPendingVerify, isProcessing, isSettling, loadingTransfers, message, pendingBalanceCents, profile, stripeConnecting, stripeMessage, stripeStatusLoading, transfers, withdrawAmount, setWithdrawAmount } = usePayouts();
+  const { payoutMethod, paypalEmail, setPaypalEmail, savePayoutSettings, isSavingPayout, balance, earnings, formatEur, handleConnectStripe, handleManageStripe, handleMax, handleRequestPayout, handleWithdraw, isDetailsSubmitted, isFullyConnected, isManagingStripe, isPendingVerify, isProcessing, isSettling, loadingTransfers, message, pendingBalanceCents, profile, stripeConnecting, stripeMessage, stripeStatusLoading, transfers, withdrawAmount, setWithdrawAmount } = usePayouts();
 
   return (
     <div className="dashboard-page pb-2xl">
@@ -36,9 +38,11 @@ export default function DashboardPayouts() {
             {earnings === null ? '…' : formatEur(earnings.pendingCents / 100)}
           </h3>
           <p className="text-sm text-secondary mt-sm flex items-center gap-xs">
-            {isFullyConnected
-              ? <><CheckCircle2 size={14} className="text-success" /> Ready to transfer</>
-              : <><Clock size={14} /> Connect Stripe to receive</>}
+            {payoutMethod === 'paypal'
+              ? (profile?.paypal_email ? <><CheckCircle2 size={14} className="text-success" /> Paid to your PayPal</> : <><Clock size={14} /> Add your PayPal email</>)
+              : isFullyConnected
+                ? <><CheckCircle2 size={14} className="text-success" /> Ready to transfer</>
+                : <><Clock size={14} /> Connect Stripe to receive</>}
           </p>
         </div>
         <div className="premium-stat-card">
@@ -46,7 +50,7 @@ export default function DashboardPayouts() {
           <h3 className="text-3xl font-bold font-display text-primary">
             {earnings === null ? '…' : formatEur(earnings.transferredCents / 100)}
           </h3>
-          <p className="text-sm text-secondary mt-sm flex items-center gap-xs"><CheckCircle2 size={14} className="text-success" /> Sent to your Stripe account</p>
+          <p className="text-sm text-secondary mt-sm flex items-center gap-xs"><CheckCircle2 size={14} className="text-success" /> Sent to Stripe or PayPal</p>
         </div>
         <div className="premium-stat-card">
           <p className="text-sm text-secondary font-medium mb-xs uppercase tracking-wider">Net Earnings</p>
@@ -159,7 +163,7 @@ export default function DashboardPayouts() {
                   <span className="font-medium">{formatEur(earnings.grossCents / 100)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-secondary">Nothi commission (5%) + Stripe fees</span>
+                  <span className="text-secondary">Nothi commission ({PLATFORM_FEE_PCT}%) + payment fees</span>
                   <span className="font-medium text-danger">-{formatEur(earnings.feesCents / 100)}</span>
                 </div>
                 <div className="flex justify-between text-sm pt-sm border-t border-border">
@@ -177,13 +181,18 @@ export default function DashboardPayouts() {
               </div>
             )}
 
-            <div className="mt-xl p-md bg-bg-tertiary rounded-lg text-sm text-secondary leading-snug flex items-start gap-sm">
-              <Info size={16} className="shrink-0 mt-[2px]" />
-              <span>
-                Your share of each sale is kept safely until your Stripe account is connected and verified.
-                Then click <strong>Request Payout</strong>: the money is sent to your Stripe account, and Stripe
-                pays it out to your bank automatically. All amounts are in euros (EUR).
-              </span>
+            {/* Every fee, written out */}
+            <div className="fees-box mt-xl">
+              <div className="fees-box-title"><Info size={15} /> What it costs</div>
+              <div className="fees-row"><span>Nothi commission</span><span>{PLATFORM_FEE_PCT}% of each sale</span></div>
+              <div className="fees-row"><span>Buyer pays by card</span><span>{PAYMENT_FEES.card.text}</span></div>
+              <div className="fees-row"><span>Buyer pays with PayPal</span><span>{PAYMENT_FEES.paypal.text}</span></div>
+              <div className="fees-sep" />
+              <div className="fees-row"><span>Payout with Stripe</span><span>{PAYOUT_FEES.stripe.text}</span></div>
+              <div className="fees-row"><span>Payout with PayPal</span><span>{PAYOUT_FEES.paypal.text}</span></div>
+              <p className="fees-note">
+                Sales are paid out 7 days after the purchase (refund window). All amounts are in euros (EUR).
+              </p>
             </div>
           </div>
         </div>
@@ -197,6 +206,28 @@ export default function DashboardPayouts() {
             <h3 className="card-title text-base flex items-center gap-sm"><Landmark size={18} /> Payout Method</h3>
           </div>
           <div className="card-body pt-xl">
+            {!isMockMode && (
+              <div className="payout-switch" role="radiogroup" aria-label="Payout method">
+                {['stripe', 'paypal'].map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    role="radio"
+                    aria-checked={payoutMethod === m}
+                    className={`payout-switch-opt ${payoutMethod === m ? 'active' : ''}`}
+                    onClick={() => payoutMethod !== m && savePayoutSettings({ method: m })}
+                    disabled={isSavingPayout}
+                  >
+                    <span className="payout-switch-icon">{m === 'stripe' ? <Landmark size={16} /> : <PaypalMark />}</span>
+                    <span className="payout-switch-text">
+                      <strong>{m === 'stripe' ? 'Bank (Stripe)' : 'PayPal'}</strong>
+                      <small>{m === 'stripe' ? 'No fee for you' : `${PAYOUT_FEES.paypal.pct}% PayPal fee`}</small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
 
             {/* Stripe message banner */}
             {stripeMessage && (
@@ -214,7 +245,20 @@ export default function DashboardPayouts() {
               </div>
             )}
 
-            {isFullyConnected ? (
+            {!isMockMode && payoutMethod === 'paypal' ? (
+              /* ── PayPal payouts ── */
+              <PaypalPanel
+                email={paypalEmail}
+                setEmail={setPaypalEmail}
+                savedEmail={profile?.paypal_email || ''}
+                onSave={() => savePayoutSettings({ email: paypalEmail })}
+                saving={isSavingPayout}
+                pendingCents={pendingBalanceCents}
+                onRequest={handleRequestPayout}
+                settling={isSettling}
+                formatEur={formatEur}
+              />
+            ) : isFullyConnected ? (
               /* ── Fully connected + charge-ready + transfers-active ── */
               <>
                 <div className="payout-method-card">
@@ -363,14 +407,17 @@ export default function DashboardPayouts() {
                   </tr>
                 ) : transfers.length > 0 ? transfers.map((wd) => (
                   <tr key={wd.id} className="hover:bg-bg-tertiary transition-colors cursor-pointer">
-                    <td className="pl-xl text-sm font-medium">{new Date(wd.purchased_at).toLocaleDateString(document.documentElement.lang || 'en')}</td>
-                    <td className="text-sm font-bold text-primary">{formatEur(wd.seller_amount_cents / 100)}</td>
+                    <td className="pl-xl text-sm font-medium">{new Date(wd.date).toLocaleDateString(document.documentElement.lang || 'en')}</td>
+                    <td className="text-sm font-bold text-primary">
+                      {formatEur(wd.cents / 100)}
+                      {wd.feeCents > 0 && <span className="text-xs text-secondary font-normal"> (fee {formatEur(wd.feeCents / 100)})</span>}
+                    </td>
                     <td>
                       <span className="badge badge-success text-xs px-sm py-[2px] rounded-full flex items-center gap-xs w-max">
-                        <CheckCircle2 size={12} /> completed
+                        <CheckCircle2 size={12} /> {wd.status}
                       </span>
                     </td>
-                    <td className="text-sm text-secondary">Stripe Transfer</td>
+                    <td className="text-sm text-secondary">{wd.method}</td>
                     <td className="text-right pr-xl">
                       <button className="text-accent hover:text-accent-hover transition-colors p-xs rounded-md hover:bg-accent-subtle">
                         <Download size={16} />
@@ -390,6 +437,51 @@ export default function DashboardPayouts() {
         </div>
       </div>
 
+    </div>
+  );
+}
+
+function PaypalMark() {
+  return <SocialIcon platform="paypal" size={16} />;
+}
+
+function PaypalPanel({ email, setEmail, savedEmail, onSave, saving, pendingCents, onRequest, settling, formatEur }) {
+  const dirty = (email || '').trim().toLowerCase() !== (savedEmail || '').toLowerCase();
+  const fee = payoutFeeCents('paypal', pendingCents || 0);
+  return (
+    <div className="flex flex-col gap-md">
+      <label className="text-sm font-medium" htmlFor="paypal-email">PayPal email</label>
+      <div className="flex gap-sm">
+        <input
+          id="paypal-email"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          className="payout-input"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <button type="button" className="btn btn-outline" onClick={onSave} disabled={saving || !dirty}>
+          {saving ? 'Saving…' : 'Save'}
+        </button>
+      </div>
+      <p className="text-xs text-secondary">Payouts go to the PayPal account that uses this email. {PAYOUT_FEES.paypal.delay}.</p>
+
+      {pendingCents > 0 && savedEmail && (
+        <>
+          <div className="payout-preview">
+            <div><span>Available</span><span>{formatEur(pendingCents / 100)}</span></div>
+            <div><span>PayPal fee ({PAYOUT_FEES.paypal.pct}%)</span><span>-{formatEur(fee / 100)}</span></div>
+            <div className="payout-preview-total"><span>You receive</span><span>{formatEur((pendingCents - fee) / 100)}</span></div>
+          </div>
+          <button className="btn btn-primary w-full flex-center gap-sm" onClick={onRequest} disabled={settling}>
+            {settling
+              ? <><div className="loader spin" style={{ width: '14px', height: '14px', borderWidth: '2px' }} /> Sending…</>
+              : <><ArrowUpRight size={14} /> Send {formatEur((pendingCents - fee) / 100)} to PayPal</>}
+          </button>
+        </>
+      )}
     </div>
   );
 }
