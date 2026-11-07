@@ -751,7 +751,7 @@
 /* ── Payouts: method switch, PayPal panel, fees ─────────────────── */
 .payout-switch {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr; /* the payout card is narrow: one option per row */
   gap: 8px;
   margin-bottom: var(--space-lg, 20px);
 }
