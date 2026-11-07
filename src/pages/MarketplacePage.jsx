@@ -137,7 +137,7 @@ export default function MarketplacePage() {
   }, [searchTerm, selectedPrice, selectedRating, selectedSoftware, selectedStyle, showPaid, showFree, sortBy]);
 
   const priceRanges = [
-    { id: 'all', label: t('marketplace.priceRange') },
+    { id: 'all', label: t('marketplace.anyPrice', 'Any price') },
     { id: 'free', label: t('common.free'), min: 0, max: 0 },
     { id: 'under25', label: 'Under €25', min: 0, max: 24.99 },
     { id: '25to50', label: '€25 - €50', min: 25, max: 50 },
@@ -203,7 +203,7 @@ export default function MarketplacePage() {
 
 
   const ratingRanges = [
-    { id: 'all', label: t('marketplace.rating') },
+    { id: 'all', label: t('marketplace.anyRating', 'Any rating') },
     { id: '4', label: '4+ Stars', min: 4 },
     { id: '3', label: '3+ Stars', min: 3 }
   ];

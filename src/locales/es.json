@@ -76,7 +76,9 @@
     "products": "productos",
     "clearFilters": "Limpiar Filtros",
     "apply": "Aplicar",
-    "loadMore": "Ver más"
+    "loadMore": "Ver más",
+    "anyPrice": "Cualquier precio",
+    "anyRating": "Cualquier valoración"
   },
   "product": {
     "addToCart": "Añadir al Carrito",

@@ -67,7 +67,7 @@ const SearchDropdown = ({ query, debouncedQuery, results, isSearching: searching
                   </div>
                   <div className="search-item-content">
                     <span className="search-item-title line-clamp-1">{title}</span>
-                    <span className="search-item-meta font-bold text-text-primary">{formatPrice(price)}</span>
+                    <span className="search-item-meta font-bold text-text-primary">{Number(price) === 0 ? 'Free' : formatPrice(price)}</span>
                   </div>
                 </Link>
               );

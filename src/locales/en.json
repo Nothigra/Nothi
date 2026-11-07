@@ -78,7 +78,9 @@
     "products": "products",
     "clearFilters": "Clear Filters",
     "apply": "Apply",
-    "loadMore": "Show more"
+    "loadMore": "Show more",
+    "anyPrice": "Any price",
+    "anyRating": "Any rating"
   },
   "product": {
     "addToCart": "Add to Cart",
