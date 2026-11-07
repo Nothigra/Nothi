@@ -1148,8 +1148,15 @@ export default function CreatorProfilePage() {
             </div>
             <div className="profile-stat">
               <div className="flex items-center gap-xs">
-                <Star size={18} className="relative top-[-1px]" style={{ color: 'var(--color-gold, #B8972A)' }} fill="currentColor" />
-                <span className="stat-num">{creator.rating || '5.0'}</span>
+                {(() => {
+                  // Average of the reviews on this creator's products ('—' when none yet)
+                  const n = creatorProducts.reduce((acc, p) => acc + (Number(p.reviews_count ?? p.reviews) || 0), 0);
+                  const avg = n ? creatorProducts.reduce((acc, p) => acc + (Number(p.rating) || 0) * (Number(p.reviews_count ?? p.reviews) || 0), 0) / n : null;
+                  return (<>
+                    <Star size={18} className="relative top-[-1px]" style={{ color: 'var(--color-gold, #B8972A)' }} fill={avg ? 'currentColor' : 'none'} />
+                    <span className="stat-num">{avg ? avg.toFixed(1) : '—'}</span>
+                  </>);
+                })()}
               </div>
               <span className="stat-lbl">Rating</span>
             </div>
