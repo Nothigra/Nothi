@@ -73,7 +73,7 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 55% 65% at 50% 42%, var(--color-bg) 0%, color-mix(in srgb, var(--color-bg) 75%, transparent) 45%, transparent 80%),
+    radial-gradient(ellipse 45% 50% at 50% 42%, color-mix(in srgb, var(--color-bg) 55%, transparent) 0%, transparent 75%),
     linear-gradient(to bottom, var(--color-bg) 0%, transparent 22%, transparent 68%, var(--color-bg) 100%),
     linear-gradient(to right, var(--color-bg) 0%, transparent 12%, transparent 88%, var(--color-bg) 100%);
 }
@@ -522,10 +522,10 @@
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  filter: blur(70px) saturate(1.1);
-  opacity: 0.55;
+  filter: blur(60px) saturate(1.2);
+  opacity: 0.9;
 }
-[data-theme="light"] .hero-aurora { opacity: 0.35; }
+[data-theme="light"] .hero-aurora { opacity: 0.45; }
 .hero-aurora-blob {
   position: absolute;
   width: 46vw;
@@ -537,17 +537,17 @@
 }
 .hero-aurora-blob.a {
   left: 8%; top: 10%;
-  background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.55), transparent 65%);
+  background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.75), transparent 65%);
   animation: hero-drift-a 22s ease-in-out infinite alternate;
 }
 .hero-aurora-blob.b {
   right: 6%; top: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(20, 184, 166, 0.40), transparent 65%);
+  background: radial-gradient(circle at 50% 50%, rgba(20, 184, 166, 0.55), transparent 65%);
   animation: hero-drift-b 26s ease-in-out infinite alternate;
 }
 .hero-aurora-blob.c {
   left: 34%; top: 38%;
-  background: radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.38), transparent 65%);
+  background: radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.55), transparent 65%);
   animation: hero-drift-c 30s ease-in-out infinite alternate;
 }
 @keyframes hero-drift-a { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(12vw, 6vh, 0) scale(1.15); } }
@@ -556,6 +556,6 @@
 @media (prefers-reduced-motion: reduce) { .hero-aurora-blob { animation: none; } }
 /* Phones: lighter, smaller glow */
 @media (max-width: 768px) {
-  .hero-aurora { filter: blur(50px); opacity: 0.4; }
+  .hero-aurora { filter: blur(50px); opacity: 0.7; }
   .hero-aurora-blob { width: 80vw; height: 80vw; }
 }
