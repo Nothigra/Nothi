@@ -645,7 +645,7 @@ export default function ProductPage() {
               {!isNativeApp && !(product.salePrice === 0 || product.price === 0) && (
                 <div className="secure-badge flex-center gap-xs text-xs text-secondary justify-center">
                   <ShieldCheck size={14} className="text-success" />
-                  Pay by card or PayPal · secured by Stripe
+                  Card, PayPal, Apple Pay, Klarna &amp; local methods · secured by Stripe
                 </div>
               )}
             </div>
@@ -678,7 +678,7 @@ export default function ProductPage() {
               {!(product.salePrice === 0 || product.price === 0) && (
               <div className="feature-item text-sm font-medium mb-sm flex gap-sm items-center">
                 <ShieldCheck size={16} className="text-success" />
-                <span>Card or PayPal — secured by Stripe</span>
+                <span>Card, PayPal &amp; more — secured by Stripe</span>
               </div>
               )}
               <div className="feature-item text-sm font-medium flex gap-sm items-center">

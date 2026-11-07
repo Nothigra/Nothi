@@ -187,6 +187,8 @@ export default function DashboardPayouts() {
               <div className="fees-row"><span>Nothi commission</span><span>{PLATFORM_FEE_PCT}% of each sale</span></div>
               <div className="fees-row"><span>Buyer pays by card</span><span>{PAYMENT_FEES.card.text}</span></div>
               <div className="fees-row"><span>Buyer pays with PayPal</span><span>{PAYMENT_FEES.paypal.text}</span></div>
+              <div className="fees-row"><span>Other payment methods</span><span>{PAYMENT_FEES.local.text}</span></div>
+              <div className="fees-row"><span>Buyer pays in another currency</span><span>{PAYMENT_FEES.currency.text}</span></div>
               <div className="fees-sep" />
               <div className="fees-row"><span>Payout with Stripe</span><span>{PAYOUT_FEES.stripe.text}</span></div>
               <div className="fees-row"><span>Payout with PayPal</span><span>{PAYOUT_FEES.paypal.text}</span></div>

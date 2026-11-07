@@ -56,6 +56,8 @@ export const PLATFORM_FEE_PCT = 5;
 export const PAYMENT_FEES = {
   card: { label: 'Card', text: 'about 1.5% + €0.25 (Stripe)' },
   paypal: { label: 'PayPal', text: '0.2% + €0.10 (Stripe) + PayPal’s own fee' },
+  local: { label: 'Other methods', text: 'Stripe’s rate for that method (Klarna, Alipay, Bancontact, UPI…)' },
+  currency: { label: 'Foreign currency', text: 'Paid by the buyer (shown in their currency at checkout)' },
 };
 // What a payout costs the seller
 export const PAYOUT_FEES = {

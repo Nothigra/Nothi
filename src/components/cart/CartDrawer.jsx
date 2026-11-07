@@ -195,7 +195,7 @@ export default function CartDrawer() {
                     {t('product.chargedInEur', { amount: formatEur(subtotal), defaultValue: 'Charged in EUR: {{amount}}' })}
                   </p>
                 )}
-                <p className="text-xs text-secondary mb-sm" style={{ textAlign: 'right' }}>Card or PayPal · secured by Stripe</p>
+                <p className="text-xs text-secondary mb-sm" style={{ textAlign: 'right' }}>Card, PayPal, Apple Pay &amp; more · secured by Stripe</p>
                 {checkoutError && (
                   <div className="text-danger text-sm mb-sm text-center">
                     {checkoutError}
