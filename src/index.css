@@ -14,22 +14,24 @@
    ============================================================ */
 :root {
   /* Backgrounds */
-  --color-bg: #FFFFFF;
-  --color-bg-card: #F3F3F1;
-  --color-bg-secondary: #EAEAE7;
-  --color-bg-tertiary: #DEDEDA;
-  --color-border: rgba(0, 0, 0, 0.14);
-  --color-border-strong: rgba(0, 0, 0, 0.26);
+  /* Clean light greys: page is a soft off-white, cards sit on it in pure
+     white, and inputs / chips / hovers step down in gentle grey levels. */
+  --color-bg: #F6F6F7;
+  --color-bg-card: #FFFFFF;
+  --color-bg-secondary: #EFEFF1;
+  --color-bg-tertiary: #E4E4E7;
+  --color-border: rgba(0, 0, 0, 0.09);
+  --color-border-strong: rgba(0, 0, 0, 0.18);
 
   /* Text */
-  --color-text-primary: #0A0A0A;
-  --color-text-secondary: #52524E;
-  --color-text-tertiary: #8C8C88;
+  --color-text-primary: #111113;
+  --color-text-secondary: #55555C;
+  --color-text-tertiary: #8E8E95;
 
   /* Accent — monochrome: black is the "accent" in light mode */
-  --color-accent: #0A0A0A;
-  --color-accent-hover: #262626;
-  --color-accent-subtle: rgba(0, 0, 0, 0.06);
+  --color-accent: #111113;
+  --color-accent-hover: #2C2C30;
+  --color-accent-subtle: rgba(0, 0, 0, 0.05);
   --color-accent-text: #FFFFFF;
 
   /* Energy — gamification, promos, streak, XP */
@@ -293,8 +295,8 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(0, 0, 0, 0.12) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.12) 1px, transparent 1px);
+    linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
   background-size: 64px 64px; /* larger squares */
   -webkit-mask-image: radial-gradient(circle at 50% 0%, black 10%, transparent 100%);
   mask-image: radial-gradient(circle at 50% 0%, black 10%, transparent 100%);
@@ -520,7 +522,7 @@ h6 {
 /* Small lift on hover, press-in on click — every button on the site */
 @media (hover: hover) {
   .btn:not(:disabled):not(.btn-icon):hover { transform: translateY(-1px); }
-  .btn-primary:not(:disabled):hover { box-shadow: 0 8px 24px color-mix(in srgb, var(--color-accent) 22%, transparent); }
+  .btn-primary:not(:disabled):hover { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18); }
   .btn-outline:not(:disabled):hover,
   .btn-secondary:not(:disabled):hover { border-color: var(--color-text-tertiary); }
 }
@@ -536,9 +538,11 @@ h6 {
   border-color: var(--color-accent);
 }
 
-.btn-primary:hover {
+.btn-primary:hover,
+a.btn-primary:hover {
   background: var(--color-accent-hover);
   border-color: var(--color-accent-hover);
+  color: var(--color-accent-text);
   opacity: 1;
 }
 
@@ -548,8 +552,10 @@ h6 {
   border-color: var(--color-border-strong);
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover,
+a.btn-secondary:hover {
   background: var(--color-accent-subtle);
+  color: var(--color-text-primary);
 }
 
 .btn-ghost {
@@ -574,9 +580,12 @@ h6 {
   border-color: var(--color-border-strong);
 }
 
-.btn-outline:hover {
+.btn-outline:hover,
+a.btn-outline:hover {
   background: var(--color-accent-subtle);
+  color: var(--color-text-primary);
 }
+a.btn-danger:hover { color: var(--color-danger); }
 
 .btn-lg {
   height: 44px;
