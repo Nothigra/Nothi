@@ -86,11 +86,7 @@ export default function ResetPasswordPage() {
       >
         <div className="auth-header text-center">
           <Link to="/" className="auth-logo justify-center mb-md">
-            <div className="logo-icon w-8 h-8 flex-center bg-text-primary text-bg rounded-md">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
-            </div>
+            <img src="/logo-mark.png" alt="" className="auth-mark" width="36" height="28" />
             <span>Nothi</span>
           </Link>
           <h1 className="auth-title">Set new password</h1>

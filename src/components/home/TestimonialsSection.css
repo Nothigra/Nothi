@@ -1,59 +1,9 @@
-.trust-bar-section {
-  padding-top: var(--space-2);
-  padding-bottom: var(--space-6);
-  overflow: hidden;
-}
-
-.trust-bar-label {
-  text-align: center;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-text-tertiary);
-  margin: 0 0 32px 0;
-}
-
-.trust-bar-track {
-  position: relative;
-  overflow: hidden;
-  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-}
-
-.trust-bar-marquee {
-  display: flex;
-  align-items: center;
-  gap: 56px;
-  width: max-content;
-  animation: trust-bar-scroll 28s linear infinite;
-}
-
-@keyframes trust-bar-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-
-.trust-bar-item {
-  font-family: "Inter Tight", var(--font-display);
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--color-text-tertiary);
-  white-space: nowrap;
-  letter-spacing: -0.01em;
-  opacity: 0.6;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .trust-bar-marquee {
-    animation: none;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 768px) {
-  .trust-bar-item {
-    font-size: 16px;
-  }
-}
+/* The apps the assets are made for: one slow line in the label font */
+.trust-bar-section { padding: 0 0 var(--space-6); overflow: hidden; }
+.trust-bar-track { position: relative; overflow: hidden; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); padding: 18px 0; -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent); mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent); }
+.trust-bar-marquee { display: flex; align-items: center; gap: 64px; width: max-content; animation: trust-bar-scroll 48s linear infinite; }
+.trust-bar-track:hover .trust-bar-marquee { animation-play-state: paused; }
+@keyframes trust-bar-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.trust-bar-item { font: 500 12.5px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--color-text-tertiary); white-space: nowrap; transition: color .3s ease; }
+.trust-bar-item:hover { color: var(--color-text-primary); }
+@media (prefers-reduced-motion: reduce) { .trust-bar-marquee { animation: none; flex-wrap: wrap; justify-content: center; } }

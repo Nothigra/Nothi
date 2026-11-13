@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { SOCIAL_LINKS } from '../../config/links';
+import Words from '../ui/Words';
 import './Footer.css';
 
 export default function Footer() {
@@ -8,7 +9,8 @@ export default function Footer() {
 
   return (
     <footer className="footer">
-      <div className="container">
+      <div className="nl-wrap">
+        <div className="footer-panel" data-reveal>
         <div className="footer-grid">
           <div className="footer-brand">
             <Link to="/" className="footer-logo">
@@ -75,6 +77,8 @@ export default function Footer() {
         <div className="footer-bottom">
           <p>&copy; {new Date().getFullYear()} Nothi. {t('footer.rights')}</p>
         </div>
+        </div>
+        <div className="footer-mark nl-words" aria-hidden="true"><Words text="Nothi" /></div>
       </div>
     </footer>
   );

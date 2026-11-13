@@ -38,7 +38,7 @@
 
 /* Depth & Glow Effects */
 .card-glow-active {
-  box-shadow: var(--shadow-lg), 0 0 20px color-mix(in srgb, var(--color-accent) 20%, transparent);
+  box-shadow: var(--shadow-lg);
   border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
 }
 
@@ -109,7 +109,7 @@
   background: var(--gradient-xp-bar);
   border-radius: var(--radius-full);
   transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--color-accent) 50%, transparent);
+  box-shadow: none;
 }
 
 /* Layout Divider */

@@ -310,3 +310,12 @@
   overflow-y: auto;
   scrollbar-width: thin;
 }
+
+/* ── Nothi glass: a frosted sidebar and header over the page background */
+.dashboard-sidebar { background: var(--nl-glass); border-right: 1px solid var(--nl-glass-line); -webkit-backdrop-filter: var(--nl-blur); backdrop-filter: var(--nl-blur); box-shadow: inset -1px 0 0 var(--nl-glass-hi); }
+.dashboard-header { background: var(--nl-glass-2); border-bottom: 1px solid var(--nl-glass-line); -webkit-backdrop-filter: var(--nl-blur); backdrop-filter: var(--nl-blur); }
+.sidebar-link { border-radius: 999px; transition: background-color .25s ease, color .25s ease, transform .35s var(--nl-ease); }
+.sidebar-link:hover { transform: translateX(2px); }
+.sidebar-group-title { font-family: var(--font-mono); letter-spacing: .14em; }
+.search-shortcut { background: var(--color-bg-secondary); font-family: var(--font-mono); }
+.dashboard-title { font-family: var(--font-display); font-stretch: 106%; }

@@ -84,3 +84,12 @@
   .featured-products .product-grid { gap: 10px; }
   .featured-header { align-items: center; }
 }
+
+/* ── Nothi glass */
+.section-title-wrapper { gap: 12px; }
+.featured-title { font-size: clamp(28px, 3.4vw, 52px); font-weight: 800; font-stretch: 110%; letter-spacing: -0.03em; }
+.featured-header { margin-bottom: clamp(20px, 3vw, 36px); gap: 20px; }
+.view-all-link { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 999px; border: 1px solid var(--nl-glass-line); background: var(--color-bg-secondary); color: var(--color-text-primary); font-weight: 600; white-space: nowrap; transition: background-color .25s ease, transform .35s var(--nl-ease); }
+.view-all-link:hover { background: var(--color-bg-tertiary); transform: translateX(2px); }
+.product-grid { gap: clamp(10px, 1.4vw, 20px); }
+@media (min-width: 1500px) { .featured-products .product-grid { gap: 22px; } }

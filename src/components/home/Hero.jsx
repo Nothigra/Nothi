@@ -1,12 +1,12 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { m as motion, AnimatePresence } from 'framer-motion';
+import Words from '../ui/Words';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import TrustBar from './TestimonialsSection';
 import { useTranslation } from 'react-i18next';
 import { useUnifiedSearch } from '../../hooks/useUnifiedSearch';
 import SearchDropdown from '../common/SearchDropdown';
-import { SOFTWARE_LIST } from '../../lib/seed';
 import { useAuth } from '../../context/AuthContext';
 import './Hero.css';
 
@@ -92,164 +92,34 @@ function AnimatedSearch() {
   );
 }
 
-/* ─────────────── Mouse Light Effect ─────────────── */
-function MouseLight() {
-  const lightRef = useRef(null);
-  const rafRef = useRef(null);
-  const target = useRef({ x: 0, y: 0 });
-  const current = useRef({ x: 0, y: 0 });
-  const visible = useRef(false);
-
-  const loop = useCallback(function loopFn() {
-    current.current.x += (target.current.x - current.current.x) * 0.06;
-    current.current.y += (target.current.y - current.current.y) * 0.06;
-
-    if (lightRef.current) {
-      lightRef.current.style.transform =
-        `translate3d(${current.current.x - 350}px, ${current.current.y - 350}px, 0)`;
-      lightRef.current.style.opacity = visible.current ? '1' : '0';
-    }
-    rafRef.current = requestAnimationFrame(loopFn);
-  }, []);
-
-  useEffect(() => {
-    const hero = document.querySelector('.hero-section');
-    if (!hero) return;
-
-    const onMove = (e) => {
-      const rect = hero.getBoundingClientRect();
-      target.current.x = e.clientX - rect.left;
-      target.current.y = e.clientY - rect.top;
-    };
-    const onEnter = () => { visible.current = true; };
-    const onLeave = () => { visible.current = false; };
-
-    hero.addEventListener('mousemove', onMove, { passive: true });
-    hero.addEventListener('mouseenter', onEnter);
-    hero.addEventListener('mouseleave', onLeave);
-    rafRef.current = requestAnimationFrame(loop);
-
-    return () => {
-      hero.removeEventListener('mousemove', onMove);
-      hero.removeEventListener('mouseenter', onEnter);
-      hero.removeEventListener('mouseleave', onLeave);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [loop]);
-
-  return <div ref={lightRef} className="hero-mouse-light" style={{ opacity: 0 }} />;
-}
-
-/* ─────────────── Typewriter Animation ─────────────── */
-const typewriterContainer = {
-  hidden: { opacity: 1 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.02,
-      delayChildren: 0.1
-    }
-  }
-};
-
-const typewriterLetter = {
-  hidden: { opacity: 0, y: 6, filter: 'blur(4px)' },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    filter: 'blur(0px)', 
-    transition: { duration: 0.3, ease: 'easeOut' }
-  }
-};
-
-function TypewriterText({ text, className }) {
-  return (
-    <span className={className}>
-      {text.split(' ').map((word, wi, arr) => (
-        <span key={wi}>
-          <span style={{ display: 'inline-block', whiteSpace: 'pre' }}>
-            {word.split('').map((char, i) => (
-              <motion.span
-                key={i}
-                variants={typewriterLetter}
-                style={{ display: 'inline-block' }}
-              >
-                {char}
-              </motion.span>
-            ))}
-          </span>
-          {wi < arr.length - 1 ? ' ' : ''}
-        </span>
-      ))}
-    </span>
-  );
-}
-
 /* ─────────────── Hero Component ─────────────── */
 export default function Hero() {
   const { isAuthenticated } = useAuth();
   return (
     <section className="hero-section">
-
-      {/* Slow animated gradient (light on the GPU: transforms only) */}
-      <div className="hero-aurora" aria-hidden="true">
-        <span className="hero-aurora-blob a" />
-        <span className="hero-aurora-blob b" />
-        <span className="hero-aurora-blob c" />
-      </div>
-      <div className="hero-bg-fade" aria-hidden="true" />
-
-      {/* Mouse-following light */}
-      <MouseLight />
-
-      {/* Static ambient glow */}
-      <div className="hero-glow-radial" />
-
       <div className="hero-inner">
-        <div className="hero-content">
-          {/* Headline */}
-          <motion.h1 
-            className="hero-headline"
-            variants={typewriterContainer}
-            initial="visible"
-            animate="visible"
-          >
-            <TypewriterText text="The Marketplace" />
-            <br />
-            <TypewriterText text="for Editors." className="headline-italic" />
-          </motion.h1>
-
-          {/* Subtitle */}
-          <motion.p 
-            className="hero-subheadline"
-            variants={typewriterContainer}
-            initial="visible"
-            animate="visible"
-            style={{ display: 'flex', justifyContent: 'center' }}
-          >
-            <TypewriterText text="Buy and sell premium editing assets from the best in the craft." />
-          </motion.p>
-
-          {/* Search */}
+        <div className="hero-head">
+          <span className="nl-eyebrow" data-reveal>Nothi · for editors</span>
+          <h1 className="hero-headline nl-words">
+            <span className="hl-1"><Words text="The marketplace" /></span>
+            <span className="hl-2 nl-light"><Words text="for editors." start={2} /></span>
+          </h1>
+        </div>
+        <div className="hero-side" data-reveal style={{ '--d': '.25s' }}>
+          <p className="hero-subheadline">Presets, LUTs, transitions and project files, made and sold by editors.</p>
           <AnimatedSearch />
-
-
-
-          {/* CTA Buttons */}
           <div className="hero-ctas">
-            <Link to="/marketplace" className="btn btn-primary btn-lg btn-pill text-center justify-center">
-              Browse Marketplace
+            <Link to="/marketplace" className="btn btn-primary btn-lg btn-pill">
+              Browse the marketplace
             </Link>
-            <Link to={isAuthenticated ? '/dashboard/upload' : '/login'} className="btn btn-outline btn-lg btn-pill text-center justify-center">
-              Start Selling
+            <Link to={isAuthenticated ? '/dashboard/upload' : '/login'} className="btn btn-outline btn-lg btn-pill">
+              Start selling
             </Link>
           </div>
-
-          {/* Social Proof — replaces CTA buttons */}
         </div>
       </div>
 
-      <div className="hero-software-banner-wrapper">
+      <div className="hero-software-banner-wrapper" data-reveal style={{ '--d': '.45s' }}>
         <TrustBar />
       </div>
     </section>

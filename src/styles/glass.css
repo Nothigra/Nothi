@@ -1,0 +1,298 @@
+/* ============================================================
+   NOTHI · glass (2026.11) — the Nothi Labs identity on the marketplace
+   Two looks: blue glass on ink (dark, the default) and white glass (light).
+   Calm and minimal: an ink background lit by a few soft gradients with film grain, a halftone dot pattern
+   recoloured for the look and slightly blurred, frosted glass panels, no glow under anything.
+   Type: Archivo (wide, bold) for titles, Inter for reading, JetBrains Mono for small labels.
+   Loaded after index.css: the colour tokens below replace the old ones, so every page follows.
+   ============================================================ */
+@font-face { font-family: 'Archivo'; src: url(../assets/nl/archivo-latin-wdth-wght.woff2) format('woff2'); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+@font-face { font-family: 'JBMono'; src: url(../assets/nl/jetbrains-mono-latin-wght.woff2) format('woff2'); font-weight: 100 800; font-display: swap; }
+
+/* ── white glass (light) */
+:root {
+  --color-bg: #F0F2F5;
+  --color-bg-card: rgba(255, 255, 255, .62);
+  --color-bg-secondary: rgba(14, 20, 28, .045);
+  --color-bg-tertiary: rgba(14, 20, 28, .08);
+  --color-border: rgba(14, 20, 28, .09);
+  --color-border-strong: rgba(14, 20, 28, .17);
+  --color-text-primary: #0E1218;
+  --color-text-secondary: #525A66;
+  --color-text-tertiary: #858D98;
+  --color-accent: #0E1218;
+  --color-accent-hover: #252C36;
+  --color-accent-subtle: rgba(14, 20, 28, .06);
+  --color-accent-text: #F3F6F9;
+  --color-success: #23824E;
+  --color-success-subtle: rgba(35, 130, 78, .1);
+  --focus-ring: 0 0 0 3px rgba(60, 120, 180, .22);
+  --font-display: 'Archivo', 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JBMono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --shadow-xs: 0 1px 2px rgba(14, 20, 28, .05);
+  --shadow-sm: 0 2px 6px rgba(14, 20, 28, .05);
+  --shadow-md: 0 8px 24px -10px rgba(14, 20, 28, .14);
+  --shadow-lg: 0 18px 44px -18px rgba(14, 20, 28, .2);
+  --shadow-xl: 0 28px 70px -24px rgba(14, 20, 28, .26);
+  --transition-smooth: 420ms cubic-bezier(.22, 1, .36, 1);
+  /* glass */
+  --nl-glass: rgba(255, 255, 255, .62);
+  --nl-glass-2: rgba(250, 251, 253, .84);
+  --nl-glass-line: rgba(14, 20, 28, .09);
+  --nl-glass-hi: rgba(255, 255, 255, .75);
+  --nl-blur: blur(24px) saturate(160%);
+  --nl-acc: #0E1218;
+  --nl-sky: #3D79B4;
+  /* the background */
+  --nl-g1: #B5D0EA; --nl-g2: #FFFFFF; --nl-g3: #7EA8D2; --nl-g-o: .62;
+  --nl-grain: #000; --nl-grain-a: .065;
+  --nl-dots: #2E4A68; --nl-dots-o: .2;
+  --nl-ease: cubic-bezier(.22, 1, .36, 1);
+  --nl-ease-2: cubic-bezier(.65, 0, .35, 1);
+  color-scheme: light;
+}
+/* ── blue glass on ink (dark) */
+[data-theme="dark"], .dark {
+  --color-bg: #090B0E;
+  --color-bg-card: rgba(19, 25, 34, .5);
+  --color-bg-secondary: rgba(205, 228, 250, .055);
+  --color-bg-tertiary: rgba(205, 228, 250, .1);
+  --color-border: rgba(205, 228, 250, .09);
+  --color-border-strong: rgba(205, 228, 250, .18);
+  --color-text-primary: #E8EEF5;
+  --color-text-secondary: #98A3B1;
+  --color-text-tertiary: #65707E;
+  --color-accent: #A8D1F4;
+  --color-accent-hover: #C2E0FA;
+  --color-accent-subtle: rgba(168, 209, 244, .1);
+  --color-accent-text: #08111A;
+  --color-success: #8FD3A8;
+  --color-success-subtle: rgba(143, 211, 168, .1);
+  --focus-ring: 0 0 0 3px rgba(168, 209, 244, .3);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, .3);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, .25);
+  --shadow-md: 0 10px 28px -12px rgba(0, 0, 0, .55);
+  --shadow-lg: 0 20px 48px -20px rgba(0, 0, 0, .65);
+  --shadow-xl: 0 30px 80px -28px rgba(0, 0, 0, .75);
+  --nl-glass: rgba(19, 25, 34, .5);
+  --nl-glass-2: rgba(15, 20, 27, .86);
+  --nl-glass-line: rgba(205, 228, 250, .1);
+  --nl-glass-hi: rgba(230, 242, 255, .07);
+  --nl-acc: #A8D1F4;
+  --nl-sky: #A8D1F4;
+  --nl-g1: #4F8FCB; --nl-g2: #1A3554; --nl-g3: #CBE6FC; --nl-g-o: .55;
+  --nl-grain: #FFF; --nl-grain-a: .12;
+  --nl-dots: #A8D1F4; --nl-dots-o: .3;
+  color-scheme: dark;
+}
+
+/* ── base */
+html { scroll-padding-top: 96px; }
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-stopped { overflow: clip; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+html:not(.lenis) { scroll-behavior: smooth; }
+body { background: var(--color-bg); letter-spacing: -0.006em; }
+body::before { content: none !important; }
+::selection { background: var(--color-accent); color: var(--color-accent-text); }
+:focus-visible { outline: 2px solid var(--nl-sky); outline-offset: 3px; }
+
+h1, h2, h3, .section-header h2 { font-family: var(--font-display); font-weight: 800; font-stretch: 108%; letter-spacing: -0.022em; line-height: 1.06; text-wrap: balance; }
+h4, h5, h6 { font-family: var(--font-display); font-weight: 700; font-stretch: 104%; letter-spacing: -0.012em; }
+.nl-light { font-weight: 300; font-stretch: 100%; letter-spacing: -0.03em; color: var(--color-text-secondary); }
+.nl-eyebrow { display: inline-flex; align-items: center; gap: 10px; font: 500 11.5px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--color-text-secondary); }
+.nl-eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--nl-sky); }
+
+/* the layouts let the background through */
+.app-shell, .dashboard-layout, .auth-page, .onboarding-page, .messages-layout, .chat-screen { background: transparent !important; }
+
+/* ── the background: soft gradients of the look's colours, film grain over them, halftone dots under the glass */
+.nl-bg { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; background: var(--color-bg); transition: background-color .6s var(--nl-ease); }
+.nl-bg i { position: absolute; border-radius: 50%; opacity: var(--nl-g-o); filter: blur(90px); will-change: transform; transition: background-color .8s var(--nl-ease), opacity .8s var(--nl-ease); }
+.nl-bg .g1 { width: 62vmax; height: 50vmax; left: -22vmax; top: -26vmax; background: var(--nl-g1); animation: nl-drift-a 38s var(--nl-ease-2) infinite alternate; }
+.nl-bg .g2 { width: 58vmax; height: 58vmax; right: -28vmax; top: 16vh; background: var(--nl-g2); animation: nl-drift-b 46s var(--nl-ease-2) infinite alternate; }
+.nl-bg .g3 { width: 30vmax; height: 26vmax; left: -6vmax; top: -12vmax; background: var(--nl-g3); opacity: calc(var(--nl-g-o) * .5); filter: blur(80px); }
+.nl-bg .g4 { width: 46vmax; height: 40vmax; left: 32vw; bottom: -36vmax; background: var(--nl-g1); opacity: calc(var(--nl-g-o) * .65); animation: nl-drift-a 52s var(--nl-ease-2) infinite alternate-reverse; }
+.nl-bg::after { content: ''; position: absolute; inset: -64px; background: var(--nl-grain); opacity: var(--nl-grain-a); -webkit-mask: url(../assets/nl/grain.png) 0 0 / 128px 128px; mask: url(../assets/nl/grain.png) 0 0 / 128px 128px; animation: nl-film 1.2s steps(6) infinite; }
+@keyframes nl-film { 0% { transform: translate(0, 0); } 20% { transform: translate(-31px, 17px); } 40% { transform: translate(23px, -41px); } 60% { transform: translate(-47px, -11px); } 80% { transform: translate(13px, 37px); } 100% { transform: translate(0, 0); } }
+@keyframes nl-drift-a { to { transform: translate3d(6vw, 5vh, 0) scale(1.06); } }
+@keyframes nl-drift-b { to { transform: translate3d(-5vw, -6vh, 0) scale(.96); } }
+.nl-dots { position: fixed; left: 0; top: -6vh; z-index: -1; pointer-events: none; width: 100%; height: 112vh; opacity: var(--nl-dots-o); filter: blur(.6px); will-change: transform; transition: opacity .6s var(--nl-ease); }
+html.is-app .nl-dots { opacity: calc(var(--nl-dots-o) * .7); }
+
+/* ── glass: frosted, a lit top edge, a fine border, no glow */
+.glass-card, .card,
+html.is-app .app-skel-row,
+html.is-app .app-skel-card,
+.cart-drawer,
+.bg-type-btn.active,
+.stop-btn,
+.stop-btn.active,
+.nb-confirm,
+.cookie-note,
+.theme-modal-card,
+.xp-gain-popup,
+.category-card,
+.hero-search-form,
+.software-pill,
+.mobile-bottom-nav,
+.mbn-center-avatar,
+.mbn-popover,
+.command-modal,
+.digi-currency-menu,
+.digi-select-menu,
+.about-hero,
+.podium-block,
+.leaderboard-section,
+.contact-card,
+.contact-form-section,
+.creator-modal-card,
+.creator-modal-body,
+.creator-toggle-btn.active,
+.appearance-accordion-container.active,
+.edit-mode-indicator,
+.badge-item,
+.preview-card-btn.active .preview-card-box,
+.edit-action-panel-inner,
+.shop-pinned-chip,
+.legal-content-wrapper,
+.auth-card,
+.search-bar-wrapper .search-input,
+.filter-pill,
+.marketplace-cat,
+.filter-nav-btn,
+.pricing-notice,
+.main-media-area,
+.media-thumb,
+.creator-link-modern,
+.sticky-buy-bar,
+.card-elevated,
+.chat-product,
+.chat-input,
+.chat-locked,
+.money-note,
+.money-card,
+.money-steps,
+.app-search,
+.app-chip,
+.app-hero-card,
+.app-group-card,
+.app-search-field,
+.app-cat-tile,
+.app-pill-btn,
+.app-segment-thumb,
+.app-stat,
+.app-round-btn,
+.app-empty-card,
+.app-sheet,
+.app-banner.calm,
+.pub-input,
+.pub-chip,
+.pub-drop,
+.pub-file,
+.pub-segment button.on,
+.pub-earn,
+.pub-card,
+.pub-free,
+.pub-checklist,
+.pub-btn,
+.pub-benefits li,
+.pub-callout,
+.pub-sheet,
+.nb-grade-card,
+.nb-badge-tile,
+.quick-link-card,
+.settings-nav,
+.settings-card,
+.settings-tabs,
+.premium-stat-card,
+.quick-action-card,
+.segmented-tab.active,
+.payout-switch-opt.active,
+.dp-stat-card,
+.dp-tabs,
+.dp-view-toggle,
+.dp-list-item,
+.dp-empty,
+.dp-notice,
+.live-preview,
+.sub-banner,
+.up-section,
+.up-step-dot {
+  -webkit-backdrop-filter: var(--nl-blur);
+  backdrop-filter: var(--nl-blur);
+}
+.glass-card, .card { background: var(--nl-glass); border: 1px solid var(--nl-glass-line); border-radius: var(--radius-xl); box-shadow: inset 0 1px 0 var(--nl-glass-hi); transition: border-color .3s var(--nl-ease), transform .45s var(--nl-ease), background-color .3s var(--nl-ease); }
+.glass-card:hover, .card:hover { border-color: var(--color-border-strong); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --color-bg-card: #F7F8FA; --nl-glass: #F7F8FA; }
+  [data-theme="dark"] { --color-bg-card: #121820; --nl-glass: #121820; }
+}
+
+/* menus, dialogs, drawers, toasts: the same glass, thicker */
+.modal, .dropdown-menu, .toast, .search-dropdown-container, .mobile-menu-content, .boost-modal, .theme-modal-body {
+  background: var(--nl-glass-2) !important; border: 1px solid var(--nl-glass-line);
+  -webkit-backdrop-filter: var(--nl-blur); backdrop-filter: var(--nl-blur);
+  box-shadow: inset 0 1px 0 var(--nl-glass-hi), var(--shadow-xl);
+}
+.overlay { background: rgba(6, 9, 13, .42); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+
+/* ── buttons: pills, a small lift, the look's colour for the main one */
+.btn { border-radius: var(--radius-full); font-weight: 600; letter-spacing: -0.005em; transition: background-color .25s var(--nl-ease), border-color .25s var(--nl-ease), color .25s var(--nl-ease), transform .35s var(--nl-ease), box-shadow .35s var(--nl-ease); }
+.btn:hover { opacity: 1; }
+@media (hover: hover) {
+  .btn-primary:not(:disabled):hover { box-shadow: none; }
+}
+.btn-secondary, .btn-outline { background: var(--color-bg-secondary); border-color: var(--nl-glass-line); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.btn-secondary:hover, .btn-outline:hover, a.btn-secondary:hover, a.btn-outline:hover { background: var(--color-bg-tertiary); }
+.btn-ghost:hover { background: var(--color-bg-secondary); }
+.btn-icon { border-radius: var(--radius-full); }
+
+/* ── fields */
+.input, .select-input, .auth-input { background: var(--color-bg-secondary); border-color: var(--nl-glass-line); border-radius: var(--radius-md); transition: border-color .25s var(--nl-ease), box-shadow .25s var(--nl-ease), background-color .25s var(--nl-ease); }
+.input:focus, .select-input:focus, .auth-input:focus { border-color: color-mix(in srgb, var(--nl-sky) 55%, transparent); box-shadow: var(--focus-ring); background: var(--nl-glass); }
+
+/* ── small things */
+.badge { border-radius: var(--radius-full); font-family: var(--font-mono); font-weight: 500; letter-spacing: .04em; }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); }
+
+/* ── reveal on scroll (set by useReveal: elements with data-reveal get .nl-in when they come into view) */
+[data-reveal] { opacity: 0; transform: translate3d(0, 22px, 0); filter: blur(6px); transition: opacity .9s var(--nl-ease), transform 1s var(--nl-ease), filter .9s var(--nl-ease); transition-delay: var(--d, 0s); }
+[data-reveal].nl-in { opacity: 1; transform: none; filter: none; }
+/* titles that come in word by word */
+.nl-words .w { display: inline-block; overflow: clip; overflow-clip-margin: .2em; vertical-align: top; padding-bottom: .06em; }
+.nl-words .w > span { display: inline-block; transform: translate3d(0, 105%, 0); transition: transform 1s var(--nl-ease); transition-delay: calc(var(--i, 0) * 55ms + var(--d, 0s)); }
+.nl-words.nl-in .w > span { transform: none; }
+
+/* the new look opens in a circle from the button */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-new(root) { animation: nl-circle .7s var(--nl-ease) both; }
+@keyframes nl-circle { from { clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 0%)); } to { clip-path: circle(var(--vt-r, 150vmax) at var(--vt-x, 50%) var(--vt-y, 0%)); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .nl-bg i, .nl-bg::after { animation: none !important; }
+  [data-reveal], .nl-words .w > span { opacity: 1 !important; transform: none !important; filter: none !important; transition: none !important; }
+  ::view-transition-new(root) { animation: none; }
+}
+
+/* ── wide pages: content uses the width, with room on the sides */
+:root { --container-xl: 1480px; --container-2xl: 1560px; }
+.nl-wrap { width: 100%; max-width: 1560px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 56px); }
+:root, [data-theme="dark"], .dark { --glass-bg: var(--color-bg-secondary); --glass-border: var(--nl-glass-line); --bg-elevated: var(--nl-glass-2); }
+
+/* ── page titles: wide, and they rise in when the page opens */
+.page-title { font-size: clamp(30px, 3.4vw, 54px) !important; font-weight: 800 !important; font-stretch: 110%; letter-spacing: -0.03em; animation: nl-rise 1s var(--nl-ease) both; }
+.product-page-title, .profile-name, .auth-title, .onboarding-title { font-stretch: 108%; letter-spacing: -0.025em; }
+@keyframes nl-rise { from { opacity: 0; transform: translate3d(0, 18px, 0); filter: blur(6px); } }
+@media (prefers-reduced-motion: reduce) { .page-title { animation: none; } }
+.auth-mark { height: 28px; width: auto; filter: brightness(0); }
+.dark .auth-mark { filter: brightness(0) invert(1); }
+.auth-logo span { font-family: var(--font-display); font-stretch: 112%; font-weight: 800; }
+/* messages: the conversation pane is glass too */
+.chat-area { background: var(--nl-glass) !important; -webkit-backdrop-filter: var(--nl-blur); backdrop-filter: var(--nl-blur); }
+.chat-input-wrapper { background: var(--color-bg-secondary) !important; }

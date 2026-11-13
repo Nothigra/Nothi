@@ -10,7 +10,7 @@ export default function CheckoutCancel() {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '24px',
-      background: 'var(--color-bg)',
+      background: 'transparent',
     }}>
       <motion.div
         initial={{ opacity: 0, y: 24 }}

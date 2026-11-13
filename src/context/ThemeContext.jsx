@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
 import { useAuth } from './AuthContext';
 import * as store from '../lib/accountStore';
 import { applyCustomTheme, clearCustomTheme } from '../utils/themeUtils';
@@ -68,7 +68,20 @@ export function ThemeProvider({ children }) {
   }, []);
 
   const setTheme = useCallback((newTheme) => {
-    setThemeState(newTheme);
+    // The new look opens in a circle from where the visitor clicked (browsers with view transitions)
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (document.startViewTransition && !reduce && newTheme !== 'custom' && document.visibilityState === 'visible') {
+      const root = document.documentElement, p = window.__nlPointer || { x: innerWidth / 2, y: 0 };
+      root.style.setProperty('--vt-x', p.x + 'px'); root.style.setProperty('--vt-y', p.y + 'px');
+      root.style.setProperty('--vt-r', Math.hypot(Math.max(p.x, innerWidth - p.x), Math.max(p.y, innerHeight - p.y)) + 'px');
+      document.startViewTransition(() => {
+        flushSync(() => setThemeState(newTheme));
+        root.setAttribute('data-theme', newTheme === 'light' ? 'light' : 'dark');
+        root.classList.toggle('dark', newTheme !== 'light');
+      });
+    } else {
+      setThemeState(newTheme);
+    }
 
     if (isMockMode) {
       const sessionId = store.getSession();

@@ -4,7 +4,7 @@ import { SOFTWARE_LIST } from '../../lib/seed';
 export default function TestimonialsSection() {
   return (
     <section className="trust-bar-section">
-      <div className="container">
+      <div className="nl-wrap">
         <div className="trust-bar-track">
           <div className="trust-bar-marquee">
             {[...SOFTWARE_LIST, ...SOFTWARE_LIST].filter((n) => n !== 'Other').map((name, i) => (

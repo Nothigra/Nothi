@@ -296,3 +296,33 @@
 
 .mobile-signin { padding: 6px 12px; font-size: 13px; white-space: nowrap; }
 @media (min-width: 769px) { .navbar .mobile-signin { display: none !important; } }
+
+/* ── Nothi glass: a frosted pill, the active link sits on a soft light pill, no glow */
+.navbar { max-width: 1320px; background: var(--nl-glass); border: 1px solid var(--nl-glass-line); -webkit-backdrop-filter: var(--nl-blur); backdrop-filter: var(--nl-blur); box-shadow: inset 0 1px 0 var(--nl-glass-hi), 0 18px 50px -30px rgba(0, 0, 0, .35); }
+.dark .navbar { border-color: var(--nl-glass-line); box-shadow: inset 0 1px 0 var(--nl-glass-hi), 0 18px 50px -24px rgba(0, 0, 0, .6); }
+.navbar.is-scrolled, .dark .navbar.is-scrolled { background: var(--nl-glass-2); box-shadow: inset 0 1px 0 var(--nl-glass-hi), 0 18px 50px -24px rgba(0, 0, 0, .45); }
+.navbar-container { max-width: none; padding: 0 10px 0 22px; }
+.navbar-logo-img { height: 26px; margin-right: 0; transition: transform .5s var(--nl-ease), filter .3s ease; }
+.navbar-logo-wrapper:hover .navbar-logo-img { transform: rotate(-8deg) translateY(-1px); }
+.navbar-logo-wrapper { gap: 10px; }
+.navbar-logo { font-family: var(--font-display); font-weight: 800; font-stretch: 112%; font-size: 19px; letter-spacing: -0.02em; }
+.navbar-center { gap: 4px; }
+.nav-link { padding: 8px 16px; border-radius: 999px; font-weight: 500; font-size: 14.5px; z-index: 0; transition: color .25s ease, background-color .25s ease; }
+.navbar-center .nav-link:hover { color: var(--color-text-primary); background: var(--color-bg-secondary); }
+.nav-link.active { text-shadow: none; }
+.navbar-active-indicator { inset: 0; bottom: 0; height: auto; z-index: -1; border-radius: 999px; background: var(--color-bg-tertiary); box-shadow: inset 0 1px 0 var(--nl-glass-hi); }
+.navbar-right { gap: 6px; }
+.action-btn { width: 38px; height: 38px; border-radius: 999px; transition: background-color .25s ease, color .25s ease, transform .35s var(--nl-ease); }
+.action-btn:hover { background: var(--color-bg-secondary); }
+.action-btn:active { transform: scale(.92); }
+.badge-counter { background: var(--color-accent); color: var(--color-accent-text); border: 2px solid var(--color-bg); font-family: var(--font-mono); }
+.navbar .btn-sm { height: 38px; padding: 0 18px; font-size: 14px; }
+.navbar .hidden-mobile.btn-outline { background: var(--color-accent); color: var(--color-accent-text); border-color: var(--color-accent); margin-left: 6px; }
+.navbar .hidden-mobile.btn-outline:hover { background: var(--color-accent-hover); border-color: var(--color-accent-hover); color: var(--color-accent-text); }
+.lang-dropdown { background: var(--nl-glass-2); border-color: var(--nl-glass-line); border-radius: var(--radius-lg); -webkit-backdrop-filter: var(--nl-blur); backdrop-filter: var(--nl-blur); box-shadow: inset 0 1px 0 var(--nl-glass-hi), var(--shadow-xl); }
+.active-lang-dot { box-shadow: none; }
+@media (max-width: 768px) {
+  .navbar, .dark .navbar, .navbar.is-scrolled, .dark .navbar.is-scrolled { background: transparent; border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .navbar.is-scrolled, .dark .navbar.is-scrolled { background: var(--nl-glass-2); -webkit-backdrop-filter: var(--nl-blur); backdrop-filter: var(--nl-blur); border-bottom: 1px solid var(--nl-glass-line); }
+  .navbar-container { padding: 0 12px 0 16px; }
+}

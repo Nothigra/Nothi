@@ -438,7 +438,8 @@ export default function CreatorProfilePage() {
   const shopBg = shopSettings.shop_bg || { type: 'solid', solid: { color: 'var(--color-bg)' } };
 
   const customStyles = {
-    backgroundColor: shopBg.type === 'solid' ? shopBg.solid.color : 'var(--color-bg)',
+    // A shop without its own colour shows the site's background (gradients and dots) through
+    backgroundColor: shopBg.type === 'solid' ? (shopBg.solid.color === 'var(--color-bg)' ? 'transparent' : shopBg.solid.color) : 'var(--color-bg)',
     backgroundImage: shopBg.type === 'gradient' ? `linear-gradient(${shopBg.gradient.angle}deg, ${shopBg.gradient.colorA}, ${shopBg.gradient.colorB})` : 'none',
     '--edit-bar-height': '60px',
     minHeight: '100vh',

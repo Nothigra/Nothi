@@ -141,3 +141,17 @@
     text-align: center;
   }
 }
+
+/* ── Nothi glass: a frosted panel, the big wordmark under it */
+.footer { background: transparent; border-top: 0; padding: clamp(40px, 6vw, 80px) 0 0; overflow: hidden; }
+.footer-panel { background: var(--nl-glass); border: 1px solid var(--nl-glass-line); border-radius: 28px; box-shadow: inset 0 1px 0 var(--nl-glass-hi); -webkit-backdrop-filter: var(--nl-blur); backdrop-filter: var(--nl-blur); padding: clamp(24px, 3.4vw, 48px); }
+.footer-logo { font-family: var(--font-display); font-weight: 800; font-stretch: 112%; letter-spacing: -0.02em; }
+.footer-heading { font: 500 11px/1 var(--font-mono) !important; letter-spacing: .14em !important; text-transform: uppercase; color: var(--color-text-tertiary) !important; }
+.footer-links a, .footer-links .footer-link-button { transition: color .25s ease, transform .35s var(--nl-ease); display: inline-block; }
+.footer-links a:hover, .footer-links .footer-link-button:hover { transform: translateX(3px); }
+.social-links a { background: var(--color-bg-secondary); border-color: var(--nl-glass-line); transition: background-color .25s ease, color .25s ease, transform .35s var(--nl-ease); }
+.social-links a:hover { transform: translateY(-2px); }
+.footer-bottom { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .06em; }
+.footer-mark { font-family: var(--font-display); font-weight: 800; font-stretch: 125%; letter-spacing: -0.05em; line-height: .8; font-size: clamp(90px, 22vw, 360px); color: var(--color-text-primary); opacity: .07; text-align: center; margin: clamp(16px, 3vw, 40px) 0 -0.12em; user-select: none; white-space: nowrap; }
+@media (max-width: 768px) { .footer { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); } .footer-panel { border-radius: 22px; } }
+html.is-app .footer-mark { display: none; }

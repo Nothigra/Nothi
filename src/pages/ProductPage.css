@@ -640,7 +640,7 @@
   /* Phone/tablet order: gallery → buy box → description → creator/details */
   .product-layout { display: flex; flex-direction: column; gap: var(--space-8); }
   .pl-left, .pl-right { display: contents; }
-  .product-gallery-modern { order: 1; }
+  .product-gallery-modern { order: 1; width: 100%; }
   .product-info { order: 2; }
   .product-main-content { order: 3; }
   .product-sidebar { order: 4; }

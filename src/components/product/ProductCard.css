@@ -243,3 +243,22 @@
   .products-grid-view .category-badge { top: 8px; left: 8px; padding: 3px 7px; font-size: 9.5px; }
   .products-grid-view .video-badge { right: 8px; bottom: 8px; }
 }
+
+/* ── Nothi glass: a frosted card, the picture inset with its own corners, a gentle lift, no glow */
+.product-card { background: var(--nl-glass); border: 1px solid var(--nl-glass-line); border-radius: var(--radius-xl); padding: 8px; box-shadow: inset 0 1px 0 var(--nl-glass-hi); -webkit-backdrop-filter: var(--nl-blur); backdrop-filter: var(--nl-blur); transition: transform .6s var(--nl-ease), border-color .35s ease, background-color .35s ease; }
+.product-card:hover, .dark .product-card:hover { transform: translateY(-4px); border-color: var(--color-border-strong); box-shadow: inset 0 1px 0 var(--nl-glass-hi); }
+.product-thumbnail { border-radius: 14px; border: 0; background-color: var(--color-bg-secondary); }
+.thumbnail-img, .thumbnail-fallback { transition: transform 1.1s var(--nl-ease); }
+.product-card:hover .thumbnail-img, .product-card:hover .thumbnail-fallback { transform: scale(1.045); }
+.product-content { padding: 14px 10px 8px; }
+.product-title { font-family: var(--font-display); font-stretch: 104%; font-weight: 700; letter-spacing: -0.015em; font-size: 18px; line-height: 1.2; }
+.category-badge, .video-badge { top: 10px; left: 10px; border-radius: 999px; font: 500 10px/1 var(--font-mono); letter-spacing: .12em; padding: 6px 10px; background: var(--nl-glass-2); border: 1px solid var(--nl-glass-line); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.software-tag, .fallback-tag { border-radius: 999px; font-weight: 500; font-size: 11.5px; background: var(--color-bg-secondary); border: 1px solid var(--color-border); }
+.price-current { font-family: var(--font-display); font-stretch: 106%; font-weight: 800; letter-spacing: -0.01em; }
+.creator-avatar { background: var(--color-bg-tertiary); }
+.product-new { font-family: var(--font-mono); font-weight: 500; letter-spacing: .12em; color: var(--nl-sky); }
+@media (max-width: 768px) {
+  .product-card { padding: 6px; border-radius: 16px; }
+  .product-thumbnail { border-radius: 11px; }
+  .products-grid-view .product-content { padding: 10px 6px 6px; }
+}

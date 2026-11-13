@@ -12,8 +12,10 @@ import { GamificationProvider } from './context/GamificationContext.jsx';
 import './config/i18n.js';
 import './fonts.css';
 import './index.css';
+import './styles/glass.css';
 import { isNativeApp, platform, startNativeApp } from './lib/native';
 import { supabase } from './lib/supabase';
+import GlassBackground from './components/layout/GlassBackground';
 
 if (isNativeApp) document.documentElement.classList.add('is-app', `platform-${platform}`);
 startNativeApp({ router, supabase });
@@ -27,6 +29,7 @@ createRoot(document.getElementById('root')).render(
           <WishlistProvider>
             <CurrencyProvider>
               <GamificationProvider>
+                <GlassBackground />
                 <Suspense fallback={isNativeApp ? null : <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="loader spin"></div></div>}>
                   <RouterProvider router={router} />
                 </Suspense>

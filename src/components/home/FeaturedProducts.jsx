@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { m as motion } from 'framer-motion';
 import ProductCard from '../product/ProductCard';
+import Words from '../ui/Words';
 import { supabase, isMockMode } from '../../lib/supabase';
 import { MOCK_PRODUCTS } from '../../lib/seed';
 import './FeaturedProducts.css';
@@ -47,13 +48,14 @@ export default function FeaturedProducts({ sort = 'popular', title, description,
 
   return (
       <section className={`featured-products section ${compact ? 'featured-compact' : ''}`}>
-        <div className="container">
+        <div className="nl-wrap">
           <div className="featured-header">
             <div className="section-title-wrapper">
-              <h2 className="featured-title">{title || t('sections.mostPopular', 'Most Popular')}</h2>
-              <p className="section-desc">{description || t('sections.mostPopularDesc', 'What editors are getting right now.')}</p>
+              <span className="nl-eyebrow" data-reveal>{sort === 'new' ? 'Fresh' : 'Popular'}</span>
+              <h2 className="featured-title nl-words"><Words text={title || t('sections.mostPopular', 'Most Popular')} /></h2>
+              <p className="section-desc" data-reveal style={{ '--d': '.15s' }}>{description || t('sections.mostPopularDesc', 'What editors are getting right now.')}</p>
             </div>
-            <Link to={sort === 'new' ? '/marketplace' : '/marketplace'} className="view-all-link">
+            <Link to={sort === 'new' ? '/marketplace' : '/marketplace'} className="view-all-link" data-reveal>
               {t('sections.viewAll')} →
             </Link>
           </div>

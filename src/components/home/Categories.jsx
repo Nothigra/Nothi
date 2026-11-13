@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { Package, Sparkles, FolderArchive, Contrast, Music, MoveRight, LayoutTemplate, TerminalSquare, Layers, ChevronDown } from 'lucide-react';
 
 import { useTranslation } from 'react-i18next';
+import Words from '../ui/Words';
 import './Categories.css';
 
 const categories = [
@@ -39,13 +40,14 @@ export default function Categories() {
 
   return (
     <section className="categories-section section">
-      <div className="container">
-        <div className="section-header" style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto var(--space-12) auto' }}>
-          <h2>{t('sections.browseCategories', 'Browse by Categories')}</h2>
-          <p className="text-muted">{t('sections.browseCategoriesDesc', 'Find the perfect assets for your next video project.')}</p>
+      <div className="nl-wrap">
+        <div className="section-header cat-head">
+          <span className="nl-eyebrow" data-reveal>Categories</span>
+          <h2 className="nl-words"><Words text={t('sections.browseCategories', 'Browse by Categories')} /></h2>
+          <p className="text-muted" data-reveal style={{ '--d': '.15s' }}>{t('sections.browseCategoriesDesc', 'Find the perfect assets for your next video project.')}</p>
         </div>
         
-        <div className="categories-grid">
+        <div className="categories-grid" data-reveal style={{ '--d': '.2s' }}>
           {categories.slice(0, 6).map(renderCard)}
         </div>
         <div className={`categories-extra ${expanded ? 'is-open' : ''}`}>

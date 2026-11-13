@@ -164,3 +164,16 @@
   }
   .categories-extra.is-open .category-card { opacity: 1; transform: none; transition-delay: 0.08s; }
 }
+
+/* ── Nothi glass: the heading on the left, frosted tiles */
+.cat-head { display: grid; gap: 12px; text-align: left; margin: 0 0 clamp(24px, 3vw, 40px); }
+.cat-head h2 { margin: 0; font-size: clamp(28px, 3.4vw, 52px); font-stretch: 110%; letter-spacing: -0.03em; }
+.cat-head p { margin: 0; }
+.category-card, .dark .category-card { background: var(--nl-glass); border: 1px solid var(--nl-glass-line); border-radius: var(--radius-xl); box-shadow: inset 0 1px 0 var(--nl-glass-hi); -webkit-backdrop-filter: var(--nl-blur); backdrop-filter: var(--nl-blur); transition: transform .6s var(--nl-ease), border-color .35s ease, background-color .35s ease; }
+.category-card:hover, .dark .category-card:hover { transform: translateY(-3px); border-color: var(--color-border-strong); box-shadow: inset 0 1px 0 var(--nl-glass-hi); }
+.category-card::before { display: none; }
+.category-icon-wrapper { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: var(--color-bg-secondary); border: 1px solid var(--color-border); transition: background-color .3s ease, color .3s ease, transform .5s var(--nl-ease); }
+.category-card:hover .category-icon-wrapper { background: var(--color-accent); color: var(--color-accent-text); transform: rotate(-6deg); }
+.category-name { font-family: var(--font-display); font-stretch: 106%; font-weight: 700; letter-spacing: -0.01em; }
+.category-desc { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.categories-show-more { border-radius: 999px !important; }
